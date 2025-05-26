@@ -177,6 +177,7 @@
             <div class="form-group">
                 <label>游戏版本:</label>
                 <select id="bedrock-version">
+                    <option value="1.21.80">1.21.80</option>
                     <option value="1.21.40">1.21.40</option>
                     <option value="1.21.30">1.21.30</option>
                     <option value="1.21.20">1.21.20</option>
@@ -250,7 +251,7 @@
             document.getElementById('auth').value = config.client?.auth || 'offline';
             
             // 设置基岩版配置
-            document.getElementById('bedrock-version').value = config.client?.bedrockVersion || '1.21.40';
+            document.getElementById('bedrock-version').value = config.client?.bedrockVersion || '1.21.80';
             document.getElementById('udp-port').value = config.client?.udpPort || config.client?.port || '';
             document.getElementById('bedrock-protocol').value = config.client?.bedrockProtocol || 'auto';
             

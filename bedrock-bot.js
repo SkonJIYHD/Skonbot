@@ -24,7 +24,7 @@ class BedrockBot {
     // 基岩版协议握手
     createHandshakePacket() {
         const username = this.config.client.username || 'BedrockBot';
-        const version = this.config.client.bedrockVersion || '1.21.40';
+        const version = this.config.client.bedrockVersion || '1.21.80';
         
         // 基岩版登录包构造（简化版）
         const loginPacket = {
