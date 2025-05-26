@@ -1,9 +1,11 @@
 
 {
     "client": {
-        "host": "mctxnb.aternos.me",
-        "port": "63160",
-        "username": "SkonJiYHD"
+        "host": "gm.rainplay.cn",
+        "port": "25384",
+        "username": "Bot_Skon",
+        "version": "1.21.1",
+        "auth": "offline"
     },
 
     "! DO NOT EDIT BELOW !": "ONLY IF YOU KNOW WHAT YOU ARE DOING",
@@ -11,6 +13,6 @@
     "action": {
         "commands": ["forward", "back", "left", "right", "jump"],
         "holdDuration": 5000,
-        "retryDelay": 15000
+        "retryDelay": 30000
     }
 }
