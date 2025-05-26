@@ -1,4 +1,3 @@
-
 {
     "client": {
         "host": "gm.rainplay.cn",
@@ -7,13 +6,23 @@
         "version": "1.21.1",
         "auth": "offline",
         "mode": "java",
-        "mods": []
+        "mods": [],
+        "adaptiveMods": true
     },
-
     "! DO NOT EDIT BELOW !": "ONLY IF YOU KNOW WHAT YOU ARE DOING",
-    "logLevel": ["error", "log", "debug"],
+    "logLevel": [
+        "error",
+        "log",
+        "debug"
+    ],
     "action": {
-        "commands": ["forward", "back", "left", "right", "jump"],
+        "commands": [
+            "forward",
+            "back",
+            "left",
+            "right",
+            "jump"
+        ],
         "holdDuration": 5000,
         "retryDelay": 30000
     }

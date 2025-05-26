@@ -161,42 +161,7 @@
         .hidden {
             display: none;
         }
-        #microsoft-auth-section {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #dee2e6;
-        }
-        #microsoft-status {
-            padding: 5px 10px;
-            margin: 5px 0;
-            border-radius: 3px;
-            font-weight: bold;
-        }
-        .microsoft-logged-in {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .microsoft-logged-out {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        #microsoft-login-btn, #microsoft-logout-btn {
-            padding: 8px 15px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        #microsoft-login-btn {
-            background-color: #0078d4;
-            color: white;
-        }
-        #microsoft-logout-btn {
-            background-color: #dc3545;
-            color: white;
-        }
+        
     </style>
 </head>
 <body>
@@ -240,44 +205,33 @@
             </div>
             <div class="form-group">
                 <label>认证方式:</label>
-                <select id="auth" onchange="handleAuthChange()">
+                <select id="auth">
                     <option value="offline">离线模式</option>
-                    <option value="microsoft">微软账户</option>
                 </select>
             </div>
-            <div id="microsoft-auth-section" class="form-group hidden">
-                <label>微软账户状态:</label>
-                <div id="microsoft-status">未登录</div>
-                <button type="button" id="microsoft-login-btn" onclick="loginMicrosoft()">登录微软账户</button>
-                <button type="button" id="microsoft-logout-btn" onclick="logoutMicrosoft()" class="hidden">注销账户</button>
-                
-                <div style="margin-top: 10px; padding: 10px; background-color: #e3f2fd; border-radius: 5px;">
-                    <h4>微软认证设置指南:</h4>
-                    <div style="background-color: #fff3cd; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ffeaa7;">
-                        <strong>⚠️ Azure注册问题解决方案：</strong>
-                        <ul>
-                            <li>确保使用有效的微软账户（个人或工作账户）</li>
-                            <li>完成邮箱/手机验证</li>
-                            <li>如遇地区限制，可尝试使用VPN</li>
-                            <li>也可使用其他微软开发者账户代为注册</li>
-                        </ul>
-                    </div>
-                    <ol>
-                        <li>访问 <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank">Azure 应用注册</a></li>
-                        <li>点击"新注册"创建应用（如果无法注册，请参考上面的解决方案）</li>
-                        <li>设置重定向URI为: <code id="current-redirect-uri">加载中...</code></li>
-                        <li>获取应用ID和客户端密钥</li>
-                        <li>在web-server.js中替换MICROSOFT_CONFIG配置</li>
-                    </ol>
-                    <p><strong>注意:</strong> 当前为测试配置，实际认证需要有效的Azure应用！</p>
-                </div>
-            </div>
             <div class="form-group">
-                <label>模组列表:</label>
+                <label>模组列表 (假mod列表):</label>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="adaptive-mods" onchange="updateAdaptiveMode()"> 
+                        启用自适应mod模式
+                    </label>
+                    <div style="margin: 8px 0; padding: 8px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; font-size: 12px;">
+                        <strong>🔥 自适应模式:</strong> 机器人会自动检测服务器要求的mod列表，然后伪装成拥有这些mod，无需手动配置喵！
+                        <br>当启用时，下面的手动mod列表会被忽略。
+                    </div>
+                </div>
+                <div id="manual-mods-section">
+                    <div style="margin-bottom: 10px; padding: 8px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
+                        <strong>💡 手动模式:</strong> 这里填写固定的mod名称，机器人会向服务器声明已安装这些mod喵！
+                        <br>常用格式: <code>modname</code> 或 <code>modname@version</code>
+                    </div>
+                </div>
                 <div id="mod-list" class="mod-list">
                     <!-- 模组列表将在这里动态生成 -->
                 </div>
-                <button type="button" onclick="addMod()">添加模组</button>
+                <button type="button" onclick="addMod()">添加假mod</button>
+                <button type="button" onclick="addCommonMods()" style="margin-left: 10px; background-color: #17a2b8;">添加常用mod</button>
             </div>
         </div>
 
@@ -370,6 +324,10 @@
             // 加载模组列表
             mods = config.client?.mods || [];
             updateModList();
+            
+            // 设置自适应mod模式
+            document.getElementById('adaptive-mods').checked = config.client?.adaptiveMods || false;
+            updateAdaptiveMode();
 
             // 只在页面首次加载时设置模式，避免循环
             if (!currentMode || currentMode === '') {
@@ -378,6 +336,23 @@
                 } else {
                     switchMode('java');
                 }
+            }
+        }
+
+        function updateAdaptiveMode() {
+            const isAdaptive = document.getElementById('adaptive-mods').checked;
+            const manualSection = document.getElementById('manual-mods-section');
+            const modList = document.getElementById('mod-list');
+            const addButtons = document.querySelectorAll('button[onclick*="addMod"], button[onclick*="addCommonMods"]');
+            
+            if (isAdaptive) {
+                manualSection.style.opacity = '0.5';
+                modList.style.pointerEvents = 'none';
+                addButtons.forEach(btn => btn.disabled = true);
+            } else {
+                manualSection.style.opacity = '1';
+                modList.style.pointerEvents = 'auto';
+                addButtons.forEach(btn => btn.disabled = false);
             }
         }
 
@@ -399,12 +374,67 @@
                 const modItem = document.createElement('div');
                 modItem.className = 'mod-item';
                 modItem.innerHTML = `
-                    <input type="text" value="${mod}" placeholder="模组名称" 
+                    <input type="text" value="${mod}" placeholder="mod名称 (如: forge, optifine, jei)" 
                            onchange="mods[${index}] = this.value">
                     <button onclick="removeMod(${index})">删除</button>
                 `;
                 modListEl.appendChild(modItem);
             });
+        }
+
+        function addCommonMods() {
+            const commonMods = [
+                'forge',
+                'optifine', 
+                'jei',
+                'journeymap',
+                'waila',
+                'nei',
+                'buildcraft',
+                'industrialcraft2',
+                'thermalexpansion',
+                'tinkersconstruct'
+            ];
+            
+            const selectedMods = [];
+            let modalHtml = '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">';
+            modalHtml += '<div style="background: white; padding: 20px; border-radius: 10px; max-width: 400px; max-height: 500px; overflow-y: auto;">';
+            modalHtml += '<h3>选择常用mod:</h3>';
+            
+            commonMods.forEach((mod, index) => {
+                modalHtml += `<label style="display: block; margin: 5px 0;"><input type="checkbox" value="${mod}" onchange="toggleMod('${mod}', this.checked)"> ${mod}</label>`;
+            });
+            
+            modalHtml += '<div style="margin-top: 15px;"><button onclick="confirmAddMods()" style="margin-right: 10px; padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px;">确认添加</button>';
+            modalHtml += '<button onclick="closeModal()" style="padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px;">取消</button></div>';
+            modalHtml += '</div></div>';
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            window.selectedMods = [];
+            window.toggleMod = function(mod, checked) {
+                if (checked) {
+                    window.selectedMods.push(mod);
+                } else {
+                    const index = window.selectedMods.indexOf(mod);
+                    if (index > -1) window.selectedMods.splice(index, 1);
+                }
+            };
+            
+            window.confirmAddMods = function() {
+                window.selectedMods.forEach(mod => {
+                    if (!mods.includes(mod)) {
+                        mods.push(mod);
+                    }
+                });
+                updateModList();
+                closeModal();
+            };
+            
+            window.closeModal = function() {
+                const modal = document.querySelector('div[style*="position: fixed"]');
+                if (modal) modal.remove();
+            };
         }
 
         function saveConfig() {
@@ -422,6 +452,7 @@
 
             if (currentMode === 'java') {
                 newConfig.client.version = document.getElementById('java-version').value;
+                newConfig.client.adaptiveMods = document.getElementById('adaptive-mods').checked;
                 newConfig.client.mods = mods.filter(mod => mod.trim() !== '');
             } else {
                 newConfig.client.bedrockVersion = document.getElementById('bedrock-version').value;
@@ -501,96 +532,7 @@
                     console.error('获取状态失败:', error);
                 });
 
-            // 同时检查微软认证状态
-            checkMicrosoftAuthStatus();
-        }
-
-        function handleAuthChange() {
-            const authSelect = document.getElementById('auth');
-            const microsoftSection = document.getElementById('microsoft-auth-section');
-
-            if (authSelect.value === 'microsoft') {
-                microsoftSection.classList.remove('hidden');
-                checkMicrosoftAuthStatus();
-            } else {
-                microsoftSection.classList.add('hidden');
             }
-        }
-
-        function checkMicrosoftAuthStatus() {
-            fetch('/api/auth/microsoft/status')
-                .then(response => response.json())
-                .then(data => {
-                    const statusDiv = document.getElementById('microsoft-status');
-                    const loginBtn = document.getElementById('microsoft-login-btn');
-                    const logoutBtn = document.getElementById('microsoft-logout-btn');
-
-                    if (data.authenticated) {
-                        statusDiv.textContent = `已登录: ${data.username || data.email || '未知用户'}`;
-                        statusDiv.className = 'microsoft-logged-in';
-                        loginBtn.classList.add('hidden');
-                        logoutBtn.classList.remove('hidden');
-                    } else {
-                        statusDiv.textContent = '未登录';
-                        statusDiv.className = 'microsoft-logged-out';
-                        loginBtn.classList.remove('hidden');
-                        logoutBtn.classList.add('hidden');
-                    }
-                })
-                .catch(error => {
-                    console.error('检查微软认证状态失败:', error);
-                });
-        }
-
-        function loginMicrosoft() {
-            // 打开微软登录页面
-            window.open('/api/auth/microsoft/login', 'microsoftLogin', 'width=600,height=700,scrollbars=yes,resizable=yes');
-
-            // 监听登录完成事件
-            const checkLoginInterval = setInterval(() => {
-                checkMicrosoftAuthStatus();
-                fetch('/api/auth/microsoft/status')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.authenticated) {
-                            clearInterval(checkLoginInterval);
-                            alert('微软账户登录成功！');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('检查登录状态失败:', error);
-                    });
-            }, 2000);
-
-            // 10分钟后停止检查
-            setTimeout(() => {
-                clearInterval(checkLoginInterval);
-            }, 600000);
-        }
-
-        function logoutMicrosoft() {
-            fetch('/api/auth/microsoft/logout', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('微软账户已注销！');
-                        checkMicrosoftAuthStatus();
-                    } else {
-                        alert('注销失败: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('注销失败:', error);
-                    alert('注销失败');
-                });
-        }
-
-        // 显示当前重定向URI
-        function updateRedirectUri() {
-            const currentUri = window.location.origin + '/api/auth/microsoft/callback';
-            document.getElementById('current-redirect-uri').textContent = currentUri;
-        }
-        updateRedirectUri();
     </script>
 </body>
 </html>
