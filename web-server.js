@@ -175,10 +175,10 @@ function startBot(mode = null) {
             console.log('自适应mod模式:', config.client.adaptiveMods);
         }
         
-        console.log('机器人将使用端口3001避免冲突');
+        console.log('使用修补版aterbot避免端口冲突');
         
-        // 启动Java版机器人 - 设置不同的端口避免冲突，禁用web服务
-        botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts', '--no-web'], {
+        // 启动修补版的Java机器人 - 禁用web服务
+        botProcess = spawn('node', ['aterbot-no-web.js'], {
             stdio: 'pipe',
             env: env
         });
