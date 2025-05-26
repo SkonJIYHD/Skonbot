@@ -74,11 +74,30 @@ function stopBot() {
 }
 
 const server = http.createServer((req, res) => {
+    // 添加CORS头部
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+    }
+    
+    console.log(`收到请求: ${req.method} ${req.url}`);
+    
     if (req.method === 'GET' && req.url === '/') {
         // 返回主页面
-        const html = fs.readFileSync('control-panel.html', 'utf8');
-        res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-        res.end(html);
+        try {
+            const html = fs.readFileSync('control-panel.html', 'utf8');
+            res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+            res.end(html);
+        } catch (error) {
+            console.error('读取HTML文件失败:', error);
+            res.writeHead(500, {'Content-Type': 'text/plain'});
+            res.end('Internal Server Error');
+        }
     } else if (req.method === 'GET' && req.url === '/api/config') {
         // 返回当前配置
         const config = loadConfig();
@@ -127,5 +146,19 @@ const server = http.createServer((req, res) => {
 
 server.listen(5000, '0.0.0.0', () => {
     console.log('Aterbot控制面板启动在 http://0.0.0.0:5000');
+    console.log('请访问: https://你的repl域名 或者在Replit中点击Webview');
     loadConfig();
+});
+
+server.on('error', (error) => {
+    console.error('服务器启动失败:', error);
+});
+
+// 优雅处理未捕获的异常
+process.on('uncaughtException', (error) => {
+    console.error('未捕获的异常:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('未处理的Promise拒绝:', reason);
 });
