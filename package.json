@@ -8,8 +8,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "aterbot": "git+https://github.com/JadeMin/aterbot.git"
-  }
+  "description": ""
 }
