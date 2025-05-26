@@ -153,8 +153,15 @@ function startBot(mode = null) {
         });
     } else {
         console.log('启动Java版机器人...');
-        // 启动Java版机器人 - 设置不同的端口避免冲突
+        
+        // 准备假mod列表环境变量
         const env = { ...process.env, PORT: '5001' };
+        if (config && config.client && config.client.mods && config.client.mods.length > 0) {
+            env.FAKE_MODS = JSON.stringify(config.client.mods);
+            console.log('配置假mod列表:', config.client.mods);
+        }
+        
+        // 启动Java版机器人 - 设置不同的端口避免冲突
         botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
             stdio: 'pipe',
             env: env

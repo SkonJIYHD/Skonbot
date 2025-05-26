@@ -210,11 +210,16 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>模组列表:</label>
+                <label>模组列表 (假mod列表):</label>
+                <div style="margin-bottom: 10px; padding: 8px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
+                    <strong>💡 提示:</strong> 这里只需要填写mod名称，机器人会向服务器声明已安装这些mod，无需实际上传mod文件喵！
+                    <br>常用格式: <code>modname</code> 或 <code>modname@version</code>
+                </div>
                 <div id="mod-list" class="mod-list">
                     <!-- 模组列表将在这里动态生成 -->
                 </div>
-                <button type="button" onclick="addMod()">添加模组</button>
+                <button type="button" onclick="addMod()">添加假mod</button>
+                <button type="button" onclick="addCommonMods()" style="margin-left: 10px; background-color: #17a2b8;">添加常用mod</button>
             </div>
         </div>
 
@@ -336,12 +341,67 @@
                 const modItem = document.createElement('div');
                 modItem.className = 'mod-item';
                 modItem.innerHTML = `
-                    <input type="text" value="${mod}" placeholder="模组名称" 
+                    <input type="text" value="${mod}" placeholder="mod名称 (如: forge, optifine, jei)" 
                            onchange="mods[${index}] = this.value">
                     <button onclick="removeMod(${index})">删除</button>
                 `;
                 modListEl.appendChild(modItem);
             });
+        }
+
+        function addCommonMods() {
+            const commonMods = [
+                'forge',
+                'optifine', 
+                'jei',
+                'journeymap',
+                'waila',
+                'nei',
+                'buildcraft',
+                'industrialcraft2',
+                'thermalexpansion',
+                'tinkersconstruct'
+            ];
+            
+            const selectedMods = [];
+            let modalHtml = '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">';
+            modalHtml += '<div style="background: white; padding: 20px; border-radius: 10px; max-width: 400px; max-height: 500px; overflow-y: auto;">';
+            modalHtml += '<h3>选择常用mod:</h3>';
+            
+            commonMods.forEach((mod, index) => {
+                modalHtml += `<label style="display: block; margin: 5px 0;"><input type="checkbox" value="${mod}" onchange="toggleMod('${mod}', this.checked)"> ${mod}</label>`;
+            });
+            
+            modalHtml += '<div style="margin-top: 15px;"><button onclick="confirmAddMods()" style="margin-right: 10px; padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px;">确认添加</button>';
+            modalHtml += '<button onclick="closeModal()" style="padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px;">取消</button></div>';
+            modalHtml += '</div></div>';
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            window.selectedMods = [];
+            window.toggleMod = function(mod, checked) {
+                if (checked) {
+                    window.selectedMods.push(mod);
+                } else {
+                    const index = window.selectedMods.indexOf(mod);
+                    if (index > -1) window.selectedMods.splice(index, 1);
+                }
+            };
+            
+            window.confirmAddMods = function() {
+                window.selectedMods.forEach(mod => {
+                    if (!mods.includes(mod)) {
+                        mods.push(mod);
+                    }
+                });
+                updateModList();
+                closeModal();
+            };
+            
+            window.closeModal = function() {
+                const modal = document.querySelector('div[style*="position: fixed"]');
+                if (modal) modal.remove();
+            };
         }
 
         function saveConfig() {
