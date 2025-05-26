@@ -211,9 +211,21 @@
             </div>
             <div class="form-group">
                 <label>模组列表 (假mod列表):</label>
-                <div style="margin-bottom: 10px; padding: 8px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
-                    <strong>💡 提示:</strong> 这里只需要填写mod名称，机器人会向服务器声明已安装这些mod，无需实际上传mod文件喵！
-                    <br>常用格式: <code>modname</code> 或 <code>modname@version</code>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="adaptive-mods" onchange="updateAdaptiveMode()"> 
+                        启用自适应mod模式
+                    </label>
+                    <div style="margin: 8px 0; padding: 8px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; font-size: 12px;">
+                        <strong>🔥 自适应模式:</strong> 机器人会自动检测服务器要求的mod列表，然后伪装成拥有这些mod，无需手动配置喵！
+                        <br>当启用时，下面的手动mod列表会被忽略。
+                    </div>
+                </div>
+                <div id="manual-mods-section">
+                    <div style="margin-bottom: 10px; padding: 8px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
+                        <strong>💡 手动模式:</strong> 这里填写固定的mod名称，机器人会向服务器声明已安装这些mod喵！
+                        <br>常用格式: <code>modname</code> 或 <code>modname@version</code>
+                    </div>
                 </div>
                 <div id="mod-list" class="mod-list">
                     <!-- 模组列表将在这里动态生成 -->
@@ -312,6 +324,10 @@
             // 加载模组列表
             mods = config.client?.mods || [];
             updateModList();
+            
+            // 设置自适应mod模式
+            document.getElementById('adaptive-mods').checked = config.client?.adaptiveMods || false;
+            updateAdaptiveMode();
 
             // 只在页面首次加载时设置模式，避免循环
             if (!currentMode || currentMode === '') {
@@ -320,6 +336,23 @@
                 } else {
                     switchMode('java');
                 }
+            }
+        }
+
+        function updateAdaptiveMode() {
+            const isAdaptive = document.getElementById('adaptive-mods').checked;
+            const manualSection = document.getElementById('manual-mods-section');
+            const modList = document.getElementById('mod-list');
+            const addButtons = document.querySelectorAll('button[onclick*="addMod"], button[onclick*="addCommonMods"]');
+            
+            if (isAdaptive) {
+                manualSection.style.opacity = '0.5';
+                modList.style.pointerEvents = 'none';
+                addButtons.forEach(btn => btn.disabled = true);
+            } else {
+                manualSection.style.opacity = '1';
+                modList.style.pointerEvents = 'auto';
+                addButtons.forEach(btn => btn.disabled = false);
             }
         }
 
@@ -419,6 +452,7 @@
 
             if (currentMode === 'java') {
                 newConfig.client.version = document.getElementById('java-version').value;
+                newConfig.client.adaptiveMods = document.getElementById('adaptive-mods').checked;
                 newConfig.client.mods = mods.filter(mod => mod.trim() !== '');
             } else {
                 newConfig.client.bedrockVersion = document.getElementById('bedrock-version').value;

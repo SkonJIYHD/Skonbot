@@ -156,9 +156,17 @@ function startBot(mode = null) {
         
         // 准备假mod列表环境变量
         const env = { ...process.env, PORT: '5001' };
+        
+        // 传递mod配置
         if (config && config.client && config.client.mods && config.client.mods.length > 0) {
             env.FAKE_MODS = JSON.stringify(config.client.mods);
             console.log('配置假mod列表:', config.client.mods);
+        }
+        
+        // 传递自适应mod配置
+        if (config && config.client && config.client.adaptiveMods !== undefined) {
+            env.ADAPTIVE_MODS = config.client.adaptiveMods ? 'true' : 'false';
+            console.log('自适应mod模式:', config.client.adaptiveMods);
         }
         
         // 启动Java版机器人 - 设置不同的端口避免冲突
