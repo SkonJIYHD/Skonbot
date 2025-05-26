@@ -19,10 +19,11 @@ let microsoftAuthData = {
 };
 
 // 微软应用配置 - 你需要在微软Azure中创建应用
+// 临时测试配置 - 请替换为你自己的Azure应用配置
 const MICROSOFT_CONFIG = {
-    clientId: process.env.MICROSOFT_CLIENT_ID || 'your-client-id-here',
-    clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'your-client-secret-here',
-    redirectUri: process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:5000/api/auth/microsoft/callback',
+    clientId: process.env.MICROSOFT_CLIENT_ID || '00000000-0000-0000-0000-000000000000', // 替换为你的应用ID
+    clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'your-client-secret', // 替换为你的应用密钥  
+    redirectUri: process.env.MICROSOFT_REDIRECT_URI || 'https://你的repl域名/api/auth/microsoft/callback',
     scopes: 'XboxLive.signin offline_access',
     authUrl: 'https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/consumers/oauth2/v2.0/token',
@@ -347,9 +348,10 @@ async function handleMicrosoftCallback(req, res) {
         const error = url.searchParams.get('error');
         
         if (error) {
-            logger.log(`微软认证错误: ${error}`, 'error');
+            const errorDesc = url.searchParams.get('error_description') || error;
+            logger.log(`微软认证错误: ${error} - ${errorDesc}`, 'error');
             res.writeHead(400, {'Content-Type': 'text/html; charset=utf-8'});
-            res.end('<script>window.close();</script>');
+            res.end(`<script>alert("认证失败: ${errorDesc}"); window.close();</script>`);
             return;
         }
         

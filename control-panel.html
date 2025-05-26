@@ -483,7 +483,7 @@
                 .catch(error => {
                     console.error('获取状态失败:', error);
                 });
-            
+
             // 同时检查微软认证状态
             checkMicrosoftAuthStatus();
         }
@@ -491,7 +491,7 @@
         function handleAuthChange() {
             const authSelect = document.getElementById('auth');
             const microsoftSection = document.getElementById('microsoft-auth-section');
-            
+
             if (authSelect.value === 'microsoft') {
                 microsoftSection.classList.remove('hidden');
                 checkMicrosoftAuthStatus();
@@ -507,7 +507,7 @@
                     const statusDiv = document.getElementById('microsoft-status');
                     const loginBtn = document.getElementById('microsoft-login-btn');
                     const logoutBtn = document.getElementById('microsoft-logout-btn');
-                    
+
                     if (data.authenticated) {
                         statusDiv.textContent = `已登录: ${data.username || data.email || '未知用户'}`;
                         statusDiv.className = 'microsoft-logged-in';
@@ -528,7 +528,7 @@
         function loginMicrosoft() {
             // 打开微软登录页面
             window.open('/api/auth/microsoft/login', 'microsoftLogin', 'width=600,height=700,scrollbars=yes,resizable=yes');
-            
+
             // 监听登录完成事件
             const checkLoginInterval = setInterval(() => {
                 checkMicrosoftAuthStatus();
@@ -544,7 +544,7 @@
                         console.error('检查登录状态失败:', error);
                     });
             }, 2000);
-            
+
             // 10分钟后停止检查
             setTimeout(() => {
                 clearInterval(checkLoginInterval);
@@ -567,6 +567,13 @@
                     alert('注销失败');
                 });
         }
+
+        // 显示当前重定向URI
+        function updateRedirectUri() {
+            const currentUri = window.location.origin + '/api/auth/microsoft/callback';
+            document.getElementById('current-redirect-uri').textContent = currentUri;
+        }
+        updateRedirectUri();
     </script>
 </body>
 </html>
