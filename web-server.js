@@ -15,39 +15,23 @@ function getConfigFile(mode) {
 // 读取配置文件
 function loadConfig(mode = null) {
     try {
-        // 如果没有指定模式，尝试从界面状态或默认配置读取
-        if (!mode) {
-            // 先尝试读取Java配置
-            try {
-                const javaConfigData = fs.readFileSync('config-java.json', 'utf8');
-                const javaConfig = JSON.parse(javaConfigData);
-                if (javaConfig.client && javaConfig.client.mode === 'java') {
-                    currentConfig = javaConfig;
-                    return currentConfig;
-                }
-            } catch (error) {
-                // 忽略错误，继续尝试基岩版
-            }
-            
-            // 再尝试读取基岩版配置
-            try {
-                const bedrockConfigData = fs.readFileSync('config-bedrock.json', 'utf8');
-                const bedrockConfig = JSON.parse(bedrockConfigData);
-                if (bedrockConfig.client && bedrockConfig.client.mode === 'bedrock') {
-                    currentConfig = bedrockConfig;
-                    return currentConfig;
-                }
-            } catch (error) {
-                // 忽略错误
-            }
-            
-            // 如果都没有，返回默认Java配置
-            mode = 'java';
+        if (mode) {
+            // 如果指定了模式，直接读取对应配置
+            const configFile = getConfigFile(mode);
+            const configData = fs.readFileSync(configFile, 'utf8');
+            currentConfig = JSON.parse(configData);
+            console.log(`加载${mode}模式配置:`, currentConfig.client);
+            return currentConfig;
         }
         
-        const configFile = getConfigFile(mode);
-        const configData = fs.readFileSync(configFile, 'utf8');
-        currentConfig = JSON.parse(configData);
+        // 如果没有指定模式，返回当前配置或默认Java配置
+        if (currentConfig) {
+            return currentConfig;
+        }
+        
+        // 默认加载Java配置
+        const javaConfigData = fs.readFileSync('config-java.json', 'utf8');
+        currentConfig = JSON.parse(javaConfigData);
         return currentConfig;
     } catch (error) {
         console.error('读取配置文件失败:', error);
@@ -78,14 +62,18 @@ function startBot(mode = null) {
     const config = loadConfig(mode);
     
     if (config && config.client && config.client.mode === 'bedrock') {
+        console.log('启动基岩版机器人...');
         // 启动基岩版机器人
         botProcess = spawn('node', ['bedrock-bot.js'], {
             stdio: 'pipe'
         });
     } else {
-        // 启动Java版机器人
+        console.log('启动Java版机器人...');
+        // 启动Java版机器人 - 设置不同的端口避免冲突
+        const env = { ...process.env, PORT: '5001' };
         botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
-            stdio: 'pipe'
+            stdio: 'pipe',
+            env: env
         });
     }
     
