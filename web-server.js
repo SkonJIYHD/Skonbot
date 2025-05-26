@@ -158,7 +158,9 @@ function startBot(mode = null) {
         const env = { 
             ...process.env, 
             PORT: '3001',  // 使用3001端口避免与控制面板的5000端口冲突
-            WEB_PORT: '3001'  // 确保aterbot的web服务使用3001端口
+            WEB_PORT: '3001',  // 确保aterbot的web服务使用3001端口
+            ATERBOT_WEB_PORT: '3001',  // aterbot专用的web端口环境变量
+            NODE_ENV: 'production'  // 设置为生产环境，避免默认端口冲突
         };
         
         // 传递mod配置
@@ -175,8 +177,8 @@ function startBot(mode = null) {
         
         console.log('机器人将使用端口3001避免冲突');
         
-        // 启动Java版机器人 - 设置不同的端口避免冲突
-        botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
+        // 启动Java版机器人 - 设置不同的端口避免冲突，禁用web服务
+        botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts', '--no-web'], {
             stdio: 'pipe',
             env: env
         });
