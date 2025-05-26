@@ -1,0 +1,20 @@
+
+{
+    "client": {
+        "host": "gm.rainplay.cn",
+        "port": "25384",
+        "username": "Bot_Skon",
+        "version": "1.21.1",
+        "auth": "offline",
+        "mode": "java",
+        "mods": []
+    },
+
+    "! DO NOT EDIT BELOW !": "ONLY IF YOU KNOW WHAT YOU ARE DOING",
+    "logLevel": ["error", "log", "debug"],
+    "action": {
+        "commands": ["forward", "back", "left", "right", "jump"],
+        "holdDuration": 5000,
+        "retryDelay": 30000
+    }
+}

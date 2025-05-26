@@ -177,6 +177,7 @@
             <div class="form-group">
                 <label>游戏版本:</label>
                 <select id="bedrock-version">
+                    <option value="1.21.80">1.21.80</option>
                     <option value="1.21.40">1.21.40</option>
                     <option value="1.21.30">1.21.30</option>
                     <option value="1.21.20">1.21.20</option>
@@ -219,21 +220,28 @@
 
         // 页面加载时获取当前配置
         window.onload = function() {
+            currentMode = ''; // 初始化为空，避免重复设置
             loadConfig();
             updateStatus();
             setInterval(updateStatus, 2000); // 每2秒更新状态
         };
 
         function switchMode(mode) {
+            if (currentMode === mode) return; // 防止重复切换
+            
             currentMode = mode;
             document.getElementById('java-mode').classList.toggle('active', mode === 'java');
             document.getElementById('bedrock-mode').classList.toggle('active', mode === 'bedrock');
             document.getElementById('java-config').classList.toggle('hidden', mode !== 'java');
             document.getElementById('bedrock-config').classList.toggle('hidden', mode !== 'bedrock');
+            
+            // 切换模式时加载对应的配置
+            loadConfig(mode);
         }
 
-        function loadConfig() {
-            fetch('/api/config')
+        function loadConfig(mode = null) {
+            const url = mode ? `/api/config?mode=${mode}` : '/api/config';
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     config = data;
@@ -250,7 +258,7 @@
             document.getElementById('auth').value = config.client?.auth || 'offline';
             
             // 设置基岩版配置
-            document.getElementById('bedrock-version').value = config.client?.bedrockVersion || '1.21.40';
+            document.getElementById('bedrock-version').value = config.client?.bedrockVersion || '1.21.80';
             document.getElementById('udp-port').value = config.client?.udpPort || config.client?.port || '';
             document.getElementById('bedrock-protocol').value = config.client?.bedrockProtocol || 'auto';
             
@@ -258,11 +266,13 @@
             mods = config.client?.mods || [];
             updateModList();
             
-            // 根据当前模式设置界面
-            if (config.client?.mode === 'bedrock') {
-                switchMode('bedrock');
-            } else {
-                switchMode('java');
+            // 只在页面首次加载时设置模式，避免循环
+            if (!currentMode || currentMode === '') {
+                if (config.client?.mode === 'bedrock') {
+                    switchMode('bedrock');
+                } else {
+                    switchMode('java');
+                }
             }
         }
 

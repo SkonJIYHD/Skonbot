@@ -13,10 +13,10 @@ class BedrockBot {
 
     loadConfig() {
         try {
-            const configData = fs.readFileSync('config.json', 'utf8');
+            const configData = fs.readFileSync('config-bedrock.json', 'utf8');
             return JSON.parse(configData);
         } catch (error) {
-            console.error('读取配置文件失败:', error);
+            console.error('读取基岩版配置文件失败:', error);
             return null;
         }
     }
@@ -24,7 +24,7 @@ class BedrockBot {
     // 基岩版协议握手
     createHandshakePacket() {
         const username = this.config.client.username || 'BedrockBot';
-        const version = this.config.client.bedrockVersion || '1.21.40';
+        const version = this.config.client.bedrockVersion || '1.21.80';
         
         // 基岩版登录包构造（简化版）
         const loginPacket = {
