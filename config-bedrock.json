@@ -1,20 +1,29 @@
-
 {
     "client": {
-        "host": "gm.rainplay.cn",
-        "port": "25384",
+        "host": "mctxnb.aternos.me",
+        "port": "63160",
         "username": "Bot_Skon",
         "bedrockVersion": "1.21.80",
         "auth": "offline",
         "mode": "bedrock",
-        "udpPort": "25384",
-        "bedrockProtocol": "auto"
+        "udpPort": "63160",
+        "bedrockProtocol": "auto",
+        "protocol": "bedrock"
     },
-
     "! DO NOT EDIT BELOW !": "ONLY IF YOU KNOW WHAT YOU ARE DOING",
-    "logLevel": ["error", "log", "debug"],
+    "logLevel": [
+        "error",
+        "log",
+        "debug"
+    ],
     "action": {
-        "commands": ["forward", "back", "left", "right", "jump"],
+        "commands": [
+            "forward",
+            "back",
+            "left",
+            "right",
+            "jump"
+        ],
         "holdDuration": 5000,
         "retryDelay": 30000
     }
