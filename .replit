@@ -1,0 +1,9 @@
+modules = ["bash", "nix", "nodejs-20"]
+run = "node index.mjs"
+
+[nix]
+channel = "stable-24_05"
+packages = ["via"]
+
+[deployment]
+run = ["sh", "-c", "node index.mjs"]
