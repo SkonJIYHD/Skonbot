@@ -20,10 +20,17 @@ let microsoftAuthData = {
 
 // 微软应用配置 - 你需要在微软Azure中创建应用
 // 临时测试配置 - 请替换为你自己的Azure应用配置
+// 动态获取重定向URI
+function getRedirectUri(req) {
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers.host;
+    return `${protocol}://${host}/api/auth/microsoft/callback`;
+}
+
 const MICROSOFT_CONFIG = {
     clientId: process.env.MICROSOFT_CLIENT_ID || '00000000-0000-0000-0000-000000000000', // 替换为你的应用ID
     clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'your-client-secret', // 替换为你的应用密钥  
-    redirectUri: process.env.MICROSOFT_REDIRECT_URI || 'https://你的repl域名/api/auth/microsoft/callback',
+    redirectUri: process.env.MICROSOFT_REDIRECT_URI, // 将动态获取
     scopes: 'XboxLive.signin offline_access',
     authUrl: 'https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/consumers/oauth2/v2.0/token',
@@ -298,10 +305,11 @@ const server = http.createServer((req, res) => {
     } else if (req.method === 'GET' && req.url === '/api/auth/microsoft/login') {
         // 开始微软OAuth流程
         const state = crypto.randomBytes(16).toString('hex');
+        const redirectUri = MICROSOFT_CONFIG.redirectUri || getRedirectUri(req);
         const authParams = {
             client_id: MICROSOFT_CONFIG.clientId,
             response_type: 'code',
-            redirect_uri: MICROSOFT_CONFIG.redirectUri,
+            redirect_uri: redirectUri,
             scope: MICROSOFT_CONFIG.scopes,
             state: state,
             response_mode: 'query'
@@ -362,7 +370,8 @@ async function handleMicrosoftCallback(req, res) {
         }
         
         // 交换授权码获取访问令牌
-        const tokenData = await exchangeCodeForToken(code);
+        const redirectUri = MICROSOFT_CONFIG.redirectUri || getRedirectUri(req);
+        const tokenData = await exchangeCodeForToken(code, redirectUri);
         if (tokenData) {
             // 获取Minecraft令牌
             const minecraftToken = await getMinecraftToken(tokenData.access_token);
@@ -395,7 +404,7 @@ async function handleMicrosoftCallback(req, res) {
 }
 
 // 交换授权码获取访问令牌
-async function exchangeCodeForToken(code) {
+async function exchangeCodeForToken(code, redirectUri) {
     const https = require('https');
     
     const postData = querystring.stringify({
@@ -403,7 +412,7 @@ async function exchangeCodeForToken(code) {
         client_secret: MICROSOFT_CONFIG.clientSecret,
         code: code,
         grant_type: 'authorization_code',
-        redirect_uri: MICROSOFT_CONFIG.redirectUri
+        redirect_uri: redirectUri
     });
     
     return new Promise((resolve, reject) => {
