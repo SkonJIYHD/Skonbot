@@ -7,3 +7,7 @@ packages = ["via"]
 
 [deployment]
 run = ["sh", "-c", "node index.mjs"]
+
+[[ports]]
+localPort = 5500
+externalPort = 80
