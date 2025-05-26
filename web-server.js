@@ -37,9 +37,19 @@ function startBot() {
         stopBot();
     }
     
-    botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
-        stdio: 'pipe'
-    });
+    const config = loadConfig();
+    
+    if (config && config.client && config.client.mode === 'bedrock') {
+        // 启动基岩版机器人
+        botProcess = spawn('node', ['bedrock-bot.js'], {
+            stdio: 'pipe'
+        });
+    } else {
+        // 启动Java版机器人
+        botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
+            stdio: 'pipe'
+        });
+    }
     
     botProcess.stdout.on('data', (data) => {
         console.log(`Bot输出: ${data}`);

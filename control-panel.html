@@ -187,6 +187,18 @@
             </div>
             <div class="form-group">
                 <label>UDP端口:</label>
+                <input type="number" id="udp-port" placeholder="UDP端口（通常与TCP端口相同）">
+            </div>
+            <div class="form-group">
+                <label>连接协议:</label>
+                <select id="bedrock-protocol">
+                    <option value="auto">自动检测</option>
+                    <option value="tcp-udp">TCP + UDP</option>
+                    <option value="tcp-only">仅TCP</option>
+                </select>
+            </div></div>
+            <div class="form-group">
+                <label>UDP端口:</label>
                 <input type="number" id="udp-port" placeholder="UDP端口 (通常与TCP端口相同)">
             </div>
         </div>
@@ -240,6 +252,7 @@
             // 设置基岩版配置
             document.getElementById('bedrock-version').value = config.client?.bedrockVersion || '1.21.40';
             document.getElementById('udp-port').value = config.client?.udpPort || config.client?.port || '';
+            document.getElementById('bedrock-protocol').value = config.client?.bedrockProtocol || 'auto';
             
             // 加载模组列表
             mods = config.client?.mods || [];
@@ -299,6 +312,7 @@
                 newConfig.client.bedrockVersion = document.getElementById('bedrock-version').value;
                 newConfig.client.udpPort = document.getElementById('udp-port').value;
                 newConfig.client.protocol = 'bedrock';
+                newConfig.client.bedrockProtocol = document.getElementById('bedrock-protocol').value;
             }
 
             fetch('/api/config', {
