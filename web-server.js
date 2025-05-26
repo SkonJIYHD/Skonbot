@@ -31,10 +31,10 @@ function getRedirectUri(req) {
 }
 
 const MICROSOFT_CONFIG = {
-    // 替换为你从Azure Portal获取的应用ID
-    clientId: process.env.MICROSOFT_CLIENT_ID || '请替换为你的Azure应用ID',
-    // 替换为你从Azure Portal获取的客户端密钥
-    clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '请替换为你的Azure客户端密钥',
+    // 如果Azure注册失败，可以暂时使用以下配置进行功能测试
+    // 注意：这个配置仅用于界面测试，实际认证功能需要有效的Azure应用
+    clientId: process.env.MICROSOFT_CLIENT_ID || 'test-client-id-placeholder',
+    clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'test-client-secret-placeholder',
     redirectUri: process.env.MICROSOFT_REDIRECT_URI, // 动态获取
     scopes: 'XboxLive.signin offline_access',
     authUrl: 'https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize',

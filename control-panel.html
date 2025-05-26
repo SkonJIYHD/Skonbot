@@ -253,14 +253,23 @@
                 
                 <div style="margin-top: 10px; padding: 10px; background-color: #e3f2fd; border-radius: 5px;">
                     <h4>微软认证设置指南:</h4>
+                    <div style="background-color: #fff3cd; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ffeaa7;">
+                        <strong>⚠️ Azure注册问题解决方案：</strong>
+                        <ul>
+                            <li>确保使用有效的微软账户（个人或工作账户）</li>
+                            <li>完成邮箱/手机验证</li>
+                            <li>如遇地区限制，可尝试使用VPN</li>
+                            <li>也可使用其他微软开发者账户代为注册</li>
+                        </ul>
+                    </div>
                     <ol>
                         <li>访问 <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank">Azure 应用注册</a></li>
-                        <li>点击"新注册"创建应用</li>
+                        <li>点击"新注册"创建应用（如果无法注册，请参考上面的解决方案）</li>
                         <li>设置重定向URI为: <code id="current-redirect-uri">加载中...</code></li>
                         <li>获取应用ID和客户端密钥</li>
                         <li>在web-server.js中替换MICROSOFT_CONFIG配置</li>
                     </ol>
-                    <p><strong>注意:</strong> 需要重启应用才能生效！</p>
+                    <p><strong>注意:</strong> 当前为测试配置，实际认证需要有效的Azure应用！</p>
                 </div>
             </div>
             <div class="form-group">
