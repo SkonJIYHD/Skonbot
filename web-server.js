@@ -18,9 +18,12 @@ let microsoftAuthData = {
     expiresAt: null
 };
 
-// 微软应用配置 - 你需要在微软Azure中创建应用
-// 临时测试配置 - 请替换为你自己的Azure应用配置
-// 动态获取重定向URI
+// 微软应用配置 - 请在Azure Portal中创建应用后替换以下配置
+// 配置步骤：
+// 1. 访问 https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade
+// 2. 创建新应用注册，设置重定向URI为: https://你的repl域名/api/auth/microsoft/callback
+// 3. 获取应用ID和客户端密钥
+// 4. 替换下面的clientId和clientSecret
 function getRedirectUri(req) {
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers.host;
@@ -28,9 +31,11 @@ function getRedirectUri(req) {
 }
 
 const MICROSOFT_CONFIG = {
-    clientId: process.env.MICROSOFT_CLIENT_ID || '00000000-0000-0000-0000-000000000000', // 替换为你的应用ID
-    clientSecret: process.env.MICROSOFT_CLIENT_SECRET || 'your-client-secret', // 替换为你的应用密钥  
-    redirectUri: process.env.MICROSOFT_REDIRECT_URI, // 将动态获取
+    // 替换为你从Azure Portal获取的应用ID
+    clientId: process.env.MICROSOFT_CLIENT_ID || '请替换为你的Azure应用ID',
+    // 替换为你从Azure Portal获取的客户端密钥
+    clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '请替换为你的Azure客户端密钥',
+    redirectUri: process.env.MICROSOFT_REDIRECT_URI, // 动态获取
     scopes: 'XboxLive.signin offline_access',
     authUrl: 'https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/consumers/oauth2/v2.0/token',
