@@ -13,6 +13,7 @@ localPort = 5000
 externalPort = 5000
 
 [workflows]
+runButton = "Run"
 
 [[workflows.workflow]]
 name = "bot"
@@ -31,3 +32,7 @@ author = 43112388
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "bot"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node index.mjs"
