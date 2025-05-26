@@ -16,6 +16,7 @@ class LogManager {
         this.statusCount = 0;
         this.logBuffer = [];
         this.maxLogSize = 1000; // 最大日志条数
+        this.lastError = null; // 存储最近的错误信息
         
         // 每5分钟清理一次日志
         setInterval(() => {
@@ -86,6 +87,19 @@ class LogManager {
     
     getLogs() {
         return this.logBuffer;
+    }
+    
+    setError(error) {
+        this.lastError = error;
+        this.log(`错误: ${error}`, 'error');
+    }
+    
+    getLastError() {
+        return this.lastError;
+    }
+    
+    clearError() {
+        this.lastError = null;
     }
 }
 
@@ -189,11 +203,22 @@ function startBot(mode = null) {
     });
     
     botProcess.stderr.on('data', (data) => {
-        console.error(`Bot错误: ${data}`);
+        const errorMsg = data.toString();
+        console.error(`Bot错误: ${errorMsg}`);
+        logger.setError(`启动失败: ${errorMsg}`);
     });
     
     botProcess.on('close', (code) => {
         console.log(`Bot进程退出，退出码: ${code}`);
+        if (code !== 0 && code !== null) {
+            logger.setError(`机器人异常退出，退出码: ${code}`);
+        }
+        botProcess = null;
+    });
+    
+    botProcess.on('error', (error) => {
+        console.error('Bot进程启动失败:', error);
+        logger.setError(`进程启动失败: ${error.message}`);
         botProcess = null;
     });
 }
@@ -261,6 +286,7 @@ const server = http.createServer((req, res) => {
         });
     } else if (req.method === 'POST' && req.url === '/api/bot/start') {
         // 启动机器人
+        logger.clearError(); // 清除之前的错误
         startBot();
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify({success: true, message: '机器人已启动'}));
@@ -272,7 +298,10 @@ const server = http.createServer((req, res) => {
     } else if (req.method === 'GET' && req.url === '/api/bot/status') {
         // 获取机器人状态
         res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify({running: botProcess !== null}));
+        res.end(JSON.stringify({
+            running: botProcess !== null,
+            error: logger.getLastError()
+        }));
     } else if (req.method === 'GET' && req.url === '/api/logs') {
         // 获取日志
         res.writeHead(200, {'Content-Type': 'application/json'});

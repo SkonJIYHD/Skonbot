@@ -158,6 +158,24 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+        .error-info {
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .error-info h4 {
+            margin: 0 0 10px 0;
+            color: #721c24;
+            font-family: Arial, sans-serif;
+        }
         .hidden {
             display: none;
         }
@@ -270,6 +288,7 @@
         </div>
 
         <div id="status" class="status stopped">机器人状态: 已停止</div>
+        <div id="error-info" class="error-info hidden"></div>
     </div>
 
     <script>
@@ -484,11 +503,16 @@
         }
 
         function startBot() {
+            // 启动时先隐藏错误信息
+            document.getElementById('error-info').className = 'error-info hidden';
+            
             fetch('/api/bot/start', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         alert('机器人启动成功！');
+                        // 立即更新状态
+                        setTimeout(updateStatus, 1000);
                     } else {
                         alert('启动失败: ' + data.message);
                     }
@@ -520,12 +544,23 @@
                 .then(response => response.json())
                 .then(data => {
                     const statusEl = document.getElementById('status');
+                    const errorEl = document.getElementById('error-info');
+                    
                     if (data.running) {
                         statusEl.textContent = '机器人状态: 运行中';
                         statusEl.className = 'status running';
+                        errorEl.className = 'error-info hidden'; // 隐藏错误信息
                     } else {
                         statusEl.textContent = '机器人状态: 已停止';
                         statusEl.className = 'status stopped';
+                        
+                        // 显示错误信息（如果有的话）
+                        if (data.error) {
+                            errorEl.innerHTML = '<h4>🚨 启动失败原因:</h4>' + data.error;
+                            errorEl.className = 'error-info';
+                        } else {
+                            errorEl.className = 'error-info hidden';
+                        }
                     }
                 })
                 .catch(error => {
