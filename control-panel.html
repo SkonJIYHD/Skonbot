@@ -161,42 +161,7 @@
         .hidden {
             display: none;
         }
-        #microsoft-auth-section {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #dee2e6;
-        }
-        #microsoft-status {
-            padding: 5px 10px;
-            margin: 5px 0;
-            border-radius: 3px;
-            font-weight: bold;
-        }
-        .microsoft-logged-in {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .microsoft-logged-out {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        #microsoft-login-btn, #microsoft-logout-btn {
-            padding: 8px 15px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        #microsoft-login-btn {
-            background-color: #0078d4;
-            color: white;
-        }
-        #microsoft-logout-btn {
-            background-color: #dc3545;
-            color: white;
-        }
+        
     </style>
 </head>
 <body>
@@ -240,37 +205,9 @@
             </div>
             <div class="form-group">
                 <label>认证方式:</label>
-                <select id="auth" onchange="handleAuthChange()">
+                <select id="auth">
                     <option value="offline">离线模式</option>
-                    <option value="microsoft">微软账户</option>
                 </select>
-            </div>
-            <div id="microsoft-auth-section" class="form-group hidden">
-                <label>微软账户状态:</label>
-                <div id="microsoft-status">未登录</div>
-                <button type="button" id="microsoft-login-btn" onclick="loginMicrosoft()">登录微软账户</button>
-                <button type="button" id="microsoft-logout-btn" onclick="logoutMicrosoft()" class="hidden">注销账户</button>
-                
-                <div style="margin-top: 10px; padding: 10px; background-color: #e3f2fd; border-radius: 5px;">
-                    <h4>微软认证设置指南:</h4>
-                    <div style="background-color: #fff3cd; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ffeaa7;">
-                        <strong>⚠️ Azure注册问题解决方案：</strong>
-                        <ul>
-                            <li>确保使用有效的微软账户（个人或工作账户）</li>
-                            <li>完成邮箱/手机验证</li>
-                            <li>如遇地区限制，可尝试使用VPN</li>
-                            <li>也可使用其他微软开发者账户代为注册</li>
-                        </ul>
-                    </div>
-                    <ol>
-                        <li>访问 <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank">Azure 应用注册</a></li>
-                        <li>点击"新注册"创建应用（如果无法注册，请参考上面的解决方案）</li>
-                        <li>设置重定向URI为: <code id="current-redirect-uri">加载中...</code></li>
-                        <li>获取应用ID和客户端密钥</li>
-                        <li>在web-server.js中替换MICROSOFT_CONFIG配置</li>
-                    </ol>
-                    <p><strong>注意:</strong> 当前为测试配置，实际认证需要有效的Azure应用！</p>
-                </div>
             </div>
             <div class="form-group">
                 <label>模组列表:</label>
@@ -501,96 +438,7 @@
                     console.error('获取状态失败:', error);
                 });
 
-            // 同时检查微软认证状态
-            checkMicrosoftAuthStatus();
-        }
-
-        function handleAuthChange() {
-            const authSelect = document.getElementById('auth');
-            const microsoftSection = document.getElementById('microsoft-auth-section');
-
-            if (authSelect.value === 'microsoft') {
-                microsoftSection.classList.remove('hidden');
-                checkMicrosoftAuthStatus();
-            } else {
-                microsoftSection.classList.add('hidden');
             }
-        }
-
-        function checkMicrosoftAuthStatus() {
-            fetch('/api/auth/microsoft/status')
-                .then(response => response.json())
-                .then(data => {
-                    const statusDiv = document.getElementById('microsoft-status');
-                    const loginBtn = document.getElementById('microsoft-login-btn');
-                    const logoutBtn = document.getElementById('microsoft-logout-btn');
-
-                    if (data.authenticated) {
-                        statusDiv.textContent = `已登录: ${data.username || data.email || '未知用户'}`;
-                        statusDiv.className = 'microsoft-logged-in';
-                        loginBtn.classList.add('hidden');
-                        logoutBtn.classList.remove('hidden');
-                    } else {
-                        statusDiv.textContent = '未登录';
-                        statusDiv.className = 'microsoft-logged-out';
-                        loginBtn.classList.remove('hidden');
-                        logoutBtn.classList.add('hidden');
-                    }
-                })
-                .catch(error => {
-                    console.error('检查微软认证状态失败:', error);
-                });
-        }
-
-        function loginMicrosoft() {
-            // 打开微软登录页面
-            window.open('/api/auth/microsoft/login', 'microsoftLogin', 'width=600,height=700,scrollbars=yes,resizable=yes');
-
-            // 监听登录完成事件
-            const checkLoginInterval = setInterval(() => {
-                checkMicrosoftAuthStatus();
-                fetch('/api/auth/microsoft/status')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.authenticated) {
-                            clearInterval(checkLoginInterval);
-                            alert('微软账户登录成功！');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('检查登录状态失败:', error);
-                    });
-            }, 2000);
-
-            // 10分钟后停止检查
-            setTimeout(() => {
-                clearInterval(checkLoginInterval);
-            }, 600000);
-        }
-
-        function logoutMicrosoft() {
-            fetch('/api/auth/microsoft/logout', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('微软账户已注销！');
-                        checkMicrosoftAuthStatus();
-                    } else {
-                        alert('注销失败: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('注销失败:', error);
-                    alert('注销失败');
-                });
-        }
-
-        // 显示当前重定向URI
-        function updateRedirectUri() {
-            const currentUri = window.location.origin + '/api/auth/microsoft/callback';
-            document.getElementById('current-redirect-uri').textContent = currentUri;
-        }
-        updateRedirectUri();
     </script>
 </body>
 </html>
