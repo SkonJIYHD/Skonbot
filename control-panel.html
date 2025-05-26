@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -70,12 +69,59 @@
             margin-right: 10px;
         }
         .mod-item button {
-            padding: 5px 10px;
+            margin-left: 10px;
             background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .log-container {
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+        }
+
+        .log-content {
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+
+        .log-controls {
+            margin-bottom: 10px;
+        }
+
+        .log-controls button {
+            margin-right: 10px;
+            padding: 5px 10px;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 3px;
             cursor: pointer;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .log-timestamp {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .log-compressed {
+            color: #ff6b35;
+            font-weight: bold;
         }
         .control-buttons {
             margin-top: 20px;
@@ -115,12 +161,48 @@
         .hidden {
             display: none;
         }
+        #microsoft-auth-section {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        #microsoft-status {
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .microsoft-logged-in {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .microsoft-logged-out {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        #microsoft-login-btn, #microsoft-logout-btn {
+            padding: 8px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #microsoft-login-btn {
+            background-color: #0078d4;
+            color: white;
+        }
+        #microsoft-logout-btn {
+            background-color: #dc3545;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Aterbot 控制面板</h1>
-        
+
         <div class="mode-selector">
             <button id="java-mode" class="active" onclick="switchMode('java')">JAVA模式</button>
             <button id="bedrock-mode" onclick="switchMode('bedrock')">基岩版模式</button>
@@ -158,10 +240,28 @@
             </div>
             <div class="form-group">
                 <label>认证方式:</label>
-                <select id="auth">
+                <select id="auth" onchange="handleAuthChange()">
                     <option value="offline">离线模式</option>
                     <option value="microsoft">微软账户</option>
                 </select>
+            </div>
+            <div id="microsoft-auth-section" class="form-group hidden">
+                <label>微软账户状态:</label>
+                <div id="microsoft-status">未登录</div>
+                <button type="button" id="microsoft-login-btn" onclick="loginMicrosoft()">登录微软账户</button>
+                <button type="button" id="microsoft-logout-btn" onclick="logoutMicrosoft()" class="hidden">注销账户</button>
+                
+                <div style="margin-top: 10px; padding: 10px; background-color: #e3f2fd; border-radius: 5px;">
+                    <h4>微软认证设置指南:</h4>
+                    <ol>
+                        <li>访问 <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank">Azure 应用注册</a></li>
+                        <li>点击"新注册"创建应用</li>
+                        <li>设置重定向URI为: <code id="current-redirect-uri">加载中...</code></li>
+                        <li>获取应用ID和客户端密钥</li>
+                        <li>在web-server.js中替换MICROSOFT_CONFIG配置</li>
+                    </ol>
+                    <p><strong>注意:</strong> 需要重启应用才能生效！</p>
+                </div>
             </div>
             <div class="form-group">
                 <label>模组列表:</label>
@@ -197,10 +297,6 @@
                     <option value="tcp-udp">TCP + UDP</option>
                     <option value="tcp-only">仅TCP</option>
                 </select>
-            </div></div>
-            <div class="form-group">
-                <label>UDP端口:</label>
-                <input type="number" id="udp-port" placeholder="UDP端口 (通常与TCP端口相同)">
             </div>
         </div>
 
@@ -228,13 +324,13 @@
 
         function switchMode(mode) {
             if (currentMode === mode) return; // 防止重复切换
-            
+
             currentMode = mode;
             document.getElementById('java-mode').classList.toggle('active', mode === 'java');
             document.getElementById('bedrock-mode').classList.toggle('active', mode === 'bedrock');
             document.getElementById('java-config').classList.toggle('hidden', mode !== 'java');
             document.getElementById('bedrock-config').classList.toggle('hidden', mode !== 'bedrock');
-            
+
             // 切换模式时加载对应的配置
             loadConfig(mode);
         }
@@ -256,16 +352,16 @@
             document.getElementById('username').value = config.client?.username || '';
             document.getElementById('java-version').value = config.client?.version || '1.21.1';
             document.getElementById('auth').value = config.client?.auth || 'offline';
-            
+
             // 设置基岩版配置
             document.getElementById('bedrock-version').value = config.client?.bedrockVersion || '1.21.80';
             document.getElementById('udp-port').value = config.client?.udpPort || config.client?.port || '';
             document.getElementById('bedrock-protocol').value = config.client?.bedrockProtocol || 'auto';
-            
+
             // 加载模组列表
             mods = config.client?.mods || [];
             updateModList();
-            
+
             // 只在页面首次加载时设置模式，避免循环
             if (!currentMode || currentMode === '') {
                 if (config.client?.mode === 'bedrock') {
@@ -289,7 +385,7 @@
         function updateModList() {
             const modListEl = document.getElementById('mod-list');
             modListEl.innerHTML = '';
-            
+
             mods.forEach((mod, index) => {
                 const modItem = document.createElement('div');
                 modItem.className = 'mod-item';
@@ -395,7 +491,97 @@
                 .catch(error => {
                     console.error('获取状态失败:', error);
                 });
+
+            // 同时检查微软认证状态
+            checkMicrosoftAuthStatus();
         }
+
+        function handleAuthChange() {
+            const authSelect = document.getElementById('auth');
+            const microsoftSection = document.getElementById('microsoft-auth-section');
+
+            if (authSelect.value === 'microsoft') {
+                microsoftSection.classList.remove('hidden');
+                checkMicrosoftAuthStatus();
+            } else {
+                microsoftSection.classList.add('hidden');
+            }
+        }
+
+        function checkMicrosoftAuthStatus() {
+            fetch('/api/auth/microsoft/status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusDiv = document.getElementById('microsoft-status');
+                    const loginBtn = document.getElementById('microsoft-login-btn');
+                    const logoutBtn = document.getElementById('microsoft-logout-btn');
+
+                    if (data.authenticated) {
+                        statusDiv.textContent = `已登录: ${data.username || data.email || '未知用户'}`;
+                        statusDiv.className = 'microsoft-logged-in';
+                        loginBtn.classList.add('hidden');
+                        logoutBtn.classList.remove('hidden');
+                    } else {
+                        statusDiv.textContent = '未登录';
+                        statusDiv.className = 'microsoft-logged-out';
+                        loginBtn.classList.remove('hidden');
+                        logoutBtn.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('检查微软认证状态失败:', error);
+                });
+        }
+
+        function loginMicrosoft() {
+            // 打开微软登录页面
+            window.open('/api/auth/microsoft/login', 'microsoftLogin', 'width=600,height=700,scrollbars=yes,resizable=yes');
+
+            // 监听登录完成事件
+            const checkLoginInterval = setInterval(() => {
+                checkMicrosoftAuthStatus();
+                fetch('/api/auth/microsoft/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.authenticated) {
+                            clearInterval(checkLoginInterval);
+                            alert('微软账户登录成功！');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('检查登录状态失败:', error);
+                    });
+            }, 2000);
+
+            // 10分钟后停止检查
+            setTimeout(() => {
+                clearInterval(checkLoginInterval);
+            }, 600000);
+        }
+
+        function logoutMicrosoft() {
+            fetch('/api/auth/microsoft/logout', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('微软账户已注销！');
+                        checkMicrosoftAuthStatus();
+                    } else {
+                        alert('注销失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('注销失败:', error);
+                    alert('注销失败');
+                });
+        }
+
+        // 显示当前重定向URI
+        function updateRedirectUri() {
+            const currentUri = window.location.origin + '/api/auth/microsoft/callback';
+            document.getElementById('current-redirect-uri').textContent = currentUri;
+        }
+        updateRedirectUri();
     </script>
 </body>
 </html>
