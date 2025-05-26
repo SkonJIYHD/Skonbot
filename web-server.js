@@ -7,6 +7,88 @@ const { spawn } = require('child_process');
 let botProcess = null;
 let currentConfig = null;
 
+// 日志管理
+class LogManager {
+    constructor() {
+        this.lastStatus = null;
+        this.statusCount = 0;
+        this.logBuffer = [];
+        this.maxLogSize = 1000; // 最大日志条数
+        
+        // 每5分钟清理一次日志
+        setInterval(() => {
+            this.cleanLogs();
+        }, 5 * 60 * 1000);
+    }
+    
+    log(message, type = 'info') {
+        const timestamp = new Date().toISOString();
+        
+        // 检测重复状态请求
+        if (message.includes('GET /api/bot/status')) {
+            if (this.lastStatus === 'GET /api/bot/status') {
+                this.statusCount++;
+                return; // 不记录重复状态
+            } else {
+                if (this.statusCount > 0) {
+                    this.logBuffer.push({
+                        timestamp,
+                        message: `状态请求重复 x${this.statusCount}`,
+                        type: 'compressed'
+                    });
+                    this.statusCount = 0;
+                }
+                this.lastStatus = 'GET /api/bot/status';
+            }
+        } else {
+            // 输出之前压缩的状态日志
+            if (this.statusCount > 0) {
+                this.logBuffer.push({
+                    timestamp,
+                    message: `状态请求重复 x${this.statusCount}`,
+                    type: 'compressed'
+                });
+                this.statusCount = 0;
+            }
+            this.lastStatus = null;
+        }
+        
+        this.logBuffer.push({
+            timestamp,
+            message,
+            type
+        });
+        
+        console.log(`[${timestamp}] ${message}`);
+        
+        // 限制日志大小
+        if (this.logBuffer.length > this.maxLogSize) {
+            this.logBuffer = this.logBuffer.slice(-this.maxLogSize);
+        }
+    }
+    
+    cleanLogs() {
+        const now = new Date();
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+        
+        const originalLength = this.logBuffer.length;
+        this.logBuffer = this.logBuffer.filter(log => {
+            return new Date(log.timestamp) > oneHourAgo;
+        });
+        
+        const cleaned = originalLength - this.logBuffer.length;
+        if (cleaned > 0) {
+            console.log(`清理了 ${cleaned} 条过期日志，当前日志条数: ${this.logBuffer.length}`);
+        }
+    }
+    
+    getLogs() {
+        return this.logBuffer;
+    }
+}
+
+const logger = new LogManager();
+
 // 根据模式获取配置文件名
 function getConfigFile(mode) {
     return mode === 'bedrock' ? 'config-bedrock.json' : 'config-java.json';
@@ -111,7 +193,7 @@ const server = http.createServer((req, res) => {
         return;
     }
     
-    console.log(`收到请求: ${req.method} ${req.url}`);
+    logger.log(`收到请求: ${req.method} ${req.url}`);
     
     if (req.method === 'GET' && req.url === '/') {
         // 返回主页面
@@ -166,6 +248,20 @@ const server = http.createServer((req, res) => {
         // 获取机器人状态
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify({running: botProcess !== null}));
+    } else if (req.method === 'GET' && req.url === '/api/logs') {
+        // 获取日志
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({
+            logs: logger.getLogs(),
+            totalCount: logger.logBuffer.length
+        }));
+    } else if (req.method === 'POST' && req.url === '/api/logs/clear') {
+        // 清除日志
+        logger.logBuffer = [];
+        logger.statusCount = 0;
+        logger.lastStatus = null;
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({success: true, message: '日志已清除'}));
     } else {
         res.writeHead(404, {'Content-Type': 'text/plain'});
         res.end('Not Found');
