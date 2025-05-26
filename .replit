@@ -20,5 +20,14 @@ localPort = 5000
 externalPort = 80
 exposeLocalhost = false
 
-[workflows.run]
-run = "node index.mjs"
+[workflows]
+runButton = "Run"
+
+[[workflows.workflow]]
+name = "Run"
+author = 43112388
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node index.mjs"
