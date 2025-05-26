@@ -220,12 +220,15 @@
 
         // 页面加载时获取当前配置
         window.onload = function() {
+            currentMode = ''; // 初始化为空，避免重复设置
             loadConfig();
             updateStatus();
             setInterval(updateStatus, 2000); // 每2秒更新状态
         };
 
         function switchMode(mode) {
+            if (currentMode === mode) return; // 防止重复切换
+            
             currentMode = mode;
             document.getElementById('java-mode').classList.toggle('active', mode === 'java');
             document.getElementById('bedrock-mode').classList.toggle('active', mode === 'bedrock');
@@ -263,11 +266,13 @@
             mods = config.client?.mods || [];
             updateModList();
             
-            // 根据当前模式设置界面
-            if (config.client?.mode === 'bedrock') {
-                switchMode('bedrock');
-            } else {
-                switchMode('java');
+            // 只在页面首次加载时设置模式，避免循环
+            if (!currentMode || currentMode === '') {
+                if (config.client?.mode === 'bedrock') {
+                    switchMode('bedrock');
+                } else {
+                    switchMode('java');
+                }
             }
         }
 
