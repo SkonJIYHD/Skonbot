@@ -231,10 +231,14 @@
             document.getElementById('bedrock-mode').classList.toggle('active', mode === 'bedrock');
             document.getElementById('java-config').classList.toggle('hidden', mode !== 'java');
             document.getElementById('bedrock-config').classList.toggle('hidden', mode !== 'bedrock');
+            
+            // 切换模式时加载对应的配置
+            loadConfig(mode);
         }
 
-        function loadConfig() {
-            fetch('/api/config')
+        function loadConfig(mode = null) {
+            const url = mode ? `/api/config?mode=${mode}` : '/api/config';
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     config = data;
