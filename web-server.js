@@ -154,8 +154,12 @@ function startBot(mode = null) {
     } else {
         console.log('启动Java版机器人...');
         
-        // 准备假mod列表环境变量
-        const env = { ...process.env, PORT: '5001' };
+        // 准备环境变量，避免端口冲突
+        const env = { 
+            ...process.env, 
+            PORT: '3001',  // 使用3001端口避免与控制面板的5000端口冲突
+            WEB_PORT: '3001'  // 确保aterbot的web服务使用3001端口
+        };
         
         // 传递mod配置
         if (config && config.client && config.client.mods && config.client.mods.length > 0) {
@@ -168,6 +172,8 @@ function startBot(mode = null) {
             env.ADAPTIVE_MODS = config.client.adaptiveMods ? 'true' : 'false';
             console.log('自适应mod模式:', config.client.adaptiveMods);
         }
+        
+        console.log('机器人将使用端口3001避免冲突');
         
         // 启动Java版机器人 - 设置不同的端口避免冲突
         botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
