@@ -9,4 +9,25 @@ packages = ["via"]
 run = ["sh", "-c", "node index.mjs"]
 
 [[ports]]
-localPort = 5500
+localPort = 5000
+externalPort = 5000
+
+[workflows]
+
+[[workflows.workflow]]
+name = "bot"
+mode = "sequential"
+author = 43112388
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node index.mjs"
+
+[[workflows.workflow]]
+name = "Run"
+mode = "sequential"
+author = 43112388
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "bot"
