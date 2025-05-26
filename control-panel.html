@@ -287,6 +287,19 @@
             <button class="stop-btn" onclick="stopBot()">停止机器人</button>
         </div>
 
+        <div style="margin-top: 20px; padding: 15px; border: 2px solid #ffc107; border-radius: 5px; background-color: #fff3cd;">
+            <h3 style="margin-top: 0; color: #856404;">🐛 Debug测试功能</h3>
+            <p style="margin: 5px 0; color: #856404; font-size: 14px;">用于测试错误信息显示效果喵</p>
+            <div style="margin-top: 10px;">
+                <button onclick="testError('startup')" style="margin: 5px; padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">测试启动失败</button>
+                <button onclick="testError('connection')" style="margin: 5px; padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">测试连接失败</button>
+                <button onclick="testError('auth')" style="margin: 5px; padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">测试认证失败</button>
+                <button onclick="testError('mod')" style="margin: 5px; padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">测试mod失败</button>
+                <button onclick="testError('crash')" style="margin: 5px; padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">测试崩溃错误</button>
+                <button onclick="clearTestError()" style="margin: 5px; padding: 8px 12px; background: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer;">清除测试错误</button>
+            </div>
+        </div>
+
         <div id="status" class="status stopped">机器人状态: 已停止</div>
         <div id="error-info" class="error-info hidden"></div>
     </div>
@@ -566,8 +579,52 @@
                 .catch(error => {
                     console.error('获取状态失败:', error);
                 });
+        }
 
-            }
+        // Debug测试函数
+        function testError(errorType) {
+            fetch('/api/debug/test-error', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ errorType: errorType })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`测试错误已设置: ${errorType}`);
+                    // 立即更新状态显示
+                    setTimeout(updateStatus, 500);
+                } else {
+                    alert('设置测试错误失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('设置测试错误失败:', error);
+                alert('设置测试错误失败');
+            });
+        }
+
+        function clearTestError() {
+            fetch('/api/debug/clear-error', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('测试错误已清除');
+                    // 立即更新状态显示
+                    setTimeout(updateStatus, 500);
+                } else {
+                    alert('清除测试错误失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('清除测试错误失败:', error);
+                alert('清除测试错误失败');
+            });
+        }
     </script>
 </body>
 </html>
