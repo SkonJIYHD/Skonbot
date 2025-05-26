@@ -1,2 +1,2 @@
-import { aterbot } from 'aterbot'; 
+import aterbot from 'aterbot'; 
 aterbot();
