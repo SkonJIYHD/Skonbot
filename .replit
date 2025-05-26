@@ -1,37 +1,32 @@
-modules = ["bash", "nix", "nodejs-20"]
-run = "node index.mjs"
+modules = ["nodejs-20", "nix"]
+hidden = [".config", "package-lock.json"]
+
+[gitHubImport]
+requiredFiles = [".replit", "replit.nix", "package.json"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["via"]
+
+[unitTest]
+language = "nodejs"
 
 [deployment]
 run = ["sh", "-c", "node index.mjs"]
+deploymentTarget = "cloudrun"
+ignorePorts = false
 
 [[ports]]
 localPort = 5000
-externalPort = 5000
+externalPort = 80
+exposeLocalhost = false
 
 [workflows]
 runButton = "Run"
 
 [[workflows.workflow]]
-name = "bot"
-mode = "sequential"
-author = 43112388
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node index.mjs"
-
-[[workflows.workflow]]
 name = "Run"
-mode = "sequential"
 author = 43112388
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "bot"
+mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
