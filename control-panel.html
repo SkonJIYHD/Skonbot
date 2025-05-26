@@ -1,0 +1,377 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aterbot 控制面板</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .mode-selector {
+            margin-bottom: 20px;
+        }
+        .mode-selector button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+        .mode-selector button.active {
+            background-color: #28a745;
+        }
+        .config-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .config-section h3 {
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .mod-list {
+            margin-top: 10px;
+        }
+        .mod-item {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .mod-item input {
+            flex: 1;
+            margin-right: 10px;
+        }
+        .mod-item button {
+            padding: 5px 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .control-buttons {
+            margin-top: 20px;
+        }
+        .control-buttons button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .start-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .stop-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .save-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        .status {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .status.running {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.stopped {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Aterbot 控制面板</h1>
+        
+        <div class="mode-selector">
+            <button id="java-mode" class="active" onclick="switchMode('java')">JAVA模式</button>
+            <button id="bedrock-mode" onclick="switchMode('bedrock')">基岩版模式</button>
+        </div>
+
+        <div class="config-section">
+            <h3>基础配置</h3>
+            <div class="form-group">
+                <label>服务器地址:</label>
+                <input type="text" id="host" placeholder="服务器IP地址">
+            </div>
+            <div class="form-group">
+                <label>端口:</label>
+                <input type="number" id="port" placeholder="服务器端口">
+            </div>
+            <div class="form-group">
+                <label>用户名:</label>
+                <input type="text" id="username" placeholder="机器人用户名">
+            </div>
+        </div>
+
+        <div id="java-config" class="config-section">
+            <h3>JAVA模式配置</h3>
+            <div class="form-group">
+                <label>游戏版本:</label>
+                <select id="java-version">
+                    <option value="1.21.1">1.21.1</option>
+                    <option value="1.21">1.21</option>
+                    <option value="1.20.6">1.20.6</option>
+                    <option value="1.20.4">1.20.4</option>
+                    <option value="1.20.1">1.20.1</option>
+                    <option value="1.19.4">1.19.4</option>
+                    <option value="1.18.2">1.18.2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>认证方式:</label>
+                <select id="auth">
+                    <option value="offline">离线模式</option>
+                    <option value="microsoft">微软账户</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>模组列表:</label>
+                <div id="mod-list" class="mod-list">
+                    <!-- 模组列表将在这里动态生成 -->
+                </div>
+                <button type="button" onclick="addMod()">添加模组</button>
+            </div>
+        </div>
+
+        <div id="bedrock-config" class="config-section hidden">
+            <h3>基岩版模式配置</h3>
+            <div class="form-group">
+                <label>游戏版本:</label>
+                <select id="bedrock-version">
+                    <option value="1.21.40">1.21.40</option>
+                    <option value="1.21.30">1.21.30</option>
+                    <option value="1.21.20">1.21.20</option>
+                    <option value="1.21.0">1.21.0</option>
+                    <option value="1.20.80">1.20.80</option>
+                    <option value="1.20.70">1.20.70</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>UDP端口:</label>
+                <input type="number" id="udp-port" placeholder="UDP端口 (通常与TCP端口相同)">
+            </div>
+        </div>
+
+        <div class="control-buttons">
+            <button class="save-btn" onclick="saveConfig()">保存配置</button>
+            <button class="start-btn" onclick="startBot()">启动机器人</button>
+            <button class="stop-btn" onclick="stopBot()">停止机器人</button>
+        </div>
+
+        <div id="status" class="status stopped">机器人状态: 已停止</div>
+    </div>
+
+    <script>
+        let currentMode = 'java';
+        let config = {};
+        let mods = [];
+
+        // 页面加载时获取当前配置
+        window.onload = function() {
+            loadConfig();
+            updateStatus();
+            setInterval(updateStatus, 2000); // 每2秒更新状态
+        };
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('java-mode').classList.toggle('active', mode === 'java');
+            document.getElementById('bedrock-mode').classList.toggle('active', mode === 'bedrock');
+            document.getElementById('java-config').classList.toggle('hidden', mode !== 'java');
+            document.getElementById('bedrock-config').classList.toggle('hidden', mode !== 'bedrock');
+        }
+
+        function loadConfig() {
+            fetch('/api/config')
+                .then(response => response.json())
+                .then(data => {
+                    config = data;
+                    updateUI();
+                })
+                .catch(error => console.error('加载配置失败:', error));
+        }
+
+        function updateUI() {
+            document.getElementById('host').value = config.client?.host || '';
+            document.getElementById('port').value = config.client?.port || '';
+            document.getElementById('username').value = config.client?.username || '';
+            document.getElementById('java-version').value = config.client?.version || '1.21.1';
+            document.getElementById('auth').value = config.client?.auth || 'offline';
+            
+            // 设置基岩版配置
+            document.getElementById('bedrock-version').value = config.client?.bedrockVersion || '1.21.40';
+            document.getElementById('udp-port').value = config.client?.udpPort || config.client?.port || '';
+            
+            // 加载模组列表
+            mods = config.client?.mods || [];
+            updateModList();
+            
+            // 根据当前模式设置界面
+            if (config.client?.mode === 'bedrock') {
+                switchMode('bedrock');
+            } else {
+                switchMode('java');
+            }
+        }
+
+        function addMod() {
+            mods.push('');
+            updateModList();
+        }
+
+        function removeMod(index) {
+            mods.splice(index, 1);
+            updateModList();
+        }
+
+        function updateModList() {
+            const modListEl = document.getElementById('mod-list');
+            modListEl.innerHTML = '';
+            
+            mods.forEach((mod, index) => {
+                const modItem = document.createElement('div');
+                modItem.className = 'mod-item';
+                modItem.innerHTML = `
+                    <input type="text" value="${mod}" placeholder="模组名称" 
+                           onchange="mods[${index}] = this.value">
+                    <button onclick="removeMod(${index})">删除</button>
+                `;
+                modListEl.appendChild(modItem);
+            });
+        }
+
+        function saveConfig() {
+            const newConfig = {
+                ...config,
+                client: {
+                    ...config.client,
+                    host: document.getElementById('host').value,
+                    port: document.getElementById('port').value,
+                    username: document.getElementById('username').value,
+                    mode: currentMode,
+                    auth: document.getElementById('auth').value
+                }
+            };
+
+            if (currentMode === 'java') {
+                newConfig.client.version = document.getElementById('java-version').value;
+                newConfig.client.mods = mods.filter(mod => mod.trim() !== '');
+            } else {
+                newConfig.client.bedrockVersion = document.getElementById('bedrock-version').value;
+                newConfig.client.udpPort = document.getElementById('udp-port').value;
+                newConfig.client.protocol = 'bedrock';
+            }
+
+            fetch('/api/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newConfig)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('配置保存成功！');
+                    config = newConfig;
+                } else {
+                    alert('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存配置失败:', error);
+                alert('保存配置失败');
+            });
+        }
+
+        function startBot() {
+            fetch('/api/bot/start', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('机器人启动成功！');
+                    } else {
+                        alert('启动失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('启动机器人失败:', error);
+                    alert('启动机器人失败');
+                });
+        }
+
+        function stopBot() {
+            fetch('/api/bot/stop', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('机器人已停止！');
+                    } else {
+                        alert('停止失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('停止机器人失败:', error);
+                    alert('停止机器人失败');
+                });
+        }
+
+        function updateStatus() {
+            fetch('/api/bot/status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusEl = document.getElementById('status');
+                    if (data.running) {
+                        statusEl.textContent = '机器人状态: 运行中';
+                        statusEl.className = 'status running';
+                    } else {
+                        statusEl.textContent = '机器人状态: 已停止';
+                        statusEl.className = 'status stopped';
+                    }
+                })
+                .catch(error => {
+                    console.error('获取状态失败:', error);
+                });
+        }
+    </script>
+</body>
+</html>
