@@ -316,48 +316,6 @@ const server = http.createServer((req, res) => {
         logger.lastStatus = null;
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify({success: true, message: '日志已清除'}));
-    } else if (req.method === 'POST' && req.url === '/api/debug/test-error') {
-        // DEBUG: 测试错误信息显示
-        let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-        req.on('end', () => {
-            try {
-                const { errorType } = JSON.parse(body);
-                
-                switch(errorType) {
-                    case 'startup':
-                        logger.setError('DEBUG测试: 机器人启动失败 - 端口冲突或配置错误');
-                        break;
-                    case 'connection':
-                        logger.setError('DEBUG测试: 连接服务器失败 - 服务器不可达或端口错误');
-                        break;
-                    case 'auth':
-                        logger.setError('DEBUG测试: 认证失败 - 用户名已被使用或服务器拒绝连接');
-                        break;
-                    case 'mod':
-                        logger.setError('DEBUG测试: mod验证失败 - 服务器要求的mod列表与本地不匹配');
-                        break;
-                    case 'crash':
-                        logger.setError('DEBUG测试: 机器人崩溃 - 运行时异常\nError: Cannot read property \'undefined\' of null\n    at Bot.handlePacket (bot.js:123:45)\n    at Socket.emit (events.js:314:20)');
-                        break;
-                    default:
-                        logger.setError('DEBUG测试: 未知错误类型');
-                }
-                
-                res.writeHead(200, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({success: true, message: '测试错误已设置'}));
-            } catch (error) {
-                res.writeHead(400, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({success: false, message: '无效的请求格式'}));
-            }
-        });
-    } else if (req.method === 'POST' && req.url === '/api/debug/clear-error') {
-        // DEBUG: 清除错误信息
-        logger.clearError();
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify({success: true, message: '错误信息已清除'}));
     
     } else {
         res.writeHead(404, {'Content-Type': 'text/plain'});
