@@ -273,7 +273,19 @@
             loadConfig();
             updateStatus();
             setInterval(updateStatus, 2000); // 每2秒更新状态
+
+            // 检查是否是第一次访问
+            if (localStorage.getItem('firstVisit') === null) {
+                // 显示教程
+                showTutorial();
+                // 设置标志，表示已经访问过
+                localStorage.setItem('firstVisit', 'true');
+            }
         };
+
+        function showTutorial() {
+            alert('欢迎使用 Aterbot 控制面板！\n\n📖 使用步骤：\n1. 在"基础配置"中填写服务器地址、端口和机器人用户名。\n2. 在"JAVA模式配置"中选择游戏版本和认证方式。\n3. 根据需要，添加或选择假mod。\n4. 点击"保存配置"保存设置。\n5. 点击"启动机器人"启动机器人。\n\n⚠️ 重要提示：\n• 如果服务器开启了正版验证（online-mode=true），机器人将无法进入服务器！\n机器人只能连接到离线模式的服务器（online-mode=false）。\n\n💡 服务器管理建议：\n• 建议将机器人设置为创造模式（/gamemode creative 机器人名字）\n• 建议将机器人困在一个封闭的房间内，避免到处乱跑影响其他玩家\n• 这样可以让机器人更稳定地保持在线状态\n\n尽情享受吧！');
+        }
 
         function switchMode(mode) {
             if (currentMode === mode) return; // 防止重复切换
@@ -530,8 +542,3 @@
     </script>
 </body>
 </html>
-```
-
-```
-The code has been modified to remove Bedrock mode configurations and related logic, focusing solely on Java mode.
-```
