@@ -126,18 +126,18 @@
         .character-warning {
             animation: fadeIn 0.3s ease-in;
         }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        
+
         .character-warning.error {
             background-color: #f8d7da !important;
             border-color: #f5c6cb !important;
             color: #721c24 !important;
         }
-        
+
         .control-buttons {
             margin-top: 20px;
         }
@@ -287,14 +287,14 @@
 
         <div id="status" class="status stopped">机器人状态: 已停止</div>
         <div id="error-info" class="error-info hidden"></div>
-        
+
         <!-- 命令执行界面 -->
         <div class="config-section" id="command-section" style="display: none;">
             <h3>🎮 机器人命令控制</h3>
             <div style="margin-bottom: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
                 <strong>💡 安全提示:</strong> 在控制面板执行命令比在游戏内更安全，避免了恶意玩家的风险。
             </div>
-            
+
             <div class="form-group">
                 <label>执行Minecraft命令:</label>
                 <div style="display: flex; gap: 10px;">
@@ -302,7 +302,7 @@
                     <button onclick="executeMinecraftCommand()" style="background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 4px;">执行</button>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label>发送聊天消息:</label>
                 <div style="display: flex; gap: 10px;">
@@ -310,7 +310,7 @@
                     <button onclick="sendChatMessage()" style="background-color: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 4px;">发送</button>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label>快捷命令:</label>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
@@ -322,7 +322,7 @@
                     <button onclick="executeQuickCommand('/tp @s ~ ~10 ~')" style="background-color: #fd7e14; color: white;">向上传送</button>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label>命令执行记录:</label>
                 <div id="command-log" style="height: 150px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: #f8f9fa; font-family: 'Courier New', monospace; font-size: 12px;">
@@ -358,10 +358,10 @@
         function validateUsername(input) {
             const username = input.value;
             const warningEl = document.getElementById('username-warning');
-            
+
             // 检查非法字符：只允许字母和数字
             const illegalChars = username.match(/[^a-zA-Z0-9]/g);
-            
+
             if (illegalChars && illegalChars.length > 0) {
                 const uniqueChars = [...new Set(illegalChars)];
                 const suggestionName = username.replace(/[^a-zA-Z0-9]/g, '') || 'BotSkon';
@@ -569,29 +569,29 @@
             // 验证用户名
             const username = document.getElementById('username').value;
             const illegalChars = username.match(/[^a-zA-Z0-9]/g);
-            
+
             if (!username.trim()) {
                 alert(`🚫 用户名不能为空喵！\n\n请输入一个有效的机器人用户名。\n建议使用: BotSkon, AterBot, MyBot 等格式。`);
                 return;
             }
-            
+
             if (illegalChars && illegalChars.length > 0) {
                 const suggestion = username.replace(/[^a-zA-Z0-9]/g, '') || 'BotSkon';
                 alert(`🚫 用户名包含非法字符: ${[...new Set(illegalChars)].join(', ')}\n\n❌ 这些字符会导致机器人被服务器踢出，显示 "illegal_characters" 错误！\n\n💡 建议修改为: ${suggestion}\n\n只能使用字母(a-z, A-Z)和数字(0-9)喵~`);
                 return;
             }
-            
+
             if (username.length > 16) {
                 alert(`📏 用户名过长！\n\nMinecraft用户名不能超过16个字符\n当前长度: ${username.length} 个字符\n\n建议缩短为: ${username.substring(0, 16)}`);
                 return;
             }
-            
+
             if (username.length < 3) {
                 if (!confirm(`⚠️ 用户名有点短哦！\n\n当前用户名只有 ${username.length} 个字符，某些服务器可能不接受。\n\n是否仍要保存此配置？`)) {
                     return;
                 }
             }
-            
+
             const newConfig = {
                 ...config,
                 client: {
@@ -710,7 +710,7 @@
             }
 
             const fullCommand = command.startsWith('/') ? command : '/' + command;
-            
+
             fetch('/api/bot/command', {
                 method: 'POST',
                 headers: {
@@ -802,10 +802,10 @@
             const prefixes = ['Bot', 'Ater', 'Auto', 'Helper', 'Player', 'Test', 'Game', 'MC'];
             const suffixes = ['Skon', 'Bot', 'Helper', 'Player', '2024', '123', 'MC', 'Pro'];
             const simpleNames = ['BotSkon', 'AterBot', 'AutoBot', 'HelperBot', 'TestBot', 'PlayerBot', 'GameBot', 'MCBot'];
-            
+
             const randomChoice = Math.random();
             let suggestedName;
-            
+
             if (randomChoice < 0.4) {
                 // 使用简单名字
                 suggestedName = simpleNames[Math.floor(Math.random() * simpleNames.length)];
@@ -820,17 +820,62 @@
                 const number = Math.floor(Math.random() * 999) + 1;
                 suggestedName = baseName + number;
             }
-            
+
             // 确保不超过16个字符
             if (suggestedName.length > 16) {
                 suggestedName = suggestedName.substring(0, 16);
             }
-            
+
             document.getElementById('username').value = suggestedName;
             validateUsername(document.getElementById('username'));
-            
+
             // 显示提示
             alert(`💡 推荐用户名: ${suggestedName}\n\n这个名字完全符合Minecraft服务器要求，可以尝试使用喵！`);
+        }
+
+        // 生成随机用户名
+        function generateRandomUsername() {
+            const adjectives = ['快速', '聪明', '强大', '灵活', '勇敢', '智慧', '神奇', '超级'];
+            const nouns = ['机器人', '助手', '伙伴', '守护者', '探索者', '建造者', '冒险家', '战士'];
+
+            const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+            const randomNum = Math.floor(Math.random() * 1000);
+
+            // 转换为拼音或英文
+            const englishMap = {
+                '快速': 'Fast', '聪明': 'Smart', '强大': 'Strong', '灵活': 'Agile',
+                '勇敢': 'Brave', '智慧': 'Wise', '神奇': 'Magic', '超级': 'Super',
+                '机器人': 'Bot', '助手': 'Helper', '伙伴': 'Friend', '守护者': 'Guard',
+                '探索者': 'Explorer', '建造者': 'Builder', '冒险家': 'Adventure', '战士': 'Warrior'
+            };
+
+            const username = `${englishMap[randomAdj]}${englishMap[randomNoun]}${randomNum}`;
+            document.getElementById('username').value = username;
+
+            // 触发验证
+            validateUsername(document.getElementById('username'));
+        }
+
+        // 生成超简单兼容用户名（专门对付挑剔的服务器）
+        function generateSimpleUsername() {
+            const simpleNames = [
+                'Bot', 'Player', 'User', 'Guest', 'Helper', 'Builder', 'Miner', 'Crafter',
+                'Steve', 'Alex', 'Notch', 'Herobrine', 'Enderman', 'Creeper', 'Zombie', 'Skeleton'
+            ];
+
+            const randomName = simpleNames[Math.floor(Math.random() * simpleNames.length)];
+            const randomNum = Math.floor(Math.random() * 9999) + 1;
+
+            // 确保用户名简单且长度合适
+            const username = `${randomName}${randomNum}`;
+            document.getElementById('username').value = username;
+
+            // 触发验证
+            validateUsername(document.getElementById('username'));
+
+            // 显示提示
+            alert(`生成了超兼容用户名: ${username}\n这种格式几乎所有服务器都接受喵！`);
         }
 
         // 回车键快捷执行
