@@ -296,11 +296,21 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({success: true, message: '机器人已停止'}));
     } else if (req.method === 'GET' && req.url === '/api/bot/status') {
         // 获取机器人状态
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify({
-            running: botProcess !== null,
-            error: logger.getLastError()
-        }));
+        try {
+            const status = {
+                running: botProcess !== null && botProcess.exitCode === null,
+                error: logger.getLastError()
+            };
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify(status));
+        } catch (error) {
+            console.error('获取状态失败:', error);
+            res.writeHead(500, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({
+                running: false,
+                error: `状态获取失败: ${error.message}`
+            }));
+        }
     } else if (req.method === 'GET' && req.url === '/api/logs') {
         // 获取日志
         res.writeHead(200, {'Content-Type': 'application/json'});
