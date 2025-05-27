@@ -176,26 +176,7 @@ ${indexContent.replace(
             }
         }
 
-        // 保存机器人实例的引用
-        const originalAterbot = require('./node_modules/aterbot/cli');
-
-        // Hook进aterbot的机器人创建过程
-        const originalMineflayer = require('mineflayer');
-        const originalCreateBot = originalMineflayer.createBot;
-
-        let currentBot = null;
-
-        originalMineflayer.createBot = function(...args) {
-            const bot = originalCreateBot.apply(this, args);
-            currentBot = bot; // 保存机器人实例
-            console.log('🤖 机器人实例已保存，控制面板现在可以发送命令');
-            return bot;
-        };
-
-        // 启动aterbot
-        originalAterbot;
-
-        // 启动aterbot
+        // 直接启动aterbot，不需要引入CLI模块
         const { spawn } = require('child_process');
 
         const env = {
@@ -205,18 +186,62 @@ ${indexContent.replace(
         };
 
         console.log('启动已修补的aterbot（包含管理员检测）...');
-        let botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
-            stdio: ['pipe', 'pipe', 'pipe'],
-            env: env
-        });
+        
+        // 尝试多种启动方式
+        let botProcess;
+        
+        // 首先尝试使用npx aterbot
+        try {
+            botProcess = spawn('npx', ['aterbot'], {
+                stdio: ['pipe', 'pipe', 'pipe'],
+                env: env
+            });
+            
+            // 检查进程是否成功启动
+            setTimeout(() => {
+                if (botProcess && !botProcess.killed) {
+                    console.log('✅ 使用 npx aterbot 启动成功');
+                }
+            }, 1000);
+            
+        } catch (error) {
+            console.log('npx aterbot 启动失败，尝试其他方式...');
+            
+            // 备用方案：直接运行index.ts
+            try {
+                botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
+                    stdio: ['pipe', 'pipe', 'pipe'],
+                    env: env
+                });
+                console.log('✅ 使用 tsx 启动成功');
+            } catch (tsxError) {
+                console.error('所有启动方式都失败了:', tsxError);
+                throw tsxError;
+            }
+        }
+
+        // 处理进程输出
+        if (botProcess) {
+            botProcess.stdout.on('data', (data) => {
+                console.log('Bot输出:', data.toString());
+            });
+
+            botProcess.stderr.on('data', (data) => {
+                console.error('Bot错误:', data.toString());
+            });
+
+            botProcess.on('close', (code) => {
+                console.log(`Bot进程退出，退出码: ${code}`);
+            });
+        }
 
         process.on('SIGINT', () => {
-            botProcess.kill();
+            if (botProcess) botProcess.kill();
             process.exit();
         });
 
         process.on('SIGTERM', () => {
-            botProcess.kill();
+            if (botProcess) botProcess.kill();
             process.exit();
         });
 
