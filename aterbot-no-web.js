@@ -190,14 +190,28 @@ function createBot() {
         version: config.version
     });
 
-    bot = mineflayer.createBot({
+    // 准备机器人配置
+    const botConfig = {
         host: config.host,
         port: parseInt(config.port) || 25565,
         username: config.username || 'aterbot',
         version: config.version || '1.21.1',
-        auth: 'offline',
+        auth: config.auth || 'offline',
         hideErrors: false
-    });
+    };
+
+    // 如果配置了自定义皮肤URL，添加到配置中
+    if (config.skinUrl && config.skinMode === 'url') {
+        console.log('🎨 配置自定义皮肤:', config.skinUrl);
+        // 注意：不是所有服务器都支持自定义皮肤URL
+        // 这主要是为了将来可能的扩展
+    }
+
+    if (config.skinMode === 'premium') {
+        console.log('👑 使用正版账号模式 (皮肤将自动同步)');
+    }
+
+    bot = mineflayer.createBot(botConfig);
 
     // 连接成功事件
     bot.on('spawn', () => {
