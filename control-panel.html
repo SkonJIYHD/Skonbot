@@ -349,13 +349,20 @@
             </div>
         </div>
 
-        <div class="control-buttons">
-            <button class="save-btn" onclick="saveConfig()">保存配置</button>
-            <button class="start-btn" onclick="startBot()">启动机器人</button>
-            <button class="stop-btn" onclick="stopBot()">停止机器人</button>
-        </div>
+        <div class="config-section">
+            <h3>🎮 机器人控制面板</h3>
+            <div style="margin-bottom: 15px; padding: 10px; background-color: #e7f3ff; border: 1px solid #b8daff; border-radius: 4px; font-size: 12px; color: #004085;">
+                <strong>💡 操作指南:</strong> 先保存配置，再启动机器人。启动后可以使用下方的命令控制功能喵！
+            </div>
+            
+            <div class="control-buttons">
+                <button class="save-btn" onclick="saveConfig()">💾 保存配置</button>
+                <button class="start-btn" onclick="startBot()">▶️ 启动机器人</button>
+                <button class="stop-btn" onclick="stopBot()">⏹️ 停止机器人</button>
+            </div>
 
-        <div id="status" class="status stopped">机器人状态: 已停止</div>
+            <div id="status" class="status stopped">机器人状态: 已停止</div>
+        </div>
         <div id="error-info" class="error-info hidden"></div>
 
         <!-- 命令执行界面 -->
