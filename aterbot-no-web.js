@@ -131,26 +131,36 @@ function createBot() {
     // 读取配置
     const config = loadConfig();
 
-    // 验证用户名是否安全
-    const username = config.username;
-    const illegalChars = username.match(/[^a-zA-Z0-9]/g);
-
-    if (illegalChars && illegalChars.length > 0) {
-        console.error('⚠️ 警告: 用户名包含可能的非法字符:', illegalChars.join(', '));
-        console.error('原用户名:', username);
-        // 清理用户名
-        config.username = username.replace(/[^a-zA-Z0-9]/g, '');
-        console.log('🔧 已清理用户名为:', config.username);
-
-        if (config.username.length === 0) {
-            config.username = 'CleanBot' + Math.floor(Math.random() * 1000);
-            console.log('🎲 生成新用户名:', config.username);
-        }
+    // 验证并清理用户名
+    let username = config.username.toString().trim();
+    
+    // 移除所有不可见字符和特殊字符
+    const cleanUsername = username
+        .replace(/[^\x20-\x7E]/g, '') // 移除非ASCII可打印字符
+        .replace(/[^a-zA-Z0-9]/g, '') // 只保留字母和数字
+        .substring(0, 16); // 限制长度
+    
+    console.log('🔍 用户名检查:');
+    console.log('  原始用户名:', `"${username}"`);
+    console.log('  原始字节:', username.split('').map(c => `${c}(${c.charCodeAt(0)})`).join(' '));
+    
+    if (cleanUsername !== username) {
+        console.log('🔧 用户名需要清理');
+        console.log('  清理前:', `"${username}"`);
+        console.log('  清理后:', `"${cleanUsername}"`);
+        config.username = cleanUsername;
     }
-
-    console.log('🚀 最终使用的配置:');
-    console.log('  用户名:', config.username);
-    console.log('  字符检查:', config.username.split('').map(c => `${c}(${c.charCodeAt(0)})`).join(' '));
+    
+    // 如果清理后为空，生成安全的用户名
+    if (!config.username || config.username.length < 3) {
+        const safeNames = ['BotSkon', 'HelperBot', 'AutoBot', 'TestBot', 'GameBot'];
+        config.username = safeNames[Math.floor(Math.random() * safeNames.length)] + Math.floor(Math.random() * 100);
+        console.log('🎲 生成安全用户名:', config.username);
+    }
+    
+    console.log('✅ 最终用户名:', `"${config.username}"`);
+    console.log('  长度:', config.username.length);
+    console.log('  字符安全性:', config.username.split('').every(c => /[a-zA-Z0-9]/.test(c)) ? '通过' : '不通过');
 
     if (!config) {
         console.error('❌ 无法获取有效配置');
