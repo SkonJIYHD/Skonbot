@@ -201,9 +201,7 @@
     <div class="container">
         <h1>Aterbot 控制面板</h1>
 
-        <div class="mode-selector">
-            <button id="java-mode" class="active" onclick="switchMode('java')">JAVA模式</button>
-        </div>
+        
 
         <div class="config-section">
             <h3>基础配置</h3>
@@ -229,7 +227,7 @@
                 </div>
             </div>
 
-            
+
         </div>
 
         <div id="java-config" class="config-section">
@@ -255,56 +253,7 @@
                     <strong>💡 提示:</strong> 机器人只能使用离线模式连接服务器，不支持正版验证。
                 </div>
             </div>
-            <div class="form-group">
-                <label>🎨 机器人皮肤设置:</label>
-                <div style="margin-bottom: 10px; padding: 8px; background-color: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 4px; font-size: 12px;">
-                    <strong>💡 皮肤说明:</strong> 机器人的皮肤显示取决于服务器设置。正版服务器会显示账号皮肤，离线服务器可能支持自定义皮肤插件喵~
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label>皮肤模式:</label>
-                    <select id="skinMode" onchange="updateSkinMode()" style="width: 100%; margin-bottom: 10px;">
-                        <option value="default">使用默认皮肤 (Steve/Alex)</option>
-                        <option value="yggdrasil">🔥 Yggdrasil皮肤站 (推荐使用)</option>
-                        <option value="url">自定义皮肤URL (实验性功能)</option>
-                    </select>
-                </div>
-
-                <div id="yggdrasil-section" style="display: none; margin-top: 10px;">
-                    <label>选择皮肤站:</label>
-                    <select id="skinServer" onchange="updateYggdrasilUrl()" style="width: 100%; margin-bottom: 10px;">
-                        <option value="https://littleskin.cn/api/yggdrasil">LittleSkin (推荐)</option>
-                        <option value="https://skin.prinzeugen.net/api/yggdrasil">Blessing Skin</option>
-                        <option value="https://authserver.ely.by/api/yggdrasil">Ely.by</option>
-                        <option value="https://sessionserver.mojang.com">Mojang官方 (正版)</option>
-                        <option value="custom">自定义皮肤站...</option>
-                    </select>
-
-                    <div id="custom-yggdrasil" style="display: none; margin-bottom: 10px;">
-                        <label>自定义Yggdrasil API地址:</label>
-                        <input type="url" id="customYggdrasilUrl" placeholder="https://your-skin-server.com/api/yggdrasil" style="width: 100%;">
-                    </div>
-
-                    <div style="margin-bottom: 10px;">
-                        <label>皮肤站用户名:</label>
-                        <input type="text" id="yggdrasilUsername" placeholder="在皮肤站注册的用户名" style="width: 100%; margin-bottom: 5px;">
-                        <small style="color: #666;">这将会使用该用户在皮肤站设置的皮肤</small>
-                    </div>
-
-                    <div style="padding: 8px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; font-size: 12px;">
-                        <strong>🌟 Yggdrasil优势:</strong><br>
-                        • 支持大部分第三方皮肤站 (LittleSkin、Blessing Skin等)<br>
-                        • 标准化API，兼容性好<br>
-                        • 支持高清皮肤和披风显示<br>
-                        • 无需上传文件，直接使用皮肤站账号
-                    </div>
-                </div>
-
-                <div id="skin-url-section" style="display: none; margin-top: 10px;">
-                    <label>皮肤文件URL:</label>
-                    <input type="url" id="skinUrl" placeholder="https://example.com/skin.png" style="width: 100%; margin-bottom: 5px;">
-                    <small style="color: #666;">皮肤文件应为64x64像素的PNG格式，符合Minecraft皮肤规范</small>
-                </div>
-            </div>
+            
             <div class="form-group">
                 <label>模组列表 (假mod列表):</label>
                 <div class="form-group">
@@ -775,7 +724,8 @@
                         errorEl.className = 'error-info hidden'; // 隐藏错误信息
                         commandSection.style.display = 'block'; // 显示命令控制界面
                     } else {
-                        statusEl.textContent = '机器人状态: 已停止';
+                        statusEl// The mode selector and the skin settings sections are removed from the code as requested.
+.textContent = '机器人状态: 已停止';
                         statusEl.className = 'status stopped';
                         commandSection.style.display = 'none'; // 隐藏命令控制界面
 
