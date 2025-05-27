@@ -240,48 +240,42 @@
                         使用默认皮肤 (Steve/Alex)
                     </label>
                     <label style="display: block; margin-bottom: 5px;">
-                        <input type="radio" name="skinMode" value="premium" onchange="updateSkinMode()"> 
-                        正版账号皮肤 (需要正版账号)
-                    </label>
-                    <label style="display: block; margin-bottom: 5px;">
-                        <input type="radio" name="skinMode" value="littleskin" onchange="updateSkinMode()"> 
-                        🌟 LittleSkin皮肤站 (推荐!)
+                        <input type="radio" name="skinMode" value="yggdrasil" onchange="updateSkinMode()"> 
+                        🔥 Yggdrasil皮肤站 (推荐使用)
                     </label>
                     <label style="display: block; margin-bottom: 5px;">
                         <input type="radio" name="skinMode" value="url" onchange="updateSkinMode()"> 
-                        自定义皮肤URL (部分服务器支持)
+                        自定义皮肤URL (实验性功能)
                     </label>
                 </div>
 
-                <div id="littleskin-section" style="display: none; margin-top: 10px;">
-                    <div style="padding: 8px; background-color: #e6f7ff; border: 1px solid #91d5ff; border-radius: 4px; margin-bottom: 10px;">
-                        <strong>🌟 LittleSkin皮肤站:</strong> 免费的Minecraft皮肤托管服务，支持高清皮肤和披风喵！
-                        <br><small>访问 <a href="https://littleskin.cn" target="_blank">littleskin.cn</a> 注册账号并上传皮肤</small>
-                    </div>
-                    
-                    <label>LittleSkin用户名:</label>
-                    <input type="text" id="littleskinUsername" placeholder="你在LittleSkin的用户名" style="width: 100%; margin-bottom: 10px;">
-                    <small style="color: #666; display: block; margin-bottom: 10px;">
-                        输入你在LittleSkin皮肤站注册的用户名，机器人会自动获取你的皮肤喵~
-                    </small>
+                <div id="yggdrasil-section" style="display: none; margin-top: 10px;">
+                    <label>选择皮肤站:</label>
+                    <select id="skinServer" onchange="updateYggdrasilUrl()" style="width: 100%; margin-bottom: 10px;">
+                        <option value="https://littleskin.cn/api/yggdrasil">LittleSkin (推荐)</option>
+                        <option value="https://skin.prinzeugen.net/api/yggdrasil">Blessing Skin</option>
+                        <option value="https://authserver.ely.by/api/yggdrasil">Ely.by</option>
+                        <option value="https://sessionserver.mojang.com">Mojang官方 (正版)</option>
+                        <option value="custom">自定义皮肤站...</option>
+                    </select>
 
-                    <div style="margin-top: 10px;">
-                        <label>
-                            <input type="checkbox" id="enableLittleskinAuth" onchange="updateLittleskinAuth()"> 
-                            启用LittleSkin Yggdrasil认证 (实验性)
-                        </label>
-                        <div style="margin-top: 5px; padding: 6px; background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 4px; font-size: 11px;">
-                            <strong>⚡ 实验功能:</strong> 让机器人使用LittleSkin的Yggdrasil认证服务。<br>
-                            需要LittleSkin账号密码，仅适用于支持外置登录的服务器。
-                        </div>
+                    <div id="custom-yggdrasil" style="display: none; margin-bottom: 10px;">
+                        <label>自定义Yggdrasil API地址:</label>
+                        <input type="url" id="customYggdrasilUrl" placeholder="https://your-skin-server.com/api/yggdrasil" style="width: 100%;">
                     </div>
 
-                    <div id="littleskin-auth-section" style="display: none; margin-top: 10px; padding: 8px; background-color: #fff2e8; border: 1px solid #ffbb96; border-radius: 4px;">
-                        <label style="margin-bottom: 5px; display: block;">LittleSkin密码:</label>
-                        <input type="password" id="littleskinPassword" placeholder="LittleSkin账号密码" style="width: 100%; margin-bottom: 5px;">
-                        <small style="color: #d4380d; font-size: 11px;">
-                            ⚠️ 密码将用于Yggdrasil认证，请确保服务器支持外置登录！
-                        </small>
+                    <div style="margin-bottom: 10px;">
+                        <label>皮肤站用户名:</label>
+                        <input type="text" id="yggdrasilUsername" placeholder="在皮肤站注册的用户名" style="width: 100%; margin-bottom: 5px;">
+                        <small style="color: #666;">这将会使用该用户在皮肤站设置的皮肤</small>
+                    </div>
+
+                    <div style="padding: 8px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; font-size: 12px;">
+                        <strong>🌟 Yggdrasil优势:</strong><br>
+                        • 支持大部分第三方皮肤站 (LittleSkin、Blessing Skin等)<br>
+                        • 标准化API，兼容性好<br>
+                        • 支持高清皮肤和披风显示<br>
+                        • 无需上传文件，直接使用皮肤站账号
                     </div>
                 </div>
 
@@ -291,11 +285,7 @@
                     <small style="color: #666;">皮肤文件应为64x64像素的PNG格式，符合Minecraft皮肤规范</small>
                 </div>
 
-                <div id="premium-warning" style="display: none; margin-top: 10px; padding: 8px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
-                    <strong>⚠️ 正版账号提醒:</strong><br>
-                    使用正版账号需要将认证模式改为 "online"，并确保账号有效。<br>
-                    离线服务器可能不支持正版皮肤显示。
-                </div>
+                
             </div>
         </div>
 
@@ -534,7 +524,7 @@
             if (config.client?.skinUrl) {
                 document.getElementById('skinUrl').value = config.client.skinUrl;
             }
-            
+
             // 恢复LittleSkin设置
             if (config.client?.littleskinUsername) {
                 document.getElementById('littleskinUsername').value = config.client.littleskinUsername;
@@ -685,10 +675,6 @@
             const skinMode = document.querySelector('input[name="skinMode"]:checked').value;
             const skinUrl = document.getElementById('skinUrl').value;
 
-            const littleskinUsername = document.getElementById('littleskinUsername').value;
-            const littleskinPassword = document.getElementById('littleskinPassword').value;
-            const enableLittleskinAuth = document.getElementById('enableLittleskinAuth').checked;
-
             const newConfig = {
                 ...config,
                 client: {
@@ -697,7 +683,7 @@
                     port: document.getElementById('port').value,
                     username: document.getElementById('username').value,
                     mode: currentMode,
-                    auth: (skinMode === 'premium' || (skinMode === 'littleskin' && enableLittleskinAuth)) ? 'microsoft' : 'offline'
+                    auth: 'offline' // 机器人只支持离线模式
                 }
             };
 
@@ -707,12 +693,15 @@
                 newConfig.client.mods = mods.filter(mod => mod.trim() !== '');
                 newConfig.client.skinMode = skinMode;
                 newConfig.client.skinUrl = skinUrl || null;
-                
-                // LittleSkin配置
-                if (skinMode === 'littleskin') {
-                    newConfig.client.littleskinUsername = littleskinUsername || null;
-                    newConfig.client.littleskinPassword = enableLittleskinAuth ? littleskinPassword : null;
-                    newConfig.client.enableLittleskinAuth = enableLittleskinAuth;
+
+                // Yggdrasil皮肤站配置
+                if (skinMode === 'yggdrasil') {
+                    const skinServer = document.getElementById('skinServer').value;
+                    const customUrl = document.getElementById('customYggdrasilUrl').value;
+                    const yggdrasilUsername = document.getElementById('yggdrasilUsername').value;
+
+                    newConfig.client.yggdrasilServer = skinServer === 'custom' ? customUrl : skinServer;
+                    newConfig.client.yggdrasilUsername = yggdrasilUsername;
                 }
             }
 
@@ -1012,31 +1001,27 @@
         function updateSkinMode() {
             const skinMode = document.querySelector('input[name="skinMode"]:checked').value;
             const skinUrlSection = document.getElementById('skin-url-section');
-            const premiumWarning = document.getElementById('premium-warning');
-            const littleskinSection = document.getElementById('littleskin-section');
+            const yggdrasilSection = document.getElementById('yggdrasil-section');
 
-            // 隐藏所有section
+            // 隐藏所有选项区域
             skinUrlSection.style.display = 'none';
-            premiumWarning.style.display = 'none';
-            littleskinSection.style.display = 'none';
+            yggdrasilSection.style.display = 'none';
 
             if (skinMode === 'url') {
                 skinUrlSection.style.display = 'block';
-            } else if (skinMode === 'premium') {
-                premiumWarning.style.display = 'block';
-            } else if (skinMode === 'littleskin') {
-                littleskinSection.style.display = 'block';
+            } else if (skinMode === 'yggdrasil') {
+                yggdrasilSection.style.display = 'block';
             }
         }
 
-        function updateLittleskinAuth() {
-            const authEnabled = document.getElementById('enableLittleskinAuth').checked;
-            const authSection = document.getElementById('littleskin-auth-section');
-            
-            if (authEnabled) {
-                authSection.style.display = 'block';
+        function updateYggdrasilUrl() {
+            const serverSelect = document.getElementById('skinServer');
+            const customSection = document.getElementById('custom-yggdrasil');
+
+            if (serverSelect.value === 'custom') {
+                customSection.style.display = 'block';
             } else {
-                authSection.style.display = 'none';
+                customSection.style.display = 'none';
             }
         }
     </script>
