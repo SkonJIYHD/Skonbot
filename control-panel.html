@@ -659,6 +659,10 @@
                 .then(data => {
                     if (data.success) {
                         alert('机器人已停止！');
+                        // 立即更新状态，不等待下次轮询
+                        setTimeout(() => {
+                            updateStatus();
+                        }, 500);
                     } else {
                         alert('停止失败: ' + data.message);
                     }
