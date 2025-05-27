@@ -2,7 +2,7 @@
     "client": {
         "host": "gm.rainplay.cn",
         "port": "25384",
-        "username": "Bot_Skon",
+        "username": "BotSkon",
         "version": "1.21.1",
         "auth": "offline",
         "mode": "java",
