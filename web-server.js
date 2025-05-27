@@ -342,7 +342,7 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({success: true, message: '日志已清除'}));
 
     } else if (req.method === 'POST' && req.url === '/api/bot/command') {
-        // 执行机器人命令
+        // 执行命令
         let body = '';
         req.on('data', chunk => {
             body += chunk.toString();
@@ -351,34 +351,35 @@ const server = http.createServer((req, res) => {
             try {
                 const { command } = JSON.parse(body);
 
-                if (!botProcess) {
-                    res.writeHead(400, {'Content-Type': 'application/json'});
-                    res.end(JSON.stringify({success: false, message: '机器人未运行'}));
-                    return;
-                }
+                if (botProcess && botProcess.exitCode === null) {
+                    // 确保命令格式正确
+                    const cleanCommand = command.trim();
+                    const finalCommand = cleanCommand.startsWith('/') ? cleanCommand : `/${cleanCommand}`;
 
-                if (!command || typeof command !== 'string') {
-                    res.writeHead(400, {'Content-Type': 'application/json'});
-                    res.end(JSON.stringify({success: false, message: '无效的命令'}));
-                    return;
-                }
+                    // 发送命令到机器人进程
+                    console.log(`[API] 发送命令到机器人: ${finalCommand}`);
+                    botProcess.stdin.write(`COMMAND:${finalCommand}\n`);
 
-                // 通过进程通信发送命令
-                try {
-                    // 向机器人进程发送命令
-                    botProcess.stdin.write(`COMMAND:${command}\n`);
-                    logger.log(`通过控制面板执行命令: ${command}`);
-
+                    logger.log(`✅ 执行命令: ${finalCommand}`);
                     res.writeHead(200, {'Content-Type': 'application/json'});
-                    res.end(JSON.stringify({success: true, message: '命令已发送'}));
-                } catch (error) {
-                    logger.log(`命令执行失败: ${error.message}`, 'error');
-                    res.writeHead(500, {'Content-Type': 'application/json'});
-                    res.end(JSON.stringify({success: false, message: '命令发送失败'}));
+                    res.end(JSON.stringify({
+                        success: true,
+                        message: `命令已发送: ${finalCommand}`
+                    }));
+                } else {
+                    res.writeHead(400, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({
+                        success: false,
+                        message: '机器人未运行'
+                    }));
                 }
             } catch (error) {
-                res.writeHead(400, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({success: false, message: '无效的JSON格式'}));
+                console.error('命令执行失败:', error);
+                res.writeHead(500, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({
+                    success: false,
+                    message: error.message
+                }));
             }
         });
 
