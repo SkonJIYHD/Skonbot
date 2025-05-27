@@ -140,13 +140,20 @@
 
         .control-buttons {
             margin-top: 20px;
+            display: flex !important;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
         }
         .control-buttons button {
             padding: 10px 20px;
-            margin-right: 10px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            flex: 1;
+            max-width: 200px;
+            min-width: 150px;
         }
         .start-btn {
             background-color: #28a745;
@@ -355,9 +362,9 @@
                 <strong>💡 操作指南:</strong> 先保存配置，再启动机器人。启动后可以使用下方的命令控制功能喵！
             </div>
 
-            <div class="control-buttons" style="display: flex; gap: 15px; justify-content: center;">
-                <button class="save-btn" onclick="saveConfig()" style="flex: 1; max-width: 200px;">💾 保存配置</button>
-                <button id="toggle-btn" class="start-btn" onclick="toggleBot()" style="flex: 1; max-width: 200px;">▶️ 启动机器人</button>
+            <div style="display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <button class="save-btn" onclick="saveConfig()" style="flex: 1; max-width: 200px; min-width: 150px;">💾 保存配置</button>
+                <button id="toggle-btn" class="start-btn" onclick="toggleBot()" style="flex: 1; max-width: 200px; min-width: 150px;">▶️ 启动机器人</button>
             </div>
 
             <div id="status" class="status stopped">机器人状态: 已停止</div>
