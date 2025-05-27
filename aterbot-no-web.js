@@ -131,36 +131,49 @@ function createBot() {
     // 读取配置
     const config = loadConfig();
 
-    // 验证并清理用户名
+    // 验证并清理用户名 - 超严格模式
     let username = config.username.toString().trim();
     
-    // 移除所有不可见字符和特殊字符
-    const cleanUsername = username
-        .replace(/[^\x20-\x7E]/g, '') // 移除非ASCII可打印字符
-        .replace(/[^a-zA-Z0-9]/g, '') // 只保留字母和数字
-        .substring(0, 16); // 限制长度
-    
-    console.log('🔍 用户名检查:');
+    console.log('🔍 超严格用户名检查:');
     console.log('  原始用户名:', `"${username}"`);
     console.log('  原始字节:', username.split('').map(c => `${c}(${c.charCodeAt(0)})`).join(' '));
     
-    if (cleanUsername !== username) {
-        console.log('🔧 用户名需要清理');
-        console.log('  清理前:', `"${username}"`);
-        console.log('  清理后:', `"${cleanUsername}"`);
-        config.username = cleanUsername;
+    // 检查每个字符的Unicode值
+    let hasProblems = false;
+    const charAnalysis = username.split('').map(c => {
+        const code = c.charCodeAt(0);
+        const isValid = (code >= 48 && code <= 57) || // 0-9
+                       (code >= 65 && code <= 90) || // A-Z
+                       (code >= 97 && code <= 122);  // a-z
+        if (!isValid) hasProblems = true;
+        return `${c}(${code}${isValid ? '✓' : '❌'})`;
+    });
+    
+    console.log('  字符分析:', charAnalysis.join(' '));
+    
+    if (hasProblems || username.length > 16) {
+        console.log('🚨 检测到用户名问题，强制使用纯数字用户名');
+        // 如果这个服务器太挑剔，就用最简单的纯数字用户名
+        const timestamp = Date.now().toString().slice(-8); // 取时间戳后8位
+        config.username = 'Bot' + timestamp;
+        console.log('🔧 强制修改为超安全用户名:', config.username);
     }
     
-    // 如果清理后为空，生成安全的用户名
-    if (!config.username || config.username.length < 3) {
-        const safeNames = ['BotSkon', 'HelperBot', 'AutoBot', 'TestBot', 'GameBot'];
-        config.username = safeNames[Math.floor(Math.random() * safeNames.length)] + Math.floor(Math.random() * 100);
-        console.log('🎲 生成安全用户名:', config.username);
-    }
+    // 最终验证
+    const finalCheck = config.username.split('').every(c => {
+        const code = c.charCodeAt(0);
+        return (code >= 48 && code <= 57) || (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
+    });
     
     console.log('✅ 最终用户名:', `"${config.username}"`);
     console.log('  长度:', config.username.length);
-    console.log('  字符安全性:', config.username.split('').every(c => /[a-zA-Z0-9]/.test(c)) ? '通过' : '不通过');
+    console.log('  超严格检查:', finalCheck ? '完全通过' : '仍有问题');
+    
+    if (!finalCheck) {
+        // 如果还有问题，直接用纯数字
+        config.username = 'Bot' + Math.floor(Math.random() * 100000000);
+        console.log('🎲 紧急生成纯数字用户名:', config.username);
+    }
 
     if (!config) {
         console.error('❌ 无法获取有效配置');
