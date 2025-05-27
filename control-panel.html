@@ -244,9 +244,45 @@
                         正版账号皮肤 (需要正版账号)
                     </label>
                     <label style="display: block; margin-bottom: 5px;">
+                        <input type="radio" name="skinMode" value="littleskin" onchange="updateSkinMode()"> 
+                        🌟 LittleSkin皮肤站 (推荐!)
+                    </label>
+                    <label style="display: block; margin-bottom: 5px;">
                         <input type="radio" name="skinMode" value="url" onchange="updateSkinMode()"> 
                         自定义皮肤URL (部分服务器支持)
                     </label>
+                </div>
+
+                <div id="littleskin-section" style="display: none; margin-top: 10px;">
+                    <div style="padding: 8px; background-color: #e6f7ff; border: 1px solid #91d5ff; border-radius: 4px; margin-bottom: 10px;">
+                        <strong>🌟 LittleSkin皮肤站:</strong> 免费的Minecraft皮肤托管服务，支持高清皮肤和披风喵！
+                        <br><small>访问 <a href="https://littleskin.cn" target="_blank">littleskin.cn</a> 注册账号并上传皮肤</small>
+                    </div>
+                    
+                    <label>LittleSkin用户名:</label>
+                    <input type="text" id="littleskinUsername" placeholder="你在LittleSkin的用户名" style="width: 100%; margin-bottom: 10px;">
+                    <small style="color: #666; display: block; margin-bottom: 10px;">
+                        输入你在LittleSkin皮肤站注册的用户名，机器人会自动获取你的皮肤喵~
+                    </small>
+
+                    <div style="margin-top: 10px;">
+                        <label>
+                            <input type="checkbox" id="enableLittleskinAuth" onchange="updateLittleskinAuth()"> 
+                            启用LittleSkin Yggdrasil认证 (实验性)
+                        </label>
+                        <div style="margin-top: 5px; padding: 6px; background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 4px; font-size: 11px;">
+                            <strong>⚡ 实验功能:</strong> 让机器人使用LittleSkin的Yggdrasil认证服务。<br>
+                            需要LittleSkin账号密码，仅适用于支持外置登录的服务器。
+                        </div>
+                    </div>
+
+                    <div id="littleskin-auth-section" style="display: none; margin-top: 10px; padding: 8px; background-color: #fff2e8; border: 1px solid #ffbb96; border-radius: 4px;">
+                        <label style="margin-bottom: 5px; display: block;">LittleSkin密码:</label>
+                        <input type="password" id="littleskinPassword" placeholder="LittleSkin账号密码" style="width: 100%; margin-bottom: 5px;">
+                        <small style="color: #d4380d; font-size: 11px;">
+                            ⚠️ 密码将用于Yggdrasil认证，请确保服务器支持外置登录！
+                        </small>
+                    </div>
                 </div>
 
                 <div id="skin-url-section" style="display: none; margin-top: 10px;">
@@ -498,6 +534,18 @@
             if (config.client?.skinUrl) {
                 document.getElementById('skinUrl').value = config.client.skinUrl;
             }
+            
+            // 恢复LittleSkin设置
+            if (config.client?.littleskinUsername) {
+                document.getElementById('littleskinUsername').value = config.client.littleskinUsername;
+            }
+            if (config.client?.littleskinPassword) {
+                document.getElementById('littleskinPassword').value = config.client.littleskinPassword;
+            }
+            if (config.client?.enableLittleskinAuth !== undefined) {
+                document.getElementById('enableLittleskinAuth').checked = config.client.enableLittleskinAuth;
+                updateLittleskinAuth();
+            }
 
             // 只在页面首次加载时设置模式，避免循环
             if (!currentMode || currentMode === '') {
@@ -637,6 +685,10 @@
             const skinMode = document.querySelector('input[name="skinMode"]:checked').value;
             const skinUrl = document.getElementById('skinUrl').value;
 
+            const littleskinUsername = document.getElementById('littleskinUsername').value;
+            const littleskinPassword = document.getElementById('littleskinPassword').value;
+            const enableLittleskinAuth = document.getElementById('enableLittleskinAuth').checked;
+
             const newConfig = {
                 ...config,
                 client: {
@@ -645,7 +697,7 @@
                     port: document.getElementById('port').value,
                     username: document.getElementById('username').value,
                     mode: currentMode,
-                    auth: skinMode === 'premium' ? 'microsoft' : 'offline'
+                    auth: (skinMode === 'premium' || (skinMode === 'littleskin' && enableLittleskinAuth)) ? 'microsoft' : 'offline'
                 }
             };
 
@@ -655,6 +707,13 @@
                 newConfig.client.mods = mods.filter(mod => mod.trim() !== '');
                 newConfig.client.skinMode = skinMode;
                 newConfig.client.skinUrl = skinUrl || null;
+                
+                // LittleSkin配置
+                if (skinMode === 'littleskin') {
+                    newConfig.client.littleskinUsername = littleskinUsername || null;
+                    newConfig.client.littleskinPassword = enableLittleskinAuth ? littleskinPassword : null;
+                    newConfig.client.enableLittleskinAuth = enableLittleskinAuth;
+                }
             }
 
             fetch(`${getApiBase()}/api/config`, {
@@ -954,16 +1013,30 @@
             const skinMode = document.querySelector('input[name="skinMode"]:checked').value;
             const skinUrlSection = document.getElementById('skin-url-section');
             const premiumWarning = document.getElementById('premium-warning');
+            const littleskinSection = document.getElementById('littleskin-section');
+
+            // 隐藏所有section
+            skinUrlSection.style.display = 'none';
+            premiumWarning.style.display = 'none';
+            littleskinSection.style.display = 'none';
 
             if (skinMode === 'url') {
                 skinUrlSection.style.display = 'block';
-                premiumWarning.style.display = 'none';
             } else if (skinMode === 'premium') {
-                skinUrlSection.style.display = 'none';
                 premiumWarning.style.display = 'block';
+            } else if (skinMode === 'littleskin') {
+                littleskinSection.style.display = 'block';
+            }
+        }
+
+        function updateLittleskinAuth() {
+            const authEnabled = document.getElementById('enableLittleskinAuth').checked;
+            const authSection = document.getElementById('littleskin-auth-section');
+            
+            if (authEnabled) {
+                authSection.style.display = 'block';
             } else {
-                skinUrlSection.style.display = 'none';
-                premiumWarning.style.display = 'none';
+                authSection.style.display = 'none';
             }
         }
     </script>
