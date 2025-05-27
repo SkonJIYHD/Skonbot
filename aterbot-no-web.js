@@ -287,6 +287,31 @@ function createBot() {
         console.log('👑 使用正版账号模式 (皮肤将自动同步)');
     }
 
+    if (config.skinMode === 'yggdrasil') {
+        console.log('🌟 使用Yggdrasil皮肤站模式');
+        console.log('  皮肤站服务器:', config.yggdrasilServer);
+        console.log('  皮肤站用户名:', config.yggdrasilUsername);
+        
+        if (config.yggdrasilServer && config.yggdrasilUsername) {
+            // 设置Yggdrasil认证服务器
+            botConfig.sessionServer = config.yggdrasilServer;
+            botConfig.profileKeysSignatureValidation = false; // 兼容第三方皮肤站
+            
+            // 尝试从皮肤站获取皮肤信息
+            console.log('🔍 正在从皮肤站获取皮肤信息...');
+            fetchYggdrasilProfile(config.yggdrasilServer, config.yggdrasilUsername)
+                .then(profile => {
+                    if (profile) {
+                        console.log('✅ 成功获取皮肤站配置文件:', profile.name);
+                        // 可以在这里处理皮肤信息
+                    }
+                })
+                .catch(err => {
+                    console.log('⚠️ 获取皮肤站信息失败:', err.message);
+                });
+        }
+    }
+
     bot = mineflayer.createBot(botConfig);
 
     // 连接成功事件
@@ -365,6 +390,45 @@ function createBot() {
         }
         
         return clean.trim();
+    }
+
+    // Yggdrasil皮肤站API支持
+    async function fetchYggdrasilProfile(yggdrasilServer, username) {
+        try {
+            // 标准Yggdrasil API流程
+            // 1. 获取用户UUID
+            const profileUrl = `${yggdrasilServer}/sessionserver/session/minecraft/profile`;
+            const usernameUrl = `${yggdrasilServer}/api/profiles/minecraft`;
+            
+            console.log('🔍 查询用户UUID:', username);
+            
+            // 一些皮肤站使用不同的API结构，尝试多种方式
+            const possibleUrls = [
+                `${yggdrasilServer}/sessionserver/session/minecraft/profile/${username}`,
+                `${yggdrasilServer}/api/profiles/minecraft/${username}`,
+                `${yggdrasilServer}/sessionserver/session/minecraft/hasJoined?username=${username}`,
+            ];
+            
+            for (const url of possibleUrls) {
+                try {
+                    const fetch = require('node-fetch');
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('✅ 成功从皮肤站获取配置文件');
+                        return data;
+                    }
+                } catch (e) {
+                    // 继续尝试下一个URL
+                }
+            }
+            
+            console.log('⚠️ 无法从皮肤站获取用户信息，将使用默认配置');
+            return null;
+        } catch (error) {
+            console.log('⚠️ Yggdrasil API请求失败:', error.message);
+            return null;
+        }
     }
 
     // 监听标准输入，处理控制面板命令
