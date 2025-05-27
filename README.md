@@ -132,7 +132,7 @@ minecraft-bot-manager/
 
 ## 📄 许可证
 
-GPL3.0 License - 详见 [LICENSE](LICENSE) 文件
+GPL-3.0 License - 详见 [LICENSE](LICENSE) 文件
 
 ## 🤝 贡献
 
