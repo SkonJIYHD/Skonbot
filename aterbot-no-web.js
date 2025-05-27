@@ -283,9 +283,7 @@ function createBot() {
         // 这主要是为了将来可能的扩展
     }
 
-    if (config.skinMode === 'premium') {
-        console.log('👑 使用正版账号模式 (皮肤将自动同步)');
-    }
+    
 
     if (config.skinMode === 'yggdrasil') {
         console.log('🌟 使用Yggdrasil皮肤站模式');
