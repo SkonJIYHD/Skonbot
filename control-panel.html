@@ -201,7 +201,7 @@
     <div class="container">
         <h1>Aterbot 控制面板</h1>
 
-        
+
 
         <div class="config-section">
             <h3>基础配置</h3>
@@ -253,7 +253,7 @@
             <div style="margin-bottom: 15px; padding: 10px; background-color: #e7f3ff; border: 1px solid #b8daff; border-radius: 4px; font-size: 12px; color: #004085;">
                 <strong>💡 皮肤说明:</strong> 机器人可以使用不同的皮肤模式，包括默认皮肤、自定义皮肤URL或第三方皮肤站喵！
             </div>
-            
+
             <div class="form-group">
                 <label>皮肤模式:</label>
                 <select id="skinMode" onchange="updateSkinMode()">
@@ -282,12 +282,12 @@
                         <option value="custom">自定义服务器</option>
                     </select>
                 </div>
-                
+
                 <div id="custom-yggdrasil" class="form-group" style="display: none;">
                     <label>自定义Yggdrasil URL:</label>
                     <input type="url" id="customYggdrasilUrl" placeholder="https://your-server.com/api/yggdrasil">
                 </div>
-                
+
                 <div class="form-group">
                     <label>皮肤站用户名:</label>
                     <input type="text" id="yggdrasilUsername" placeholder="在皮肤站的用户名">
@@ -299,7 +299,7 @@
                     <label>LittleSkin用户名:</label>
                     <input type="text" id="littleskinUsername" placeholder="LittleSkin用户名">
                 </div>
-                
+
                 <div class="form-group">
                     <label>
                         <input type="checkbox" id="enableLittleskinAuth" onchange="updateLittleskinAuth()"> 
@@ -309,7 +309,7 @@
                         启用后可以使用LittleSkin的完整功能，需要提供密码
                     </div>
                 </div>
-                
+
                 <div id="littleskin-auth-section" class="form-group" style="display: none;">
                     <label>LittleSkin密码:</label>
                     <input type="password" id="littleskinPassword" placeholder="LittleSkin账户密码">
@@ -322,7 +322,7 @@
 
         <div id="java-config" class="config-section">
             <h3>模组配置</h3>
-            
+
             <div class="form-group">
                 <label>模组列表 (假mod列表):</label>
                 <div class="form-group">
@@ -354,11 +354,10 @@
             <div style="margin-bottom: 15px; padding: 10px; background-color: #e7f3ff; border: 1px solid #b8daff; border-radius: 4px; font-size: 12px; color: #004085;">
                 <strong>💡 操作指南:</strong> 先保存配置，再启动机器人。启动后可以使用下方的命令控制功能喵！
             </div>
-            
+
             <div class="control-buttons">
                 <button class="save-btn" onclick="saveConfig()">💾 保存配置</button>
-                <button class="start-btn" onclick="startBot()">▶️ 启动机器人</button>
-                <button class="stop-btn" onclick="stopBot()">⏹️ 停止机器人</button>
+                <button id="toggle-btn" class="start-btn" onclick="toggleBot()">▶️ 启动机器人</button>
             </div>
 
             <div id="status" class="status stopped">机器人状态: 已停止</div>
@@ -442,7 +441,7 @@
                 if (parts.length === 2) {
                     const host = parts[0].trim();
                     const port = parts[1].trim();
-                    
+
                     // 验证端口是否为数字
                     if (port && !/^\d+$/.test(port)) {
                         // 如果端口不是数字，显示提示
@@ -750,7 +749,7 @@
             const serverAddress = document.getElementById('server-address').value.trim();
             let host = '';
             let port = '';
-            
+
             if (serverAddress.includes(':')) {
                 const parts = serverAddress.split(':');
                 host = parts[0].trim();
@@ -825,6 +824,17 @@
             });
         }
 
+        // 合并启动和停止按钮
+        function toggleBot() {
+            const statusEl = document.getElementById('status');
+            if (statusEl.className === 'status running') {
+                stopBot(); // 如果正在运行，则停止
+            } else {
+                startBot(); // 如果已停止，则启动
+            }
+        }
+
+        // 启动机器人
         function startBot() {
             // 启动时先隐藏错误信息
             document.getElementById('error-info').className = 'error-info hidden';
@@ -846,6 +856,7 @@
                 });
         }
 
+        // 停止机器人
         function stopBot() {
             fetch(`${getApiBase()}/api/bot/stop`, { method: 'POST' })
                 .then(response => response.json())
@@ -866,6 +877,19 @@
                 });
         }
 
+        // 更新按钮状态
+        function updateToggleButton(isRunning) {
+            const toggleBtn = document.getElementById('toggle-btn');
+            if (isRunning) {
+                toggleBtn.textContent = '⏹️ 停止机器人';
+                toggleBtn.className = 'stop-btn'; // 使用停止按钮的样式
+            } else {
+                toggleBtn.textContent = '▶️ 启动机器人';
+                toggleBtn.className = 'start-btn'; // 使用启动按钮的样式
+            }
+        }
+
+        // 更新状态
         function updateStatus() {
             fetch(`${getApiBase()}/api/bot/status`)
                 .then(response => response.json())
@@ -879,11 +903,12 @@
                         statusEl.className = 'status running';
                         errorEl.className = 'error-info hidden'; // 隐藏错误信息
                         commandSection.style.display = 'block'; // 显示命令控制界面
+                        updateToggleButton(true); // 更新按钮为停止状态
                     } else {
-                        statusEl// The mode selector and the skin settings sections are removed from the code as requested.
-.textContent = '机器人状态: 已停止';
+                        statusEl.textContent = '机器人状态: 已停止';
                         statusEl.className = 'status stopped';
                         commandSection.style.display = 'none'; // 隐藏命令控制界面
+                        updateToggleButton(false); // 更新按钮为启动状态
 
                         // 显示错误信息（如果有的话）
                         if (data.error) {
