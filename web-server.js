@@ -316,6 +316,87 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify({success: true, message: '日志已清除'}));
 
+    } else if (req.method === 'POST' && req.url === '/api/bot/command') {
+        // 执行机器人命令
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                const { command } = JSON.parse(body);
+                
+                if (!botProcess) {
+                    res.writeHead(400, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success: false, message: '机器人未运行'}));
+                    return;
+                }
+
+                if (!command || typeof command !== 'string') {
+                    res.writeHead(400, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success: false, message: '无效的命令'}));
+                    return;
+                }
+
+                // 通过进程通信发送命令
+                try {
+                    // 向机器人进程发送命令
+                    botProcess.stdin.write(`COMMAND:${command}\n`);
+                    logger.log(`通过控制面板执行命令: ${command}`);
+                    
+                    res.writeHead(200, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success: true, message: '命令已发送'}));
+                } catch (error) {
+                    logger.log(`命令执行失败: ${error.message}`, 'error');
+                    res.writeHead(500, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success: false, message: '命令发送失败'}));
+                }
+            } catch (error) {
+                res.writeHead(400, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({success: false, message: '无效的JSON格式'}));
+            }
+        });
+
+    } else if (req.method === 'POST' && req.url === '/api/bot/chat') {
+        // 发送聊天消息
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                const { message } = JSON.parse(body);
+                
+                if (!botProcess) {
+                    res.writeHead(400, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success: false, message: '机器人未运行'}));
+                    return;
+                }
+
+                if (!message || typeof message !== 'string') {
+                    res.writeHead(400, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success: false, message: '无效的消息'}));
+                    return;
+                }
+
+                try {
+                    // 向机器人进程发送聊天消息
+                    botProcess.stdin.write(`CHAT:${message}\n`);
+                    logger.log(`通过控制面板发送聊天: ${message}`);
+                    
+                    res.writeHead(200, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success: true, message: '消息已发送'}));
+                } catch (error) {
+                    logger.log(`聊天发送失败: ${error.message}`, 'error');
+                    res.writeHead(500, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success: false, message: '消息发送失败'}));
+                }
+            } catch (error) {
+                res.writeHead(400, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({success: false, message: '无效的JSON格式'}));
+            }
+        });
+
     } else {
         res.writeHead(404, {'Content-Type': 'text/plain'});
         res.end('Not Found');

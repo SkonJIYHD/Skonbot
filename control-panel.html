@@ -263,6 +263,50 @@
 
         <div id="status" class="status stopped">机器人状态: 已停止</div>
         <div id="error-info" class="error-info hidden"></div>
+        
+        <!-- 命令执行界面 -->
+        <div class="config-section" id="command-section" style="display: none;">
+            <h3>🎮 机器人命令控制</h3>
+            <div style="margin-bottom: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
+                <strong>💡 安全提示:</strong> 在控制面板执行命令比在游戏内更安全，避免了恶意玩家的风险。
+            </div>
+            
+            <div class="form-group">
+                <label>执行Minecraft命令:</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="minecraft-command" placeholder="输入命令 (如: /time set day)" style="flex: 1;">
+                    <button onclick="executeMinecraftCommand()" style="background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 4px;">执行</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>发送聊天消息:</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="chat-message" placeholder="输入要发送的消息" style="flex: 1;">
+                    <button onclick="sendChatMessage()" style="background-color: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 4px;">发送</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>快捷命令:</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                    <button onclick="executeQuickCommand('/time set day')" style="background-color: #ffc107; color: #212529;">设为白天</button>
+                    <button onclick="executeQuickCommand('/time set night')" style="background-color: #6c757d; color: white;">设为夜晚</button>
+                    <button onclick="executeQuickCommand('/weather clear')" style="background-color: #17a2b8; color: white;">清除天气</button>
+                    <button onclick="executeQuickCommand('/gamemode creative @s')" style="background-color: #28a745; color: white;">创造模式</button>
+                    <button onclick="executeQuickCommand('/gamemode spectator @s')" style="background-color: #6f42c1; color: white;">观察者模式</button>
+                    <button onclick="executeQuickCommand('/tp @s ~ ~10 ~')" style="background-color: #fd7e14; color: white;">向上传送</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>命令执行记录:</label>
+                <div id="command-log" style="height: 150px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: #f8f9fa; font-family: 'Courier New', monospace; font-size: 12px;">
+                    <!-- 命令执行记录将在这里显示 -->
+                </div>
+                <button onclick="clearCommandLog()" style="margin-top: 5px; background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px;">清除记录</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -519,14 +563,17 @@
                 .then(data => {
                     const statusEl = document.getElementById('status');
                     const errorEl = document.getElementById('error-info');
+                    const commandSection = document.getElementById('command-section');
 
                     if (data.running) {
                         statusEl.textContent = '机器人状态: 运行中';
                         statusEl.className = 'status running';
                         errorEl.className = 'error-info hidden'; // 隐藏错误信息
+                        commandSection.style.display = 'block'; // 显示命令控制界面
                     } else {
                         statusEl.textContent = '机器人状态: 已停止';
                         statusEl.className = 'status stopped';
+                        commandSection.style.display = 'none'; // 隐藏命令控制界面
 
                         // 显示错误信息（如果有的话）
                         if (data.error) {
@@ -540,8 +587,118 @@
                 .catch(error => {
                     console.error('获取状态失败:', error);
                 });
+        }
 
+        // 执行Minecraft命令
+        function executeMinecraftCommand() {
+            const command = document.getElementById('minecraft-command').value.trim();
+            if (!command) {
+                alert('请输入命令喵！');
+                return;
             }
+
+            const fullCommand = command.startsWith('/') ? command : '/' + command;
+            
+            fetch('/api/bot/command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command: fullCommand })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addToCommandLog(`✅ 命令执行: ${fullCommand}`);
+                    document.getElementById('minecraft-command').value = '';
+                } else {
+                    addToCommandLog(`❌ 命令失败: ${fullCommand} - ${data.message}`);
+                }
+            })
+            .catch(error => {
+                addToCommandLog(`❌ 网络错误: ${fullCommand} - ${error.message}`);
+            });
+        }
+
+        // 发送聊天消息
+        function sendChatMessage() {
+            const message = document.getElementById('chat-message').value.trim();
+            if (!message) {
+                alert('请输入消息喵！');
+                return;
+            }
+
+            fetch('/api/bot/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addToCommandLog(`💬 聊天发送: ${message}`);
+                    document.getElementById('chat-message').value = '';
+                } else {
+                    addToCommandLog(`❌ 聊天失败: ${message} - ${data.message}`);
+                }
+            })
+            .catch(error => {
+                addToCommandLog(`❌ 网络错误: ${message} - ${error.message}`);
+            });
+        }
+
+        // 执行快捷命令
+        function executeQuickCommand(command) {
+            fetch('/api/bot/command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command: command })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addToCommandLog(`⚡ 快捷命令: ${command}`);
+                } else {
+                    addToCommandLog(`❌ 快捷命令失败: ${command} - ${data.message}`);
+                }
+            })
+            .catch(error => {
+                addToCommandLog(`❌ 网络错误: ${command} - ${error.message}`);
+            });
+        }
+
+        // 添加到命令记录
+        function addToCommandLog(message) {
+            const logEl = document.getElementById('command-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logEl.textContent += logEntry;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // 清除命令记录
+        function clearCommandLog() {
+            document.getElementById('command-log').textContent = '';
+        }
+
+        // 回车键快捷执行
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('minecraft-command').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    executeMinecraftCommand();
+                }
+            });
+
+            document.getElementById('chat-message').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendChatMessage();
+                }
+            });
+        });
     </script>
 </body>
 </html>
