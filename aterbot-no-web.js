@@ -128,7 +128,34 @@ const adminDetection = {
 
 // 创建机器人
 function createBot() {
+    // 读取配置
     const config = loadConfig();
+
+    // 验证用户名是否安全
+    const username = config.username;
+    const illegalChars = username.match(/[^a-zA-Z0-9]/g);
+
+    if (illegalChars && illegalChars.length > 0) {
+        console.error('⚠️ 警告: 用户名包含可能的非法字符:', illegalChars.join(', '));
+        console.error('原用户名:', username);
+        // 清理用户名
+        config.username = username.replace(/[^a-zA-Z0-9]/g, '');
+        console.log('🔧 已清理用户名为:', config.username);
+
+        if (config.username.length === 0) {
+            config.username = 'CleanBot' + Math.floor(Math.random() * 1000);
+            console.log('🎲 生成新用户名:', config.username);
+        }
+    }
+
+    console.log('🚀 最终使用的配置:');
+    console.log('  用户名:', config.username);
+    console.log('  字符检查:', config.username.split('').map(c => `${c}(${c.charCodeAt(0)})`).join(' '));
+
+    if (!config) {
+        console.error('❌ 无法获取有效配置');
+        return;
+    }
 
     console.log('🤖 创建新的机器人实例...');
     console.log('配置信息:', {
