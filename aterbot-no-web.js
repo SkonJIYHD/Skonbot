@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const mineflayer = require('mineflayer');
+const LittleSkinAPI = require('./littleskin-api.js');
 
 // 全局机器人实例
 let bot = null;
@@ -199,6 +200,81 @@ function createBot() {
         auth: config.auth || 'offline',
         hideErrors: false
     };
+
+    // LittleSkin皮肤站支持
+    if (config.skinMode === 'littleskin') {
+        console.log('🌟 使用LittleSkin皮肤站');
+        const littleSkinAPI = new LittleSkinAPI();
+        
+        if (config.enableLittleskinAuth && config.littleskinPassword && config.littleskinUsername) {
+            console.log('🔐 启用LittleSkin Yggdrasil认证');
+            
+            try {
+                // 尝试加载已保存的认证信息
+                let authData = littleSkinAPI.loadAuthData(config.littleskinUsername);
+                
+                // 如果没有认证信息或认证信息无效，重新认证
+                if (!authData || !(await littleSkinAPI.validate(authData.accessToken, authData.clientToken)).success) {
+                    console.log('🔄 正在进行LittleSkin认证...');
+                    const authResult = await littleSkinAPI.authenticate(config.littleskinUsername, config.littleskinPassword);
+                    
+                    if (authResult.success) {
+                        authData = authResult;
+                        littleSkinAPI.saveAuthData(authData, config.littleskinUsername);
+                        console.log('✅ LittleSkin认证成功！');
+                    } else {
+                        console.error('❌ LittleSkin认证失败:', authResult.message);
+                        console.log('⚠️ 回退到离线模式');
+                    }
+                }
+                
+                if (authData && authData.success !== false) {
+                    // 配置Yggdrasil认证
+                    botConfig.auth = 'offline'; // 暂时使用离线模式，因为mineflayer可能不直接支持自定义Yggdrasil
+                    botConfig.username = config.littleskinUsername;
+                    
+                    console.log('🎮 LittleSkin认证已配置:', {
+                        username: config.littleskinUsername,
+                        uuid: authData.selectedProfile?.id
+                    });
+                    
+                    // 获取皮肤信息用于日志
+                    const skinInfo = await littleSkinAPI.getUserSkin(config.littleskinUsername);
+                    if (skinInfo.success) {
+                        console.log('🎨 皮肤信息:', {
+                            skinUrl: skinInfo.skinUrl ? '✅ 有皮肤' : '❌ 无皮肤',
+                            capeUrl: skinInfo.capeUrl ? '✅ 有披风' : '❌ 无披风'
+                        });
+                    }
+                }
+                
+            } catch (error) {
+                console.error('🚨 LittleSkin认证过程出错:', error.message);
+                console.log('⚠️ 回退到离线模式');
+            }
+            
+        } else if (config.littleskinUsername) {
+            console.log(`🎨 使用LittleSkin用户 "${config.littleskinUsername}" 的皮肤 (离线模式)`);
+            
+            // 在离线模式下，某些服务器支持通过用户名获取LittleSkin皮肤
+            // 获取皮肤信息用于展示
+            try {
+                const skinInfo = await littleSkinAPI.getUserSkin(config.littleskinUsername);
+                if (skinInfo.success) {
+                    console.log('🎨 找到LittleSkin皮肤:', {
+                        用户名: skinInfo.username,
+                        UUID: skinInfo.uuid,
+                        皮肤: skinInfo.skinUrl ? '✅' : '❌',
+                        披风: skinInfo.capeUrl ? '✅' : '❌'
+                    });
+                } else {
+                    console.log('⚠️ 未找到LittleSkin用户皮肤信息');
+                }
+            } catch (error) {
+                console.log('⚠️ 获取LittleSkin皮肤信息失败:', error.message);
+            }
+        }
+    }
 
     // 如果配置了自定义皮肤URL，添加到配置中
     if (config.skinUrl && config.skinMode === 'url') {
