@@ -207,11 +207,10 @@
             <h3>基础配置</h3>
             <div class="form-group">
                 <label>服务器地址:</label>
-                <input type="text" id="host" placeholder="服务器IP地址">
-            </div>
-            <div class="form-group">
-                <label>端口:</label>
-                <input type="number" id="port" placeholder="服务器端口">
+                <input type="text" id="server-address" placeholder="服务器地址:端口 (如: gm.rainplay.cn:25384)" oninput="parseServerAddress(this)">
+                <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                    输入格式: 服务器地址:端口，如果不填端口默认使用25565
+                </div>
             </div>
             <div class="form-group">
                 <label>用户名:</label>
@@ -425,6 +424,39 @@
             }
         };
 
+        // 解析服务器地址函数
+        function parseServerAddress(input) {
+            const value = input.value.trim();
+            if (!value) return;
+
+            // 检查是否包含端口
+            if (value.includes(':')) {
+                const parts = value.split(':');
+                if (parts.length === 2) {
+                    const host = parts[0].trim();
+                    const port = parts[1].trim();
+                    
+                    // 验证端口是否为数字
+                    if (port && !/^\d+$/.test(port)) {
+                        // 如果端口不是数字，显示提示
+                        input.style.borderColor = '#dc3545';
+                        input.title = '端口必须是数字喵！';
+                    } else if (port && (parseInt(port) < 1 || parseInt(port) > 65535)) {
+                        // 端口范围检查
+                        input.style.borderColor = '#dc3545';
+                        input.title = '端口范围必须在1-65535之间喵！';
+                    } else {
+                        input.style.borderColor = '#28a745';
+                        input.title = `服务器: ${host}，端口: ${port || '25565'}`;
+                    }
+                }
+            } else {
+                // 没有端口，使用默认端口
+                input.style.borderColor = '#17a2b8';
+                input.title = `服务器: ${value}，端口: 25565 (默认)`;
+            }
+        }
+
         // 用户名验证函数
         function validateUsername(input) {
             const username = input.value;
@@ -514,8 +546,11 @@
         }
 
         function updateUI() {
-            document.getElementById('host').value = config.client?.host || '';
-            document.getElementById('port').value = config.client?.port || '';
+            // 组合服务器地址和端口
+            const host = config.client?.host || '';
+            const port = config.client?.port || '';
+            const serverAddress = host && port ? `${host}:${port}` : (host || '');
+            document.getElementById('server-address').value = serverAddress;
             document.getElementById('username').value = config.client?.username || '';
             document.getElementById('java-version').value = config.client?.version || '1.21.1';
             document.getElementById('auth').value = config.client?.auth || 'offline';
@@ -704,12 +739,26 @@
             const skinMode = document.getElementById('skinMode').value;
             const skinUrl = document.getElementById('skinUrl').value;
 
+            // 解析服务器地址
+            const serverAddress = document.getElementById('server-address').value.trim();
+            let host = '';
+            let port = '';
+            
+            if (serverAddress.includes(':')) {
+                const parts = serverAddress.split(':');
+                host = parts[0].trim();
+                port = parts[1].trim();
+            } else {
+                host = serverAddress;
+                port = '25565'; // 默认端口
+            }
+
             const newConfig = {
                 ...config,
                 client: {
                     ...config.client,
-                    host: document.getElementById('host').value,
-                    port: document.getElementById('port').value,
+                    host: host,
+                    port: port,
                     username: document.getElementById('username').value,
                     mode: currentMode,
                     auth: 'offline' // 机器人只支持离线模式
