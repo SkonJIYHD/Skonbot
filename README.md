@@ -71,7 +71,7 @@ node web-server.js
     "port": 25565,
     "username": "机器人用户名",
     "version": "1.20.1",
-    "auth": "microsoft", // 或 "offline"
+    "auth": "offline"
     "littleskinUsername": "LittleSkin用户名",
     "littleskinPassword": "LittleSkin密码"
   }
@@ -146,4 +146,3 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 ---
 
 **⭐ 如果这个项目对你有帮助，请给个Star支持一下！**
-# aterbot
