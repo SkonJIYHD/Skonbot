@@ -108,19 +108,21 @@ const adminDetection = {
                 console.log(`执行来自 ${player} 的命令: ${command}`);
 
                 try {
-                    // 执行命令
-                    bot.chat(`/${command}`);
+                    // 执行命令 - 先过滤消息
+                    const cleanCommand = sanitizeMessage(`/${command}`);
+                    bot.chat(cleanCommand);
                 } catch (error) {
                     console.error('命令执行失败:', error);
-                    bot.chat(`命令执行失败: ${error.message}`);
+                    const cleanError = sanitizeMessage(`命令执行失败: ${error.message}`);
+                    bot.chat(cleanError);
                 }
             }
         });
 
-        // 发送启用通知
+        // 发送启用通知 - 移除颜色代码和特殊字符
         setTimeout(() => {
             if (bot && isConnected) {
-                bot.chat('§a[机器人] 命令模式已自动启用！使用 !<命令> 来执行指令');
+                bot.chat('[机器人] 命令模式已自动启用！使用 !<命令> 来执行指令');
             }
         }, 2000);
     }
@@ -188,14 +190,28 @@ function createBot() {
         version: config.version
     });
 
-    bot = mineflayer.createBot({
+    // 准备机器人配置
+    const botConfig = {
         host: config.host,
         port: parseInt(config.port) || 25565,
         username: config.username || 'aterbot',
         version: config.version || '1.21.1',
-        auth: 'offline',
+        auth: config.auth || 'offline',
         hideErrors: false
-    });
+    };
+
+    // 如果配置了自定义皮肤URL，添加到配置中
+    if (config.skinUrl && config.skinMode === 'url') {
+        console.log('🎨 配置自定义皮肤:', config.skinUrl);
+        // 注意：不是所有服务器都支持自定义皮肤URL
+        // 这主要是为了将来可能的扩展
+    }
+
+    if (config.skinMode === 'premium') {
+        console.log('👑 使用正版账号模式 (皮肤将自动同步)');
+    }
+
+    bot = mineflayer.createBot(botConfig);
 
     // 连接成功事件
     bot.on('spawn', () => {
@@ -206,9 +222,9 @@ function createBot() {
         // 启用管理员检测
         adminDetection.checkAdminStatus(bot);
 
-        // 发送进入通知
+        // 发送进入通知 - 移除可能导致问题的颜色代码
         setTimeout(() => {
-            bot.chat('§a[机器人] 已连接到服务器，控制面板可用！');
+            bot.chat('[机器人] 已连接到服务器，控制面板可用！');
         }, 1000);
     });
 
@@ -256,6 +272,25 @@ function createBot() {
         bot = null;
     });
 
+    // 消息过滤器 - 确保消息符合Minecraft聊天规范
+    function sanitizeMessage(message) {
+        // 移除Minecraft颜色代码 (§ 和 & 开头的代码)
+        let clean = message.replace(/[§&][0-9a-fk-or]/gi, '');
+        
+        // 移除可能的控制字符
+        clean = clean.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+        
+        // 确保只包含基本的可打印字符
+        clean = clean.replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, '');
+        
+        // 限制长度（Minecraft聊天通常限制为256字符）
+        if (clean.length > 256) {
+            clean = clean.substring(0, 253) + '...';
+        }
+        
+        return clean.trim();
+    }
+
     // 监听标准输入，处理控制面板命令
     process.stdin.on('data', (data) => {
         const input = data.toString().trim();
@@ -264,8 +299,9 @@ function createBot() {
             const command = input.replace('COMMAND:', '');
             if (bot && isConnected) {
                 try {
-                    console.log(`📤 执行命令: ${command}`);
-                    bot.chat(command);
+                    const cleanCommand = sanitizeMessage(command);
+                    console.log(`📤 执行命令: ${cleanCommand}`);
+                    bot.chat(cleanCommand);
                 } catch (error) {
                     console.error('命令执行失败:', error);
                 }
@@ -276,8 +312,9 @@ function createBot() {
             const message = input.replace('CHAT:', '');
             if (bot && isConnected) {
                 try {
-                    console.log(`💬 发送消息: ${message}`);
-                    bot.chat(message);
+                    const cleanMessage = sanitizeMessage(message);
+                    console.log(`💬 发送消息: ${cleanMessage}`);
+                    bot.chat(cleanMessage);
                 } catch (error) {
                     console.error('消息发送失败:', error);
                 }

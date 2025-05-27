@@ -202,12 +202,25 @@ function startBot(mode = null) {
             });
 
             botProcess.on('close', (code) => {
-                console.log(`Bot进程退出，退出码: ${code}`);
-                if (code !== 0 && code !== null) {
-                    logger.setError(`机器人异常退出，退出码: ${code}`);
+        console.log(`Bot进程退出，退出码: ${code}`);
+
+        // 无论退出码是什么，都应该清理进程状态
+        const wasRunning = botProcess !== null;
+        botProcess = null;
+
+        // 如果不是手动停止（退出码0通常表示正常退出，但在被踢出时也可能是0）
+        if (wasRunning) {
+            if (code !== 0 && code !== null) {
+                logger.setError(`机器人异常退出，退出码: ${code}`);
+            } else {
+                // 即使退出码是0，如果是意外断开也需要记录
+                const currentTime = Date.now();
+                if (!global.lastManualStop || currentTime - global.lastManualStop > 5000) {
+                    logger.setError(`机器人意外断开连接（可能被踢出或网络问题）`);
                 }
-                botProcess = null;
-            });
+            }
+        }
+    });
 
             botProcess.on('error', (error) => {
                 console.error('Bot进程启动失败:', error);
@@ -227,6 +240,8 @@ function startBot(mode = null) {
 // 停止机器人
 function stopBot() {
     if (botProcess) {
+        // 记录手动停止的时间
+        global.lastManualStop = Date.now();
         botProcess.kill();
         botProcess = null;
     }
@@ -335,7 +350,7 @@ const server = http.createServer((req, res) => {
         req.on('end', () => {
             try {
                 const { command } = JSON.parse(body);
-                
+
                 if (!botProcess) {
                     res.writeHead(400, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify({success: false, message: '机器人未运行'}));
@@ -353,7 +368,7 @@ const server = http.createServer((req, res) => {
                     // 向机器人进程发送命令
                     botProcess.stdin.write(`COMMAND:${command}\n`);
                     logger.log(`通过控制面板执行命令: ${command}`);
-                    
+
                     res.writeHead(200, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify({success: true, message: '命令已发送'}));
                 } catch (error) {
@@ -376,7 +391,7 @@ const server = http.createServer((req, res) => {
         req.on('end', () => {
             try {
                 const { message } = JSON.parse(body);
-                
+
                 if (!botProcess) {
                     res.writeHead(400, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify({success: false, message: '机器人未运行'}));
@@ -393,7 +408,7 @@ const server = http.createServer((req, res) => {
                     // 向机器人进程发送聊天消息
                     botProcess.stdin.write(`CHAT:${message}\n`);
                     logger.log(`通过控制面板发送聊天: ${message}`);
-                    
+
                     res.writeHead(200, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify({success: true, message: '消息已发送'}));
                 } catch (error) {
