@@ -158,10 +158,28 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+        .error-info {
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .error-info h4 {
+            margin: 0 0 10px 0;
+            color: #721c24;
+            font-family: Arial, sans-serif;
+        }
         .hidden {
             display: none;
         }
-        
+
     </style>
 </head>
 <body>
@@ -170,7 +188,6 @@
 
         <div class="mode-selector">
             <button id="java-mode" class="active" onclick="switchMode('java')">JAVA模式</button>
-            <button id="bedrock-mode" onclick="switchMode('bedrock')">基岩版模式</button>
         </div>
 
         <div class="config-section">
@@ -235,34 +252,6 @@
             </div>
         </div>
 
-        <div id="bedrock-config" class="config-section hidden">
-            <h3>基岩版模式配置</h3>
-            <div class="form-group">
-                <label>游戏版本:</label>
-                <select id="bedrock-version">
-                    <option value="1.21.80">1.21.80</option>
-                    <option value="1.21.40">1.21.40</option>
-                    <option value="1.21.30">1.21.30</option>
-                    <option value="1.21.20">1.21.20</option>
-                    <option value="1.21.0">1.21.0</option>
-                    <option value="1.20.80">1.20.80</option>
-                    <option value="1.20.70">1.20.70</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>UDP端口:</label>
-                <input type="number" id="udp-port" placeholder="UDP端口（通常与TCP端口相同）">
-            </div>
-            <div class="form-group">
-                <label>连接协议:</label>
-                <select id="bedrock-protocol">
-                    <option value="auto">自动检测</option>
-                    <option value="tcp-udp">TCP + UDP</option>
-                    <option value="tcp-only">仅TCP</option>
-                </select>
-            </div>
-        </div>
-
         <div class="control-buttons">
             <button class="save-btn" onclick="saveConfig()">保存配置</button>
             <button class="start-btn" onclick="startBot()">启动机器人</button>
@@ -270,6 +259,7 @@
         </div>
 
         <div id="status" class="status stopped">机器人状态: 已停止</div>
+        <div id="error-info" class="error-info hidden"></div>
     </div>
 
     <script>
@@ -290,9 +280,7 @@
 
             currentMode = mode;
             document.getElementById('java-mode').classList.toggle('active', mode === 'java');
-            document.getElementById('bedrock-mode').classList.toggle('active', mode === 'bedrock');
             document.getElementById('java-config').classList.toggle('hidden', mode !== 'java');
-            document.getElementById('bedrock-config').classList.toggle('hidden', mode !== 'bedrock');
 
             // 切换模式时加载对应的配置
             loadConfig(mode);
@@ -316,15 +304,10 @@
             document.getElementById('java-version').value = config.client?.version || '1.21.1';
             document.getElementById('auth').value = config.client?.auth || 'offline';
 
-            // 设置基岩版配置
-            document.getElementById('bedrock-version').value = config.client?.bedrockVersion || '1.21.80';
-            document.getElementById('udp-port').value = config.client?.udpPort || config.client?.port || '';
-            document.getElementById('bedrock-protocol').value = config.client?.bedrockProtocol || 'auto';
-
             // 加载模组列表
             mods = config.client?.mods || [];
             updateModList();
-            
+
             // 设置自适应mod模式
             document.getElementById('adaptive-mods').checked = config.client?.adaptiveMods || false;
             updateAdaptiveMode();
@@ -332,7 +315,7 @@
             // 只在页面首次加载时设置模式，避免循环
             if (!currentMode || currentMode === '') {
                 if (config.client?.mode === 'bedrock') {
-                    switchMode('bedrock');
+                  switchMode('java');
                 } else {
                     switchMode('java');
                 }
@@ -344,7 +327,7 @@
             const manualSection = document.getElementById('manual-mods-section');
             const modList = document.getElementById('mod-list');
             const addButtons = document.querySelectorAll('button[onclick*="addMod"], button[onclick*="addCommonMods"]');
-            
+
             if (isAdaptive) {
                 manualSection.style.opacity = '0.5';
                 modList.style.pointerEvents = 'none';
@@ -395,22 +378,22 @@
                 'thermalexpansion',
                 'tinkersconstruct'
             ];
-            
+
             const selectedMods = [];
             let modalHtml = '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">';
             modalHtml += '<div style="background: white; padding: 20px; border-radius: 10px; max-width: 400px; max-height: 500px; overflow-y: auto;">';
             modalHtml += '<h3>选择常用mod:</h3>';
-            
+
             commonMods.forEach((mod, index) => {
                 modalHtml += `<label style="display: block; margin: 5px 0;"><input type="checkbox" value="${mod}" onchange="toggleMod('${mod}', this.checked)"> ${mod}</label>`;
             });
-            
+
             modalHtml += '<div style="margin-top: 15px;"><button onclick="confirmAddMods()" style="margin-right: 10px; padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px;">确认添加</button>';
             modalHtml += '<button onclick="closeModal()" style="padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px;">取消</button></div>';
             modalHtml += '</div></div>';
-            
+
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
+
             window.selectedMods = [];
             window.toggleMod = function(mod, checked) {
                 if (checked) {
@@ -420,7 +403,7 @@
                     if (index > -1) window.selectedMods.splice(index, 1);
                 }
             };
-            
+
             window.confirmAddMods = function() {
                 window.selectedMods.forEach(mod => {
                     if (!mods.includes(mod)) {
@@ -430,7 +413,7 @@
                 updateModList();
                 closeModal();
             };
-            
+
             window.closeModal = function() {
                 const modal = document.querySelector('div[style*="position: fixed"]');
                 if (modal) modal.remove();
@@ -454,11 +437,6 @@
                 newConfig.client.version = document.getElementById('java-version').value;
                 newConfig.client.adaptiveMods = document.getElementById('adaptive-mods').checked;
                 newConfig.client.mods = mods.filter(mod => mod.trim() !== '');
-            } else {
-                newConfig.client.bedrockVersion = document.getElementById('bedrock-version').value;
-                newConfig.client.udpPort = document.getElementById('udp-port').value;
-                newConfig.client.protocol = 'bedrock';
-                newConfig.client.bedrockProtocol = document.getElementById('bedrock-protocol').value;
             }
 
             fetch('/api/config', {
@@ -484,11 +462,16 @@
         }
 
         function startBot() {
+            // 启动时先隐藏错误信息
+            document.getElementById('error-info').className = 'error-info hidden';
+
             fetch('/api/bot/start', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         alert('机器人启动成功！');
+                        // 立即更新状态
+                        setTimeout(updateStatus, 1000);
                     } else {
                         alert('启动失败: ' + data.message);
                     }
@@ -520,12 +503,23 @@
                 .then(response => response.json())
                 .then(data => {
                     const statusEl = document.getElementById('status');
+                    const errorEl = document.getElementById('error-info');
+
                     if (data.running) {
                         statusEl.textContent = '机器人状态: 运行中';
                         statusEl.className = 'status running';
+                        errorEl.className = 'error-info hidden'; // 隐藏错误信息
                     } else {
                         statusEl.textContent = '机器人状态: 已停止';
                         statusEl.className = 'status stopped';
+
+                        // 显示错误信息（如果有的话）
+                        if (data.error) {
+                            errorEl.innerHTML = '<h4>🚨 启动失败原因:</h4>' + data.error;
+                            errorEl.className = 'error-info';
+                        } else {
+                            errorEl.className = 'error-info hidden';
+                        }
                     }
                 })
                 .catch(error => {
@@ -536,3 +530,8 @@
     </script>
 </body>
 </html>
+```
+
+```
+The code has been modified to remove Bedrock mode configurations and related logic, focusing solely on Java mode.
+```
