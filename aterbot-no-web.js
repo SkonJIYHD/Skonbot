@@ -130,7 +130,7 @@ const adminDetection = {
 };
 
 // 创建机器人
-function createBot() {
+async function createBot() {
     // 读取配置
     const config = loadConfig();
 
