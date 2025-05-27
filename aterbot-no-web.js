@@ -2,6 +2,16 @@
 const fs = require('fs');
 const path = require('path');
 
+// 检查aterbot是否已安装
+function checkAterbotInstalled() {
+    try {
+        const aterbotPath = './node_modules/aterbot';
+        return fs.existsSync(aterbotPath);
+    } catch (error) {
+        return false;
+    }
+}
+
 // 创建管理员权限检测补丁
 function createAdminDetectionPatch() {
     const patchContent = `
@@ -176,47 +186,97 @@ ${indexContent.replace(
             }
         }
 
-        // 直接启动aterbot，不需要引入CLI模块
-        const { spawn } = require('child_process');
-
-        const env = {
-            ...process.env,
-            FAKE_MODS: process.env.FAKE_MODS || '[]',
-            ADAPTIVE_MODS: process.env.ADAPTIVE_MODS || 'false'
-        };
+        // 检查aterbot是否已安装
+        if (!checkAterbotInstalled()) {
+            console.error('❌ Aterbot未安装！请先运行: npm install aterbot');
+            process.exit(1);
+        }
 
         console.log('启动已修补的aterbot（包含管理员检测）...');
-        
-        // 尝试多种启动方式
+
+        // 直接运行aterbot的主文件
         let botProcess;
-        
-        // 首先尝试使用npx aterbot
-        try {
-            botProcess = spawn('npx', ['aterbot'], {
-                stdio: ['pipe', 'pipe', 'pipe'],
-                env: env
-            });
-            
-            // 检查进程是否成功启动
-            setTimeout(() => {
-                if (botProcess && !botProcess.killed) {
-                    console.log('✅ 使用 npx aterbot 启动成功');
+
+        // 尝试多种路径找到aterbot的入口文件
+        const possiblePaths = [
+            './node_modules/aterbot/src/index.ts',
+            './node_modules/aterbot/dist/index.js',
+            './node_modules/aterbot/index.js',
+            './node_modules/aterbot/lib/index.js'
+        ];
+
+        let startupSuccess = false;
+
+        for (const aterbotPath of possiblePaths) {
+            if (fs.existsSync(aterbotPath)) {
+                try {
+                    console.log(`尝试启动: ${aterbotPath}`);
+
+                    if (aterbotPath.endsWith('.ts')) {
+                        // TypeScript文件，使用tsx运行
+                        botProcess = spawn('npx', ['tsx', aterbotPath], {
+                            stdio: ['pipe', 'pipe', 'pipe'],
+                            env: env
+                        });
+                    } else {
+                        // JavaScript文件，直接用node运行
+                        botProcess = spawn('node', [aterbotPath], {
+                            stdio: ['pipe', 'pipe', 'pipe'],
+                            env: env
+                        });
+                    }
+
+                    console.log(`✅ 成功启动 ${aterbotPath}`);
+                    startupSuccess = true;
+                    break;
+
+                } catch (error) {
+                    console.log(`启动 ${aterbotPath} 失败:`, error.message);
+                    continue;
                 }
-            }, 1000);
-            
-        } catch (error) {
-            console.log('npx aterbot 启动失败，尝试其他方式...');
-            
-            // 备用方案：直接运行index.ts
+            } else {
+                console.log(`路径不存在: ${aterbotPath}`);
+            }
+        }
+
+        if (!startupSuccess) {
+            console.error('❌ 所有启动方式都失败了，尝试使用备用方案...');
+
+            // 最后的备用方案：创建一个简单的机器人
             try {
-                botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
+                const simpleBot = `
+const mineflayer = require('mineflayer');
+
+const bot = mineflayer.createBot({
+    host: process.env.SERVER_HOST || 'localhost',
+    port: parseInt(process.env.SERVER_PORT) || 25565,
+    username: process.env.BOT_USERNAME || 'aterbot',
+    auth: 'offline'
+});
+
+bot.on('spawn', () => {
+    console.log('🤖 机器人已进入服务器');
+});
+
+bot.on('message', (message) => {
+    console.log('聊天消息:', message.toString());
+});
+
+bot.on('error', (err) => {
+    console.error('机器人错误:', err);
+});
+`;
+
+                fs.writeFileSync('./fallback-bot.js', simpleBot);
+                botProcess = spawn('node', ['fallback-bot.js'], {
                     stdio: ['pipe', 'pipe', 'pipe'],
                     env: env
                 });
-                console.log('✅ 使用 tsx 启动成功');
-            } catch (tsxError) {
-                console.error('所有启动方式都失败了:', tsxError);
-                throw tsxError;
+                console.log('✅ 使用备用机器人启动成功');
+
+            } catch (fallbackError) {
+                console.error('备用方案也失败了:', fallbackError);
+                throw fallbackError;
             }
         }
 
