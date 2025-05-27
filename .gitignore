@@ -1,0 +1,55 @@
+
+# 敏感配置文件
+config.json
+config-java.json
+
+# LittleSkin用户配置文件
+littleskin_profiles/
+
+# Node.js相关
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 环境变量文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 日志文件
+*.log
+logs/
+
+# 运行时文件
+*.pid
+*.seed
+*.pid.lock
+
+# 临时文件
+.tmp/
+temp/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Replit相关
+.upm/
+.config/
+.cache/
+
+# 附件和截图
+attached_assets/
+
+# 备份文件
+*.bak
+*.backup

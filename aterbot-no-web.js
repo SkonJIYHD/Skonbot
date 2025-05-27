@@ -234,10 +234,8 @@ async function createBot() {
                             skinUrl: skinInfo.skinUrl ? '✅ 有皮肤' : '❌ 无皮肤',
                             capeUrl: skinInfo.capeUrl ? '✅ 有披风' : '❌ 无披风'
                         });
-                    } else if (!skinInfo.silent) {
-                        // 只有非静默错误才显示
-                        console.log('⚠️ 皮肤信息获取失败，但不影响使用');
                     }
+                    // 完全静默404错误
                 }
                 
             } catch (error) {
@@ -263,7 +261,7 @@ async function createBot() {
                     console.log('⚠️ 未找到LittleSkin用户皮肤信息');
                 }
             } catch (error) {
-                // 不显示404相关的错误信息
+                // 完全屏蔽404错误
                 if (!error.message.includes('HTTP 404')) {
                     console.log('⚠️ 获取LittleSkin皮肤信息失败:', error.message);
                 }
@@ -425,29 +423,40 @@ async function createBot() {
     // 监听标准输入，处理控制面板命令
     process.stdin.on('data', (data) => {
         const input = data.toString().trim();
+        console.log(`[控制面板] 收到输入: ${input}`);
 
         if (input.startsWith('COMMAND:')) {
             const command = input.replace('COMMAND:', '');
+            console.log(`[控制面板] 解析命令: "${command}"`);
+            
             if (bot && isConnected) {
                 try {
                     const cleanCommand = sanitizeMessage(command);
-                    console.log(`📤 执行命令: ${cleanCommand}`);
+                    console.log(`📤 准备执行命令: "${cleanCommand}"`);
+                    console.log(`🤖 机器人状态: 已连接=${isConnected}, 实体存在=${!!bot.entity}`);
+                    
+                    // 直接使用bot.chat发送命令
                     bot.chat(cleanCommand);
+                    console.log(`✅ 命令已发送到服务器: ${cleanCommand}`);
                 } catch (error) {
-                    console.error('命令执行失败:', error);
+                    console.error('❌ 命令执行失败:', error);
                 }
             } else {
                 console.log('⚠️ 机器人未连接，无法执行命令');
+                console.log(`🔍 调试信息: bot=${!!bot}, isConnected=${isConnected}`);
             }
         } else if (input.startsWith('CHAT:')) {
             const message = input.replace('CHAT:', '');
+            console.log(`[控制面板] 解析聊天消息: "${message}"`);
+            
             if (bot && isConnected) {
                 try {
                     const cleanMessage = sanitizeMessage(message);
                     console.log(`💬 发送消息: ${cleanMessage}`);
                     bot.chat(cleanMessage);
+                    console.log(`✅ 消息已发送到服务器: ${cleanMessage}`);
                 } catch (error) {
-                    console.error('消息发送失败:', error);
+                    console.error('❌ 消息发送失败:', error);
                 }
             } else {
                 console.log('⚠️ 机器人未连接，无法发送消息');
