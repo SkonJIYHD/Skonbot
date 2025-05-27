@@ -360,24 +360,47 @@
             
             if (illegalChars && illegalChars.length > 0) {
                 const uniqueChars = [...new Set(illegalChars)];
+                const suggestionName = username.replace(/[^a-zA-Z0-9]/g, '') || 'BotSkon';
                 warningEl.innerHTML = `
-                    <strong>⚠️ 用户名包含非法字符: ${uniqueChars.join(', ')}</strong><br>
-                    Minecraft服务器通常只允许字母(a-z, A-Z)和数字(0-9)。<br>
-                    <strong>建议修改为:</strong> ${username.replace(/[^a-zA-Z0-9]/g, '')} 或其他纯字母数字组合
+                    <strong>🚫 用户名包含非法字符: ${uniqueChars.join(', ')}</strong><br>
+                    <div style="margin: 5px 0; padding: 5px; background-color: #ffe6e6; border-left: 3px solid #ff4444; font-size: 11px;">
+                        <strong>错误说明：</strong>Minecraft服务器会拒绝包含特殊字符的用户名，机器人将被踢出并显示 "illegal_characters" 错误喵！
+                    </div>
+                    <strong>💡 建议修改为:</strong> <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">${suggestionName}</code><br>
+                    <small>只允许使用字母(a-z, A-Z)和数字(0-9)，不支持下划线、空格、中文等特殊字符喵~</small>
                 `;
                 warningEl.className = 'character-warning error';
                 warningEl.style.display = 'block';
             } else if (username.length > 16) {
                 warningEl.innerHTML = `
-                    <strong>⚠️ 用户名过长！</strong><br>
-                    Minecraft用户名不能超过16个字符，当前长度: ${username.length}
+                    <strong>📏 用户名过长！</strong><br>
+                    <div style="margin: 5px 0; padding: 5px; background-color: #ffe6e6; border-left: 3px solid #ff4444; font-size: 11px;">
+                        Minecraft用户名限制为最多16个字符，当前长度: ${username.length} 个字符
+                    </div>
+                    <strong>建议缩短为:</strong> <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">${username.substring(0, 16)}</code>
                 `;
                 warningEl.className = 'character-warning error';
                 warningEl.style.display = 'block';
-            } else if (username.length > 0) {
+            } else if (username.length < 3 && username.length > 0) {
                 warningEl.innerHTML = `
-                    <strong>✅ 用户名格式正确！</strong><br>
-                    当前用户名符合Minecraft服务器要求喵~
+                    <strong>⚠️ 用户名太短了喵！</strong><br>
+                    建议使用至少3个字符的用户名，当前只有 ${username.length} 个字符<br>
+                    <small>虽然技术上可行，但某些服务器可能不接受过短的用户名</small>
+                `;
+                warningEl.className = 'character-warning';
+                warningEl.style.display = 'block';
+                warningEl.style.backgroundColor = '#fff3cd';
+                warningEl.style.borderColor = '#ffeaa7';
+                warningEl.style.color = '#856404';
+            } else if (username.length >= 3) {
+                warningEl.innerHTML = `
+                    <strong>✅ 用户名格式完全正确喵！</strong><br>
+                    <div style="margin: 5px 0; padding: 5px; background-color: #e6ffe6; border-left: 3px solid #00aa00; font-size: 11px;">
+                        ✓ 只包含字母和数字<br>
+                        ✓ 长度符合要求 (${username.length}/16 字符)<br>
+                        ✓ 符合Minecraft服务器标准
+                    </div>
+                    机器人可以正常使用此用户名进入服务器喵~
                 `;
                 warningEl.className = 'character-warning';
                 warningEl.style.display = 'block';
@@ -543,14 +566,26 @@
             const username = document.getElementById('username').value;
             const illegalChars = username.match(/[^a-zA-Z0-9]/g);
             
+            if (!username.trim()) {
+                alert(`🚫 用户名不能为空喵！\n\n请输入一个有效的机器人用户名。\n建议使用: BotSkon, AterBot, MyBot 等格式。`);
+                return;
+            }
+            
             if (illegalChars && illegalChars.length > 0) {
-                alert(`⚠️ 用户名包含非法字符: ${[...new Set(illegalChars)].join(', ')}\n\n请修改用户名后再保存配置喵！`);
+                const suggestion = username.replace(/[^a-zA-Z0-9]/g, '') || 'BotSkon';
+                alert(`🚫 用户名包含非法字符: ${[...new Set(illegalChars)].join(', ')}\n\n❌ 这些字符会导致机器人被服务器踢出，显示 "illegal_characters" 错误！\n\n💡 建议修改为: ${suggestion}\n\n只能使用字母(a-z, A-Z)和数字(0-9)喵~`);
                 return;
             }
             
             if (username.length > 16) {
-                alert(`⚠️ 用户名过长！\n\nMinecraft用户名不能超过16个字符，当前长度: ${username.length}`);
+                alert(`📏 用户名过长！\n\nMinecraft用户名不能超过16个字符\n当前长度: ${username.length} 个字符\n\n建议缩短为: ${username.substring(0, 16)}`);
                 return;
+            }
+            
+            if (username.length < 3) {
+                if (!confirm(`⚠️ 用户名有点短哦！\n\n当前用户名只有 ${username.length} 个字符，某些服务器可能不接受。\n\n是否仍要保存此配置？`)) {
+                    return;
+                }
             }
             
             const newConfig = {
