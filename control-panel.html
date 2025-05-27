@@ -312,6 +312,71 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="form-group">
+                <label>皮肤模式:</label>
+                <select id="skinMode" onchange="updateSkinMode()">
+                    <option value="default">默认皮肤 (Steve)</option>
+                    <option value="url">自定义皮肤URL</option>
+                    <option value="yggdrasil">第三方皮肤站 (Yggdrasil)</option>
+                    <option value="littleskin">LittleSkin皮肤站</option>
+                </select>
+            </div>
+
+            <div id="skin-url-section" class="form-group" style="display: none;">
+                <label>皮肤URL:</label>
+                <input type="url" id="skinUrl" placeholder="https://example.com/skin.png">
+                <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                    输入一个有效的皮肤图片URL（64x64或64x32像素的PNG格式）
+                </div>
+            </div>
+
+            <div id="yggdrasil-section" style="display: none;">
+                <div class="form-group">
+                    <label>Yggdrasil服务器:</label>
+                    <select id="skinServer" onchange="updateYggdrasilUrl()">
+                        <option value="https://littleskin.cn/api/yggdrasil">LittleSkin</option>
+                        <option value="https://auth.mc-user.com:233">统一通行证</option>
+                        <option value="https://auth.mc-user.com:233/api/yggdrasil">MC-User</option>
+                        <option value="custom">自定义服务器</option>
+                    </select>
+                </div>
+                
+                <div id="custom-yggdrasil" class="form-group" style="display: none;">
+                    <label>自定义Yggdrasil URL:</label>
+                    <input type="url" id="customYggdrasilUrl" placeholder="https://your-server.com/api/yggdrasil">
+                </div>
+                
+                <div class="form-group">
+                    <label>皮肤站用户名:</label>
+                    <input type="text" id="yggdrasilUsername" placeholder="在皮肤站的用户名">
+                </div>
+            </div>
+
+            <div id="littleskin-section" style="display: none;">
+                <div class="form-group">
+                    <label>LittleSkin用户名:</label>
+                    <input type="text" id="littleskinUsername" placeholder="LittleSkin用户名">
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="enableLittleskinAuth" onchange="updateLittleskinAuth()"> 
+                        启用LittleSkin认证
+                    </label>
+                    <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                        启用后可以使用LittleSkin的完整功能，需要提供密码
+                    </div>
+                </div>
+                
+                <div id="littleskin-auth-section" class="form-group" style="display: none;">
+                    <label>LittleSkin密码:</label>
+                    <input type="password" id="littleskinPassword" placeholder="LittleSkin账户密码">
+                    <div style="margin-top: 5px; font-size: 12px; color: #856404; background-color: #fff3cd; padding: 5px; border-radius: 3px;">
+                        <strong>⚠️ 注意:</strong> 密码将用于获取Yggdrasil认证令牌，本地存储加密后的认证信息
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="java-config" class="config-section">
@@ -724,6 +789,19 @@
 
                     newConfig.client.yggdrasilServer = skinServer === 'custom' ? customUrl : skinServer;
                     newConfig.client.yggdrasilUsername = yggdrasilUsername;
+                }
+
+                // LittleSkin皮肤站配置
+                if (skinMode === 'littleskin') {
+                    const littleskinUsername = document.getElementById('littleskinUsername').value;
+                    const enableLittleskinAuth = document.getElementById('enableLittleskinAuth').checked;
+                    const littleskinPassword = document.getElementById('littleskinPassword').value;
+
+                    newConfig.client.littleskinUsername = littleskinUsername;
+                    newConfig.client.enableLittleskinAuth = enableLittleskinAuth;
+                    if (enableLittleskinAuth && littleskinPassword) {
+                        newConfig.client.littleskinPassword = littleskinPassword;
+                    }
                 }
             }
 
