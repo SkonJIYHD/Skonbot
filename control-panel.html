@@ -362,9 +362,9 @@
                 <strong>💡 操作指南:</strong> 先保存配置，再启动机器人。启动后可以使用下方的命令控制功能喵！
             </div>
 
-            <div style="display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                <button class="save-btn" onclick="saveConfig()" style="flex: 1; max-width: 200px; min-width: 150px;">💾 保存配置</button>
-                <button id="toggle-btn" class="start-btn" onclick="toggleBot()" style="flex: 1; max-width: 200px; min-width: 150px;">▶️ 启动机器人</button>
+            <div class="control-buttons">
+                <button class="save-btn" onclick="saveConfig()">💾 保存配置</button>
+                <button id="toggle-btn" class="start-btn" onclick="toggleBot()">▶️ 启动机器人</button>
             </div>
 
             <div id="status" class="status stopped">机器人状态: 已停止</div>
