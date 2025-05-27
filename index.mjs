@@ -1,30 +1,37 @@
+import { createServer } from 'http';
+import { readFileSync, existsSync, writeFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-import { spawn } from 'child_process';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 console.log('启动 Aterbot 控制面板...');
 
-// 检查是否已经有进程在运行
-if (global.webServerProcess) {
-    console.log('Web服务器已经在运行中');
-    process.exit(0);
+// 确保配置文件存在
+const configPath = './config-java.json';
+if (!existsSync(configPath)) {
+    const defaultConfig = {
+        client: {
+            host: 'localhost',
+            port: '25565',
+            username: 'BotSkon',
+            version: '1.21.1',
+            auth: 'offline',
+            mode: 'java',
+            mods: [],
+            adaptiveMods: false,
+            skinMode: 'default'
+        }
+    };
+    writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
+    console.log('创建默认配置文件');
 }
 
-// 启动网页控制服务器
-const webServer = spawn('node', ['web-server.js'], {
-  stdio: 'inherit'
+// 启动Web服务器
+import('./web-server.js').then(module => {
+    console.log('Aterbot 控制面板正在启动...');
+    console.log('请在浏览器中打开Webview进行配置和控制');
+}).catch(error => {
+    console.error('启动失败:', error);
 });
-
-global.webServerProcess = webServer;
-
-webServer.on('close', (code) => {
-  console.log(`网页控制服务器退出，退出码: ${code}`);
-  global.webServerProcess = null;
-});
-
-webServer.on('error', (error) => {
-  console.error('Web服务器启动失败:', error);
-  global.webServerProcess = null;
-});
-
-console.log('Aterbot 控制面板正在启动...');
-console.log('请在浏览器中打开Webview进行配置和控制');
