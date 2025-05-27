@@ -610,7 +610,7 @@
                 newConfig.client.mods = mods.filter(mod => mod.trim() !== '');
             }
 
-            fetch('/api/config', {
+            fetch(`${getApiBase()}/api/config`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -636,7 +636,7 @@
             // 启动时先隐藏错误信息
             document.getElementById('error-info').className = 'error-info hidden';
 
-            fetch('/api/bot/start', { method: 'POST' })
+            fetch(`${getApiBase()}/api/bot/start`, { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -654,7 +654,7 @@
         }
 
         function stopBot() {
-            fetch('/api/bot/stop', { method: 'POST' })
+            fetch(`${getApiBase()}/api/bot/stop`, { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -674,7 +674,7 @@
         }
 
         function updateStatus() {
-            fetch('/api/bot/status')
+            fetch(`${getApiBase()}/api/bot/status`)
                 .then(response => response.json())
                 .then(data => {
                     const statusEl = document.getElementById('status');
@@ -715,7 +715,7 @@
 
             const fullCommand = command.startsWith('/') ? command : '/' + command;
 
-            fetch('/api/bot/command', {
+            fetch(`${getApiBase()}/api/bot/command`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -744,7 +744,7 @@
                 return;
             }
 
-            fetch('/api/bot/chat', {
+            fetch(`${getApiBase()}/api/bot/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -767,7 +767,7 @@
 
         // 执行快捷命令
         function executeQuickCommand(command) {
-            fetch('/api/bot/command', {
+            fetch(`${getApiBase()}/api/bot/command`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -896,6 +896,14 @@
                 }
             });
         });
+
+        // 获取API基础路径
+        function getApiBase() {
+            // 假设后端服务器和前端在同一个域名下，端口可能不同
+            return ''; // 空字符串表示使用相对路径, 自动匹配当前域名和端口
+            // 如果需要指定端口，可以修改为:
+            // return 'http://localhost:5000';  // 替换为你的后端API地址
+        }
     </script>
 </body>
 </html>
