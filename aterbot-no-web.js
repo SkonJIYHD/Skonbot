@@ -1,4 +1,3 @@
-
 // 修改版的aterbot启动器，禁用web服务并添加管理员权限检测
 const fs = require('fs');
 const path = require('path');
@@ -10,14 +9,14 @@ function createAdminDetectionPatch() {
 const adminDetection = {
     isAdmin: false,
     commandMode: false,
-    
+
     // 检测管理员权限
     checkAdminStatus(bot) {
         try {
             // 监听聊天消息以检测权限反馈
             bot.on('message', (message) => {
                 const text = message.toString();
-                
+
                 // 检测权限相关的消息
                 if (text.includes('你现在是管理员') || 
                     text.includes('You are now an operator') ||
@@ -25,20 +24,20 @@ const adminDetection = {
                     text.includes('Permission level: 4') ||
                     text.includes('Opped') ||
                     text.includes('已获得管理员权限')) {
-                    
+
                     if (!this.isAdmin) {
                         this.isAdmin = true;
                         console.log('🎉 检测到机器人已获得管理员权限！');
                         this.enableCommandMode(bot);
                     }
                 }
-                
+
                 // 检测权限移除
                 if (text.includes('你不再是管理员') || 
                     text.includes('You are no longer an operator') ||
                     text.includes('Deopped') ||
                     text.includes('已移除管理员权限')) {
-                    
+
                     if (this.isAdmin) {
                         this.isAdmin = false;
                         this.commandMode = false;
@@ -46,7 +45,7 @@ const adminDetection = {
                     }
                 }
             });
-            
+
             // 定期检测权限状态（每30秒）
             setInterval(() => {
                 if (bot && bot.chat) {
@@ -61,30 +60,30 @@ const adminDetection = {
                     }
                 }
             }, 30000);
-            
+
         } catch (error) {
             console.error('管理员权限检测初始化失败:', error);
         }
     },
-    
+
     // 启用命令模式
     enableCommandMode(bot) {
         if (this.commandMode) return;
-        
+
         this.commandMode = true;
         console.log('🚀 自动启用命令模式！');
-        
+
         // 监听聊天消息以执行命令
         bot.on('message', (message) => {
             if (!this.isAdmin || !this.commandMode) return;
-            
+
             const text = message.toString();
             const match = text.match(/^<(.+?)> !(.+)$/);
-            
+
             if (match) {
                 const [, player, command] = match;
                 console.log(\`执行来自 \${player} 的命令: \${command}\`);
-                
+
                 try {
                     // 执行命令
                     bot.chat(\`/\${command}\`);
@@ -94,7 +93,7 @@ const adminDetection = {
                 }
             }
         });
-        
+
         // 发送启用通知
         setTimeout(() => {
             if (bot && bot.chat) {
@@ -109,7 +108,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = adminDetection;
 }
 `;
-    
+
     return patchContent;
 }
 
@@ -120,10 +119,10 @@ function patchAterbot() {
         const aterbotWebPath = './node_modules/aterbot/src/web.ts';
         if (fs.existsSync(aterbotWebPath)) {
             console.log('禁用aterbot的web服务...');
-            
+
             // 读取web.ts内容
             let webContent = fs.readFileSync(aterbotWebPath, 'utf8');
-            
+
             // 如果还没有被修改过，就修改它
             if (!webContent.includes('// PATCHED BY CONTROL PANEL')) {
                 // 在文件开头添加早期返回，跳过web服务启动
@@ -137,24 +136,24 @@ export default function() {
 /*
 ${webContent}
 */`;
-                
+
                 fs.writeFileSync(aterbotWebPath, patchedContent);
                 console.log('成功禁用aterbot的web服务');
             }
         }
-        
+
         // 修补主入口文件以添加管理员检测
         const aterbotIndexPath = './node_modules/aterbot/src/index.ts';
         if (fs.existsSync(aterbotIndexPath)) {
             console.log('添加管理员权限检测功能...');
-            
+
             let indexContent = fs.readFileSync(aterbotIndexPath, 'utf8');
-            
+
             // 如果还没有被修改过，就修改它
             if (!indexContent.includes('// ADMIN DETECTION PATCH')) {
                 // 创建管理员检测代码
                 const adminDetectionCode = createAdminDetectionPatch();
-                
+
                 // 在文件开头添加管理员检测
                 const patchedIndexContent = `// ADMIN DETECTION PATCH
 ${adminDetectionCode}
@@ -171,37 +170,56 @@ ${indexContent.replace(
         console.log('🤖 机器人已进入服务器，开始检测管理员权限...');
         adminDetection.checkAdminStatus(bot);`
 )}`;
-                
+
                 fs.writeFileSync(aterbotIndexPath, patchedIndexContent);
                 console.log('成功添加管理员权限检测功能');
             }
         }
-        
+
+        // 保存机器人实例的引用
+        const originalAterbot = require('./node_modules/aterbot/cli');
+
+        // Hook进aterbot的机器人创建过程
+        const originalMineflayer = require('mineflayer');
+        const originalCreateBot = originalMineflayer.createBot;
+
+        let currentBot = null;
+
+        originalMineflayer.createBot = function(...args) {
+            const bot = originalCreateBot.apply(this, args);
+            currentBot = bot; // 保存机器人实例
+            console.log('🤖 机器人实例已保存，控制面板现在可以发送命令');
+            return bot;
+        };
+
+        // 启动aterbot
+        originalAterbot;
+
         // 启动aterbot
         const { spawn } = require('child_process');
-        
+
         const env = {
             ...process.env,
             FAKE_MODS: process.env.FAKE_MODS || '[]',
             ADAPTIVE_MODS: process.env.ADAPTIVE_MODS || 'false'
         };
-        
+
         console.log('启动已修补的aterbot（包含管理员检测）...');
-        const botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
-            stdio: 'inherit',
+        let botProcess = spawn('npx', ['tsx', './node_modules/aterbot/src/index.ts'], {
+            stdio: ['pipe', 'pipe', 'pipe'],
             env: env
         });
-        
+
         process.on('SIGINT', () => {
             botProcess.kill();
             process.exit();
         });
-        
+
         process.on('SIGTERM', () => {
             botProcess.kill();
             process.exit();
         });
-        
+
     } catch (error) {
         console.error('修补aterbot失败:', error);
         process.exit(1);
