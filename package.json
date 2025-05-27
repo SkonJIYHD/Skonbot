@@ -10,7 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "aterbot": "git+https://github.com/JadeMin/aterbot.git",
+    "aterbot": "github:JadeMin/aterbot",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
