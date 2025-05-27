@@ -899,10 +899,8 @@
 
         // 获取API基础路径
         function getApiBase() {
-            // 假设后端服务器和前端在同一个域名下，端口可能不同
-            return ''; // 空字符串表示使用相对路径, 自动匹配当前域名和端口
-            // 如果需要指定端口，可以修改为:
-            // return 'http://localhost:5000';  // 替换为你的后端API地址
+            // 在Replit环境中，使用当前页面的origin
+            return window.location.origin;
         }
     </script>
 </body>
