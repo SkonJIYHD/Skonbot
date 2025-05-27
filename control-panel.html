@@ -218,6 +218,10 @@
             <div class="form-group">
                 <label>用户名:</label>
                 <input type="text" id="username" placeholder="机器人用户名" oninput="validateUsername(this)">
+                <div style="margin-top: 5px;">
+                    <button type="button" onclick="suggestUsername()" style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 3px; font-size: 12px;">🎲 随机推荐用户名</button>
+                    <small style="margin-left: 10px; color: #666;">如果当前用户名被踢出，可以尝试其他名字喵</small>
+                </div>
                 <div id="username-warning" class="character-warning" style="display: none; margin-top: 5px; padding: 8px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px; color: #856404;">
                     <strong>⚠️ 用户名包含非法字符！</strong><br>
                     Minecraft服务器通常只允许字母(a-z, A-Z)和数字(0-9)，不支持下划线(_)、空格或特殊符号。<br>
@@ -791,6 +795,42 @@
         // 清除命令记录
         function clearCommandLog() {
             document.getElementById('command-log').textContent = '';
+        }
+
+        // 推荐用户名功能
+        function suggestUsername() {
+            const prefixes = ['Bot', 'Ater', 'Auto', 'Helper', 'Player', 'Test', 'Game', 'MC'];
+            const suffixes = ['Skon', 'Bot', 'Helper', 'Player', '2024', '123', 'MC', 'Pro'];
+            const simpleNames = ['BotSkon', 'AterBot', 'AutoBot', 'HelperBot', 'TestBot', 'PlayerBot', 'GameBot', 'MCBot'];
+            
+            const randomChoice = Math.random();
+            let suggestedName;
+            
+            if (randomChoice < 0.4) {
+                // 使用简单名字
+                suggestedName = simpleNames[Math.floor(Math.random() * simpleNames.length)];
+            } else if (randomChoice < 0.7) {
+                // 组合前缀+后缀
+                const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+                const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+                suggestedName = prefix + suffix;
+            } else {
+                // 添加随机数字
+                const baseName = simpleNames[Math.floor(Math.random() * simpleNames.length)];
+                const number = Math.floor(Math.random() * 999) + 1;
+                suggestedName = baseName + number;
+            }
+            
+            // 确保不超过16个字符
+            if (suggestedName.length > 16) {
+                suggestedName = suggestedName.substring(0, 16);
+            }
+            
+            document.getElementById('username').value = suggestedName;
+            validateUsername(document.getElementById('username'));
+            
+            // 显示提示
+            alert(`💡 推荐用户名: ${suggestedName}\n\n这个名字完全符合Minecraft服务器要求，可以尝试使用喵！`);
         }
 
         // 回车键快捷执行

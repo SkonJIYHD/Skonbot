@@ -182,7 +182,28 @@ function createBot() {
     // 被踢出事件
     bot.on('kicked', (reason) => {
         console.log('👢 机器人被踢出:', reason);
+
+        // 特别处理用户名相关错误
+        const reasonStr = JSON.stringify(reason);
+        if (reasonStr.includes('illegal_characters')) {
+            console.error('\n🚫 用户名包含非法字符错误！');
+            console.error('建议解决方案:');
+            console.error('1. 确保用户名只包含字母(a-z, A-Z)和数字(0-9)');
+            console.error('2. 不要使用下划线(_)、连字符(-)或其他特殊字符');
+            console.error('3. 用户名长度不超过16个字符');
+            console.error('4. 重新保存配置并重启机器人');
+            console.error(`当前用户名: "${config.username}"`);
+
+            // 检查当前用户名
+            const illegalChars = config.username.match(/[^a-zA-Z0-9]/g);
+            if (illegalChars) {
+                console.error(`❌ 发现非法字符: ${illegalChars.join(', ')}`);
+                console.error(`💡 建议修改为: ${config.username.replace(/[^a-zA-Z0-9]/g, '')}`);
+            }
+        }
+
         isConnected = false;
+        bot = null;
     });
 
     // 监听标准输入，处理控制面板命令
