@@ -70,20 +70,8 @@ const adminDetection = {
                 }
             });
 
-            // 定期检测权限状态（每30秒）
-            setInterval(() => {
-                if (bot && isConnected) {
-                    // 尝试执行一个管理员命令来检测权限
-                    try {
-                        bot.chat('/gamemode spectator @s');
-                        setTimeout(() => {
-                            bot.chat('/gamemode creative @s');
-                        }, 1000);
-                    } catch (error) {
-                        // 忽略错误，这只是检测
-                    }
-                }
-            }, 30000);
+            // 禁用定期权限检测，避免自动发送命令
+            console.log('权限检测已禁用，避免自动命令执行');
 
         } catch (error) {
             console.error('管理员权限检测初始化失败:', error);
@@ -120,12 +108,8 @@ const adminDetection = {
             }
         });
 
-        // 发送启用通知 - 移除颜色代码和特殊字符
-        setTimeout(() => {
-            if (bot && isConnected) {
-                bot.chat('[机器人] 命令模式已自动启用！使用 !<命令> 来执行指令');
-            }
-        }, 2000);
+        // 静默启用命令模式，不发送通知
+        console.log('✅ 命令模式已静默启用');
     }
 };
 
@@ -323,13 +307,11 @@ async function createBot() {
         console.log('🎉 机器人已成功进入服务器！');
         console.log(`当前位置: ${bot.entity.position}`);
 
-        // 启用管理员检测
-        adminDetection.checkAdminStatus(bot);
+        // 禁用自动管理员检测，避免命令冲突
+        console.log('✅ 已禁用自动管理员检测，避免命令冲突');
 
-        // 发送进入通知 - 移除可能导致问题的颜色代码
-        setTimeout(() => {
-            bot.chat('[机器人] 已连接到服务器，控制面板可用！');
-        }, 1000);
+        // 静默进入，不发送通知消息
+        console.log('✅ 机器人已静默进入服务器');
     });
 
     // 聊天消息事件
