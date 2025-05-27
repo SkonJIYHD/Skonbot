@@ -415,6 +415,12 @@ const server = http.createServer((req, res) => {
 
 // 处理端口冲突，尝试多个端口
 function startServer(port = 5000) {
+    // 防止重复启动
+    if (server.listening) {
+        console.log('服务器已经在运行中，跳过启动');
+        return;
+    }
+
     server.listen(port, '0.0.0.0', () => {
         console.log(`Aterbot控制面板启动在 http://0.0.0.0:${port}`);
         console.log('请访问: https://你的repl域名 或者在Replit中点击Webview');
@@ -422,17 +428,24 @@ function startServer(port = 5000) {
     });
 
     server.on('error', (error) => {
-        if (error.code === 'EADDRINUSE') {
+        if (error.code === 'EADDRINUSE' && port < 5010) {
             console.log(`端口 ${port} 被占用，尝试端口 ${port + 1}...`);
-            server.close();
-            startServer(port + 1);
+            // 延迟一下再尝试下一个端口，避免快速重复
+            setTimeout(() => {
+                startServer(port + 1);
+            }, 100);
         } else {
             console.error('服务器启动失败:', error);
+            process.exit(1);
         }
     });
 }
 
-startServer();
+// 防止重复调用
+if (!global.serverStarted) {
+    global.serverStarted = true;
+    startServer();
+}
 
 
 
