@@ -123,6 +123,21 @@
             color: #ff6b35;
             font-weight: bold;
         }
+        .character-warning {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .character-warning.error {
+            background-color: #f8d7da !important;
+            border-color: #f5c6cb !important;
+            color: #721c24 !important;
+        }
+        
         .control-buttons {
             margin-top: 20px;
         }
@@ -202,7 +217,12 @@
             </div>
             <div class="form-group">
                 <label>用户名:</label>
-                <input type="text" id="username" placeholder="机器人用户名">
+                <input type="text" id="username" placeholder="机器人用户名" oninput="validateUsername(this)">
+                <div id="username-warning" class="character-warning" style="display: none; margin-top: 5px; padding: 8px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px; color: #856404;">
+                    <strong>⚠️ 用户名包含非法字符！</strong><br>
+                    Minecraft服务器通常只允许字母(a-z, A-Z)和数字(0-9)，不支持下划线(_)、空格或特殊符号。<br>
+                    建议使用纯字母数字组合，如: BotSkon, AterBot123
+                </div>
             </div>
         </div>
 
@@ -329,6 +349,45 @@
                 localStorage.setItem('firstVisit', 'true');
             }
         };
+
+        // 用户名验证函数
+        function validateUsername(input) {
+            const username = input.value;
+            const warningEl = document.getElementById('username-warning');
+            
+            // 检查非法字符：只允许字母和数字
+            const illegalChars = username.match(/[^a-zA-Z0-9]/g);
+            
+            if (illegalChars && illegalChars.length > 0) {
+                const uniqueChars = [...new Set(illegalChars)];
+                warningEl.innerHTML = `
+                    <strong>⚠️ 用户名包含非法字符: ${uniqueChars.join(', ')}</strong><br>
+                    Minecraft服务器通常只允许字母(a-z, A-Z)和数字(0-9)。<br>
+                    <strong>建议修改为:</strong> ${username.replace(/[^a-zA-Z0-9]/g, '')} 或其他纯字母数字组合
+                `;
+                warningEl.className = 'character-warning error';
+                warningEl.style.display = 'block';
+            } else if (username.length > 16) {
+                warningEl.innerHTML = `
+                    <strong>⚠️ 用户名过长！</strong><br>
+                    Minecraft用户名不能超过16个字符，当前长度: ${username.length}
+                `;
+                warningEl.className = 'character-warning error';
+                warningEl.style.display = 'block';
+            } else if (username.length > 0) {
+                warningEl.innerHTML = `
+                    <strong>✅ 用户名格式正确！</strong><br>
+                    当前用户名符合Minecraft服务器要求喵~
+                `;
+                warningEl.className = 'character-warning';
+                warningEl.style.display = 'block';
+                warningEl.style.backgroundColor = '#d1ecf1';
+                warningEl.style.borderColor = '#bee5eb';
+                warningEl.style.color = '#0c5460';
+            } else {
+                warningEl.style.display = 'none';
+            }
+        }
 
         function showTutorial() {
             alert('欢迎使用 Aterbot 控制面板！\n\n📖 使用步骤：\n1. 在"基础配置"中填写服务器地址、端口和机器人用户名。\n2. 在"JAVA模式配置"中选择游戏版本和认证方式。\n3. 根据需要，添加或选择假mod。\n4. 点击"保存配置"保存设置。\n5. 点击"启动机器人"启动机器人。\n\n⚠️ 重要提示：\n• 如果服务器开启了正版验证（online-mode=true），机器人将无法进入服务器！\n机器人只能连接到离线模式的服务器（online-mode=false）。\n\n💡 服务器管理建议：\n• 建议将机器人设置为创造模式（/gamemode creative 机器人名字）\n• 建议将机器人困在一个封闭的房间内，避免到处乱跑影响其他玩家\n• 这样可以让机器人更稳定地保持在线状态\n\n尽情享受吧！');
@@ -480,6 +539,20 @@
         }
 
         function saveConfig() {
+            // 验证用户名
+            const username = document.getElementById('username').value;
+            const illegalChars = username.match(/[^a-zA-Z0-9]/g);
+            
+            if (illegalChars && illegalChars.length > 0) {
+                alert(`⚠️ 用户名包含非法字符: ${[...new Set(illegalChars)].join(', ')}\n\n请修改用户名后再保存配置喵！`);
+                return;
+            }
+            
+            if (username.length > 16) {
+                alert(`⚠️ 用户名过长！\n\nMinecraft用户名不能超过16个字符，当前长度: ${username.length}`);
+                return;
+            }
+            
             const newConfig = {
                 ...config,
                 client: {
