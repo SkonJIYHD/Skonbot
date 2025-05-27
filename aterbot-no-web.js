@@ -234,6 +234,9 @@ async function createBot() {
                             skinUrl: skinInfo.skinUrl ? '✅ 有皮肤' : '❌ 无皮肤',
                             capeUrl: skinInfo.capeUrl ? '✅ 有披风' : '❌ 无披风'
                         });
+                    } else if (!skinInfo.silent) {
+                        // 只有非静默错误才显示
+                        console.log('⚠️ 皮肤信息获取失败，但不影响使用');
                     }
                 }
                 
@@ -256,11 +259,14 @@ async function createBot() {
                         皮肤: skinInfo.skinUrl ? '✅' : '❌',
                         披风: skinInfo.capeUrl ? '✅' : '❌'
                     });
-                } else {
+                } else if (!skinInfo.silent) {
                     console.log('⚠️ 未找到LittleSkin用户皮肤信息');
                 }
             } catch (error) {
-                console.log('⚠️ 获取LittleSkin皮肤信息失败:', error.message);
+                // 不显示404相关的错误信息
+                if (!error.message.includes('HTTP 404')) {
+                    console.log('⚠️ 获取LittleSkin皮肤信息失败:', error.message);
+                }
             }
         }
     }

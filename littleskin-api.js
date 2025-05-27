@@ -33,6 +33,11 @@ class LittleSkinAPI {
             
             return { success: false, message: '未找到皮肤信息' };
         } catch (error) {
+            // 屏蔽404错误，因为这不影响皮肤功能
+            if (error.message.includes('HTTP 404')) {
+                console.log('🎨 LittleSkin皮肤API返回404，但不影响皮肤使用');
+                return { success: false, message: '404但不影响使用', silent: true };
+            }
             console.error('LittleSkin API错误:', error.message);
             return { success: false, message: error.message };
         }
