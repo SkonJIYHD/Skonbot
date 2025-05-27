@@ -1,4 +1,3 @@
-
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -17,16 +16,16 @@ class LogManager {
         this.logBuffer = [];
         this.maxLogSize = 1000; // 最大日志条数
         this.lastError = null; // 存储最近的错误信息
-        
+
         // 每5分钟清理一次日志
         setInterval(() => {
             this.cleanLogs();
         }, 5 * 60 * 1000);
     }
-    
+
     log(message, type = 'info') {
         const timestamp = new Date().toISOString();
-        
+
         // 检测重复状态请求
         if (message.includes('GET /api/bot/status')) {
             if (this.lastStatus === 'GET /api/bot/status') {
@@ -55,49 +54,49 @@ class LogManager {
             }
             this.lastStatus = null;
         }
-        
+
         this.logBuffer.push({
             timestamp,
             message,
             type
         });
-        
+
         console.log(`[${timestamp}] ${message}`);
-        
+
         // 限制日志大小
         if (this.logBuffer.length > this.maxLogSize) {
             this.logBuffer = this.logBuffer.slice(-this.maxLogSize);
         }
     }
-    
+
     cleanLogs() {
         const now = new Date();
         const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-        
+
         const originalLength = this.logBuffer.length;
         this.logBuffer = this.logBuffer.filter(log => {
             return new Date(log.timestamp) > oneHourAgo;
         });
-        
+
         const cleaned = originalLength - this.logBuffer.length;
         if (cleaned > 0) {
             console.log(`清理了 ${cleaned} 条过期日志，当前日志条数: ${this.logBuffer.length}`);
         }
     }
-    
+
     getLogs() {
         return this.logBuffer;
     }
-    
+
     setError(error) {
         this.lastError = error;
         this.log(`错误: ${error}`, 'error');
     }
-    
+
     getLastError() {
         return this.lastError;
     }
-    
+
     clearError() {
         this.lastError = null;
     }
@@ -121,12 +120,12 @@ function loadConfig(mode = null) {
             console.log(`加载${mode}模式配置:`, currentConfig.client);
             return currentConfig;
         }
-        
+
         // 如果没有指定模式，返回当前配置或默认Java配置
         if (currentConfig) {
             return currentConfig;
         }
-        
+
         // 默认加载Java配置
         const javaConfigData = fs.readFileSync('config-java.json', 'utf8');
         currentConfig = JSON.parse(javaConfigData);
@@ -156,18 +155,12 @@ function startBot(mode = null) {
     if (botProcess) {
         stopBot();
     }
-    
+
     const config = loadConfig(mode);
-    
-    if (config && config.client && config.client.mode === 'bedrock') {
-        console.log('启动基岩版机器人...');
-        // 启动基岩版机器人
-        botProcess = spawn('node', ['bedrock-bot.js'], {
-            stdio: 'pipe'
-        });
-    } else {
-        console.log('启动Java版机器人...');
-        
+
+    try {
+        console.log('启动Java模式机器人...');
+
         // 准备环境变量，避免端口冲突
         const env = { 
             ...process.env, 
@@ -176,51 +169,59 @@ function startBot(mode = null) {
             ATERBOT_WEB_PORT: '3001',  // aterbot专用的web端口环境变量
             NODE_ENV: 'production'  // 设置为生产环境，避免默认端口冲突
         };
-        
+
         // 传递mod配置
         if (config && config.client && config.client.mods && config.client.mods.length > 0) {
             env.FAKE_MODS = JSON.stringify(config.client.mods);
             console.log('配置假mod列表:', config.client.mods);
         }
-        
+
         // 传递自适应mod配置
         if (config && config.client && config.client.adaptiveMods !== undefined) {
             env.ADAPTIVE_MODS = config.client.adaptiveMods ? 'true' : 'false';
             console.log('自适应mod模式:', config.client.adaptiveMods);
         }
-        
+
         console.log('使用修补版aterbot避免端口冲突');
-        
+
         // 启动修补版的Java机器人 - 禁用web服务
         botProcess = spawn('node', ['aterbot-no-web.js'], {
             stdio: 'pipe',
             env: env
         });
-    }
-    
-    botProcess.stdout.on('data', (data) => {
-        console.log(`Bot输出: ${data}`);
-    });
-    
-    botProcess.stderr.on('data', (data) => {
-        const errorMsg = data.toString();
-        console.error(`Bot错误: ${errorMsg}`);
-        logger.setError(`启动失败: ${errorMsg}`);
-    });
-    
-    botProcess.on('close', (code) => {
-        console.log(`Bot进程退出，退出码: ${code}`);
-        if (code !== 0 && code !== null) {
-            logger.setError(`机器人异常退出，退出码: ${code}`);
+
+        if (botProcess) {
+            botProcess.stdout.on('data', (data) => {
+                console.log(`Bot输出: ${data}`);
+            });
+
+            botProcess.stderr.on('data', (data) => {
+                const errorMsg = data.toString();
+                console.error(`Bot错误: ${errorMsg}`);
+                logger.setError(`启动失败: ${errorMsg}`);
+            });
+
+            botProcess.on('close', (code) => {
+                console.log(`Bot进程退出，退出码: ${code}`);
+                if (code !== 0 && code !== null) {
+                    logger.setError(`机器人异常退出，退出码: ${code}`);
+                }
+                botProcess = null;
+            });
+
+            botProcess.on('error', (error) => {
+                console.error('Bot进程启动失败:', error);
+                logger.setError(`进程启动失败: ${error.message}`);
+                botProcess = null;
+            });
         }
-        botProcess = null;
-    });
-    
-    botProcess.on('error', (error) => {
-        console.error('Bot进程启动失败:', error);
-        logger.setError(`进程启动失败: ${error.message}`);
-        botProcess = null;
-    });
+
+        return { success: true, message: 'Java模式机器人启动成功' };
+    } catch (error) {
+        console.error('启动机器人失败:', error);
+        logger.setError(`启动机器人失败: ${error.message}`);
+        return { success: false, message: `启动失败: ${error.message}` };
+    }
 }
 
 // 停止机器人
@@ -236,15 +237,15 @@ const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    
+
     if (req.method === 'OPTIONS') {
         res.writeHead(200);
         res.end();
         return;
     }
-    
+
     logger.log(`收到请求: ${req.method} ${req.url}`);
-    
+
     if (req.method === 'GET' && req.url === '/') {
         // 返回主页面
         try {
@@ -258,9 +259,7 @@ const server = http.createServer((req, res) => {
         }
     } else if (req.method === 'GET' && req.url.startsWith('/api/config')) {
         // 返回当前配置
-        const url = new URL(req.url, `http://${req.headers.host}`);
-        const mode = url.searchParams.get('mode');
-        const config = loadConfig(mode);
+        const config = loadConfig();
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify(config));
     } else if (req.method === 'POST' && req.url === '/api/config') {
@@ -316,7 +315,7 @@ const server = http.createServer((req, res) => {
         logger.lastStatus = null;
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify({success: true, message: '日志已清除'}));
-    
+
     } else {
         res.writeHead(404, {'Content-Type': 'text/plain'});
         res.end('Not Found');
