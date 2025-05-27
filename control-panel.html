@@ -235,18 +235,12 @@
                     <strong>💡 皮肤说明:</strong> 机器人的皮肤显示取决于服务器设置。正版服务器会显示账号皮肤，离线服务器可能支持自定义皮肤插件喵~
                 </div>
                 <div style="margin-bottom: 10px;">
-                    <label style="display: block; margin-bottom: 5px;">
-                        <input type="radio" name="skinMode" value="default" checked onchange="updateSkinMode()"> 
-                        使用默认皮肤 (Steve/Alex)
-                    </label>
-                    <label style="display: block; margin-bottom: 5px;">
-                        <input type="radio" name="skinMode" value="yggdrasil" onchange="updateSkinMode()"> 
-                        🔥 Yggdrasil皮肤站 (推荐使用)
-                    </label>
-                    <label style="display: block; margin-bottom: 5px;">
-                        <input type="radio" name="skinMode" value="url" onchange="updateSkinMode()"> 
-                        自定义皮肤URL (实验性功能)
-                    </label>
+                    <label>皮肤模式:</label>
+                    <select id="skinMode" onchange="updateSkinMode()" style="width: 100%; margin-bottom: 10px;">
+                        <option value="default">使用默认皮肤 (Steve/Alex)</option>
+                        <option value="yggdrasil">🔥 Yggdrasil皮肤站 (推荐使用)</option>
+                        <option value="url">自定义皮肤URL (实验性功能)</option>
+                    </select>
                 </div>
 
                 <div id="yggdrasil-section" style="display: none; margin-top: 10px;">
@@ -518,7 +512,7 @@
 
             // 恢复皮肤设置
             if (config.client?.skinMode) {
-                document.querySelector(`input[name="skinMode"][value="${config.client.skinMode}"]`).checked = true;
+                document.getElementById('skinMode').value = config.client.skinMode;
                 updateSkinMode();
             }
             if (config.client?.skinUrl) {
@@ -672,7 +666,7 @@
                 }
             }
 
-            const skinMode = document.querySelector('input[name="skinMode"]:checked').value;
+            const skinMode = document.getElementById('skinMode').value;
             const skinUrl = document.getElementById('skinUrl').value;
 
             const newConfig = {
@@ -999,7 +993,7 @@
         }
 
         function updateSkinMode() {
-            const skinMode = document.querySelector('input[name="skinMode"]:checked').value;
+            const skinMode = document.getElementById('skinMode').value;
             const skinUrlSection = document.getElementById('skin-url-section');
             const yggdrasilSection = document.getElementById('yggdrasil-section');
 
