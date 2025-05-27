@@ -214,7 +214,12 @@ function createBot() {
                 let authData = littleSkinAPI.loadAuthData(config.littleskinUsername);
                 
                 // 如果没有认证信息或认证信息无效，重新认证
-                if (!authData || !((await littleSkinAPI.validate(authData.accessToken, authData.clientToken)).success)) {
+                let validationResult = { success: false };
+                if (authData) {
+                    validationResult = await littleSkinAPI.validate(authData.accessToken, authData.clientToken);
+                }
+                
+                if (!authData || !validationResult.success) {
                     console.log('🔄 正在进行LittleSkin认证...');
                     const authResult = await littleSkinAPI.authenticate(config.littleskinUsername, config.littleskinPassword);
                     
