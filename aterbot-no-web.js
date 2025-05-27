@@ -1,6 +1,7 @@
 // 修改版的aterbot启动器，禁用web服务并添加管理员权限检测
 const fs = require('fs');
 const path = require('path');
+const { spawn } = require('child_process');
 
 // 检查aterbot是否已安装
 function checkAterbotInstalled() {
@@ -193,6 +194,15 @@ ${indexContent.replace(
         }
 
         console.log('启动已修补的aterbot（包含管理员检测）...');
+
+        // 准备环境变量
+        const env = { 
+            ...process.env, 
+            PORT: '3001',
+            WEB_PORT: '3001',
+            ATERBOT_WEB_PORT: '3001',
+            NODE_ENV: 'production'
+        };
 
         // 直接运行aterbot的主文件
         let botProcess;
