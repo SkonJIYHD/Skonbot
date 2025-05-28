@@ -344,17 +344,38 @@ async function createBot() {
         console.log('✅ 机器人已静默进入服务器');
     });
 
-    // 聊天消息事件 - 监听所有消息类型，特别关注命令反馈
+    // 增强消息监听 - 捕获所有可能的服务器反馈
     bot.on('message', (jsonMsg, position) => {
         const message = jsonMsg.toString();
         
         // 详细记录所有消息类型，便于调试
         console.log(`📨 收到消息 [类型:${position || 'unknown'}]: ${message}`);
         
+        // 检查是否包含命令相关关键字
+        const isCommandResponse = message.includes('种子') || 
+                                 message.includes('Seed') || 
+                                 message.includes('seed:') ||
+                                 message.includes('在线玩家') || 
+                                 message.includes('players online') ||
+                                 message.includes('There are') ||
+                                 message.includes('当前有') ||
+                                 message.includes('list:') ||
+                                 message.includes('gamemode') ||
+                                 message.includes('模式') ||
+                                 message.includes('tp') ||
+                                 message.includes('传送') ||
+                                 message.includes('time') ||
+                                 message.includes('时间') ||
+                                 message.includes('weather') ||
+                                 message.includes('天气');
+
+        if (isCommandResponse) {
+            console.log(`🎯 检测到命令反馈: ${message}`);
+        }
+        
         // 处理不同类型的消息
         if (position === 'chat') {
             console.log(`💬 聊天消息: ${message}`);
-            // 发送聊天消息到控制面板
             try {
                 process.stdout.write(`CHAT_MESSAGE:${message}\n`);
             } catch (error) {
@@ -362,7 +383,6 @@ async function createBot() {
             }
         } else if (position === 'system') {
             console.log(`🔧 系统消息: ${message}`);
-            // 发送系统消息到控制面板
             try {
                 process.stdout.write(`SYSTEM_MESSAGE:${message}\n`);
             } catch (error) {
@@ -370,29 +390,14 @@ async function createBot() {
             }
         } else if (position === 'game_info') {
             console.log(`🎮 游戏信息: ${message}`);
-            // 发送游戏信息到控制面板
             try {
                 process.stdout.write(`GAME_MESSAGE:${message}\n`);
             } catch (error) {
                 console.error('发送游戏信息到控制面板失败:', error);
             }
         } else {
-            // 其他类型的消息（包括命令反馈）
-            console.log(`📋 服务器消息 [${position || 'unknown'}]: ${message}`);
-            
-            // 特别检查是否是命令反馈
-            if (message.includes('权限不足') || 
-                message.includes('Unknown command') || 
-                message.includes('No permission') ||
-                message.includes('You do not have permission') ||
-                message.includes('种子') ||
-                message.includes('Seed') ||
-                message.includes('在线玩家') ||
-                message.includes('players online') ||
-                message.includes('There are') ||
-                message.includes('当前有')) {
-                console.log(`⚠️ 检测到可能的命令反馈: ${message}`);
-            }
+            // 所有其他消息类型 - 包括命令反馈
+            console.log(`📋 服务器反馈 [${position || 'unknown'}]: ${message}`);
             
             // 发送到控制面板作为服务器消息
             try {
@@ -403,31 +408,71 @@ async function createBot() {
         }
     });
     
-    // 添加更多事件监听器来捕获可能遗漏的消息
+    // 增强事件监听器 - 特别针对Forge服务器
     bot.on('windowOpen', (window) => {
         console.log(`🪟 窗口打开: ${window.type || '未知'} - ${window.title || '无标题'}`);
     });
     
     bot.on('actionBar', (message) => {
-        console.log(`📊 操作栏消息: ${message.toString()}`);
+        const actionBarText = message.toString();
+        console.log(`📊 操作栏消息: ${actionBarText}`);
         try {
-            process.stdout.write(`ACTIONBAR_MESSAGE:${message.toString()}\n`);
+            process.stdout.write(`ACTIONBAR_MESSAGE:${actionBarText}\n`);
         } catch (error) {
             console.error('发送操作栏消息失败:', error);
         }
     });
+
+    // 监听标题消息（有些服务器通过标题发送反馈）
+    bot.on('title', (text) => {
+        const titleText = text.toString();
+        console.log(`📺 标题消息: ${titleText}`);
+        try {
+            process.stdout.write(`TITLE_MESSAGE:${titleText}\n`);
+        } catch (error) {
+            console.error('发送标题消息失败:', error);
+        }
+    });
+
+    // 监听子标题消息
+    bot.on('subtitle', (text) => {
+        const subtitleText = text.toString();
+        console.log(`📺 子标题消息: ${subtitleText}`);
+        try {
+            process.stdout.write(`SUBTITLE_MESSAGE:${subtitleText}\n`);
+        } catch (error) {
+            console.error('发送子标题消息失败:', error);
+        }
+    });
     
-    // 监听原始数据包，查看是否有遗漏的消息
+    // 增强数据包监听 - 特别关注Forge服务器的反馈
     bot._client.on('packet', (data, meta) => {
-        // 只记录可能包含文本消息的数据包
+        // 扩展监听范围，包含更多可能的消息类型
         if (meta.name && (
             meta.name.includes('chat') ||
             meta.name.includes('message') ||
             meta.name.includes('system') ||
-            meta.name === 'game_message' ||
-            meta.name === 'actionbar'
+            meta.name.includes('game_info') ||
+            meta.name.includes('actionbar') ||
+            meta.name.includes('title') ||
+            meta.name.includes('server_data') ||
+            meta.name.includes('custom_payload') ||
+            meta.name === 'disconnect'
         )) {
-            console.log(`🔍 数据包 [${meta.name}]:`, data);
+            console.log(`🔍 监听到数据包 [${meta.name}]:`, JSON.stringify(data, null, 2));
+            
+            // 如果是可能包含文本的数据包，尝试提取文本
+            if (data && typeof data === 'object') {
+                const possibleText = extractTextFromData(data);
+                if (possibleText) {
+                    console.log(`📝 提取的文本: ${possibleText}`);
+                    try {
+                        process.stdout.write(`PACKET_MESSAGE:${possibleText}\n`);
+                    } catch (error) {
+                        console.error('发送数据包消息失败:', error);
+                    }
+                }
+            }
         }
     });
 
@@ -483,6 +528,36 @@ async function createBot() {
         isConnected = false;
         bot = null;
     });
+
+    // 从数据包中提取可能的文本内容
+    function extractTextFromData(data) {
+        if (!data || typeof data !== 'object') return null;
+        
+        // 递归搜索可能的文本字段
+        function searchForText(obj, depth = 0) {
+            if (depth > 3) return null; // 限制递归深度
+            
+            for (const key in obj) {
+                const value = obj[key];
+                
+                // 检查常见的文本字段名
+                if ((key === 'text' || key === 'message' || key === 'content' || 
+                     key === 'translate' || key === 'extra') && 
+                    typeof value === 'string' && value.trim()) {
+                    return value.trim();
+                }
+                
+                // 递归检查嵌套对象
+                if (typeof value === 'object' && value !== null) {
+                    const result = searchForText(value, depth + 1);
+                    if (result) return result;
+                }
+            }
+            return null;
+        }
+        
+        return searchForText(data);
+    }
 
     // 消息过滤器 - 确保消息符合Minecraft聊天规范
     function sanitizeMessage(message) {

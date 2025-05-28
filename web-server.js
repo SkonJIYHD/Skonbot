@@ -282,11 +282,43 @@ function startBot(mode = null) {
                     // 广播给所有连接的客户端
                     const messageData = {
                         type: 'game',
-                        message: chatMessage,
+                        message: gameMessage,
                         timestamp: new Date().toISOString()
                     };
                     
-                    console.log('📡 广播消息数据:', messageData);
+                    broadcastMessage(messageData);
+                } else if (output.startsWith('ACTIONBAR_MESSAGE:')) {
+                    const actionBarMessage = output.substring(18).trim();
+                    logger.log(`📊 操作栏: ${actionBarMessage}`, 'actionbar');
+                    
+                    const messageData = {
+                        type: 'actionbar',
+                        message: actionBarMessage,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    broadcastMessage(messageData);
+                } else if (output.startsWith('TITLE_MESSAGE:')) {
+                    const titleMessage = output.substring(14).trim();
+                    logger.log(`📺 标题: ${titleMessage}`, 'title');
+                    
+                    const messageData = {
+                        type: 'title',
+                        message: titleMessage,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    broadcastMessage(messageData);
+                } else if (output.startsWith('PACKET_MESSAGE:')) {
+                    const packetMessage = output.substring(15).trim();
+                    logger.log(`📦 数据包消息: ${packetMessage}`, 'packet');
+                    
+                    const messageData = {
+                        type: 'packet',
+                        message: packetMessage,
+                        timestamp: new Date().toISOString()
+                    };
+                    
                     broadcastMessage(messageData);
                 }
                 
