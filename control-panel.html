@@ -872,11 +872,26 @@
                     try {
                         const data = JSON.parse(event.data);
                         
-                        // 验证数据完整性
-                        if (data && data.message !== undefined && data.message !== null) {
+                        // 处理心跳消息
+                        if (data && data.type === 'heartbeat') {
+                            // 心跳消息不需要显示，直接返回
+                            return;
+                        }
+                        
+                        // 处理连接确认消息
+                        if (data && data.type === 'connected') {
+                            console.log('✅ SSE连接已建立');
+                            return;
+                        }
+                        
+                        // 验证聊天和系统消息
+                        if (data && data.type && data.message !== undefined && data.message !== null && data.message !== '') {
                             addServerMessage(data.message, data.timestamp, data.type);
                         } else {
-                            console.log('⚠️ 收到无效消息数据:', data);
+                            // 只记录真正无效的消息数据
+                            if (data && !data.type) {
+                                console.log('⚠️ 收到缺少类型的消息:', data);
+                            }
                         }
                     } catch (error) {
                         // 减少错误日志输出
@@ -941,10 +956,47 @@
 
             const time = new Date(timestamp).toLocaleTimeString();
             const messageDiv = document.createElement('div');
-            messageDiv.style.cssText = 'margin-bottom: 3px; padding: 8px; border-radius: 4px; border-left: 3px solid #ddd; background-color: #f8f9fa;';
+            
+            // 根据消息类型设置不同的样式和图标
+            let icon = '💬';
+            let bgColor = '#f8f9fa';
+            let borderColor = '#ddd';
+            let textColor = '#333';
+            
+            switch(messageType) {
+                case 'chat':
+                    icon = '💬';
+                    bgColor = '#e8f5e8';
+                    borderColor = '#4caf50';
+                    textColor = '#2e7d32';
+                    break;
+                case 'system':
+                    icon = '🔧';
+                    bgColor = '#e3f2fd';
+                    borderColor = '#2196f3';
+                    textColor = '#1565c0';
+                    break;
+                case 'server':
+                    icon = '📋';
+                    bgColor = '#f3e8ff';
+                    borderColor = '#6f42c1';
+                    textColor = '#5a2d91';
+                    break;
+                case 'game':
+                    icon = '🎮';
+                    bgColor = '#fff3e0';
+                    borderColor = '#ff9800';
+                    textColor = '#e65100';
+                    break;
+                default:
+                    icon = '💬';
+                    break;
+            }
+            
+            messageDiv.style.cssText = `margin-bottom: 3px; padding: 8px; border-radius: 4px; border-left: 3px solid ${borderColor}; background-color: ${bgColor}; color: ${textColor};`;
             messageDiv.innerHTML = `
-                <div style="font-size: 11px; color: #666; margin-bottom: 2px;">[${time}]</div>
-                <div style="font-family: 'Courier New', monospace; font-size: 13px;">💬 ${message}</div>
+                <div style="font-size: 11px; color: #666; margin-bottom: 2px;">[${time}] ${messageType || 'unknown'}</div>
+                <div style="font-family: 'Courier New', monospace; font-size: 13px;">${icon} ${message}</div>
             `;
 
             messagesEl.appendChild(messageDiv);

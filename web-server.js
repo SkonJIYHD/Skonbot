@@ -12,15 +12,27 @@ function broadcastMessage(message) {
         return;
     }
 
-    const data = `data: ${JSON.stringify(message)}\n\n`;
-    console.log(`📡 向 ${clients.size} 个客户端广播消息:`, message);
+    // 确保消息格式完整
+    const messageData = {
+        type: message.type || 'chat',
+        message: message.message || '',
+        timestamp: message.timestamp || new Date().toISOString()
+    };
+
+    // 验证消息内容不为空
+    if (!messageData.message || messageData.message.trim() === '') {
+        console.log('⚠️ 消息内容为空，跳过广播');
+        return;
+    }
+
+    const data = `data: ${JSON.stringify(messageData)}\n\n`;
+    console.log(`📡 向 ${clients.size} 个客户端广播消息 [${messageData.type}]:`, messageData.message);
 
     const toRemove = [];
     clients.forEach(client => {
         try {
             if (client.writable && !client.destroyed) {
                 client.write(data);
-                console.log('✅ 消息发送成功');
             } else {
                 console.log('⚠️ 客户端连接已断开，标记移除');
                 toRemove.push(client);
