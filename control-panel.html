@@ -150,6 +150,65 @@
 <body>
     <div class="container">
         <h1>Aterbot 控制面板</h1>
+        
+        <!-- 帮助按钮 -->
+        <div style="text-align: right; margin-bottom: 15px;">
+            <button onclick="showHelp()" style="background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                ❓ 使用帮助
+            </button>
+        </div>
+
+        <!-- 帮助弹窗 -->
+        <div id="help-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="background: white; margin: 50px auto; padding: 30px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative;">
+                <button onclick="hideHelp()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">×</button>
+                
+                <h2 style="color: #007bff; margin-top: 0;">🎮 Aterbot 控制面板使用指南</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: #28a745;">📋 快速开始</h3>
+                    <ol style="line-height: 1.8;">
+                        <li><strong>配置服务器:</strong> 在"基础配置"中填入Minecraft服务器地址</li>
+                        <li><strong>设置用户名:</strong> 为机器人选择一个合适的用户名</li>
+                        <li><strong>点击启动:</strong> 保存配置后点击"启动机器人"按钮</li>
+                        <li><strong>开始控制:</strong> 启动后可以发送聊天消息和执行命令</li>
+                    </ol>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: #fd7e14;">⚙️ 主要功能</h3>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>🎨 皮肤配置:</strong> 支持默认皮肤、自定义URL、LittleSkin皮肤站</li>
+                        <li><strong>🔧 模组支持:</strong> 自适应检测服务器mod或手动配置</li>
+                        <li><strong>💬 实时聊天:</strong> 查看服务器消息并发送聊天</li>
+                        <li><strong>📋 命令执行:</strong> 执行Minecraft命令并查看响应</li>
+                        <li><strong>📊 日志监控:</strong> 实时查看机器人运行状态</li>
+                    </ul>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: #6f42c1;">🛠️ 常见问题</h3>
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 10px;">
+                        <strong>Q: 机器人无法连接服务器？</strong><br>
+                        A: 检查服务器地址、端口是否正确，确认服务器为Java版且未开启正版验证
+                    </div>
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 10px;">
+                        <strong>Q: 用户名包含非法字符？</strong><br>
+                        A: 只能使用字母和数字，不支持中文、下划线等特殊字符
+                    </div>
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                        <strong>Q: 机器人被踢出服务器？</strong><br>
+                        A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系服务器管理员
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="hideHelp(); setHelpShown();" style="background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                        ✅ 我知道了
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <div class="config-section">
             <h3>基础配置</h3>
@@ -338,7 +397,38 @@
             loadConfig();
             updateStatus();
             setInterval(updateStatus, 2000);
+            
+            // 检查是否首次使用
+            checkFirstTimeUser();
         };
+
+        // 检查是否首次使用
+        function checkFirstTimeUser() {
+            const hasShownHelp = localStorage.getItem('aterbot_help_shown');
+            if (!hasShownHelp) {
+                // 延迟显示帮助，让页面完全加载
+                setTimeout(() => {
+                    showHelp();
+                }, 1000);
+            }
+        }
+
+        // 显示帮助弹窗
+        function showHelp() {
+            document.getElementById('help-modal').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // 防止背景滚动
+        }
+
+        // 隐藏帮助弹窗
+        function hideHelp() {
+            document.getElementById('help-modal').style.display = 'none';
+            document.body.style.overflow = 'auto'; // 恢复滚动
+        }
+
+        // 标记帮助已显示
+        function setHelpShown() {
+            localStorage.setItem('aterbot_help_shown', 'true');
+        }
 
         function parseServerAddress(input) {
             const value = input.value.trim();
