@@ -146,7 +146,7 @@
         .message.game { color: #fd7e14; background-color: #fff3e0; }
         .message.unknown { color: #6c757d; background-color: #f8f9fa; }
         
-        /* 帮助相关样式 */
+        /* 帮助按钮样式 */
         .help-btn {
             background-color: #17a2b8;
             color: white;
@@ -160,190 +160,6 @@
         }
         .help-btn:hover {
             background-color: #138496;
-        }
-        
-        .help-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-            font-family: Arial, sans-serif;
-        }
-        
-        .help-modal-content {
-            background: white;
-            margin: 0;
-            padding: 20px;
-            border-radius: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: none;
-        }
-        
-        
-
-        /* 响应式设计 - 移动端优化 */
-        @media (max-width: 768px) {
-            .help-modal-content {
-                padding: 15px;
-            }
-            
-            
-            
-            .help-title {
-                font-size: 24px !important;
-                margin-top: 10px !important;
-                text-align: center !important;
-            }
-            
-            .help-section {
-                margin: 0 0 15px 0 !important;
-                padding: 15px !important;
-            }
-            
-            .help-section-title {
-                font-size: 16px !important;
-            }
-            
-            .help-list {
-                font-size: 14px;
-                line-height: 1.6;
-            }
-            
-            .help-faq-item {
-                padding: 12px !important;
-                font-size: 14px;
-                line-height: 1.5;
-            }
-            
-            .help-footer {
-                padding: 20px 0 !important;
-            }
-            
-            .help-confirm-btn {
-                padding: 12px 25px !important;
-                font-size: 16px !important;
-                width: 100%;
-                box-sizing: border-box;
-            }
-        }
-
-        /* 平板设备优化 */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .help-modal-content {
-                padding: 25px;
-            }
-            
-            
-            
-            .help-title {
-                font-size: 28px !important;
-            }
-            
-            .help-section {
-                max-width: 90% !important;
-                margin: 0 auto 20px auto !important;
-            }
-        }
-
-        /* 大屏设备优化 */
-        @media (min-width: 1025px) {
-            .help-modal-content {
-                padding: 30px 40px;
-            }
-            
-            
-            
-            .help-section {
-                max-width: 1000px !important;
-                margin: 0 auto 25px auto !important;
-            }
-            
-            .help-footer {
-                max-width: 1000px !important;
-                margin: 30px auto 0 auto !important;
-            }
-        }
-        
-        .help-title {
-            color: #007bff;
-            margin-top: 0;
-            margin-bottom: 25px;
-            font-size: 24px;
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 10px;
-        }
-        
-        .help-section {
-            margin-bottom: 25px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f8f9fa;
-        }
-        
-        .help-section-title {
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-        .help-section-title.quick-start {
-            color: #28a745;
-        }
-        .help-section-title.features {
-            color: #fd7e14;
-        }
-        .help-section-title.troubleshoot {
-            color: #6f42c1;
-        }
-        
-        .help-list {
-            line-height: 1.8;
-            margin: 0;
-            padding-left: 20px;
-        }
-        .help-list li {
-            margin-bottom: 8px;
-        }
-        
-        .help-faq-item {
-            background-color: white;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 12px;
-            border: 1px solid #e9ecef;
-            line-height: 1.6;
-        }
-        .help-faq-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .help-footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e9ecef;
-        }
-        
-        .help-confirm-btn {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
-        }
-        .help-confirm-btn:hover {
-            background-color: #218838;
         }
     </style>
 </head>
@@ -364,56 +180,7 @@
             </div>
         </div>
 
-        <!-- 帮助弹窗 -->
-        <div id="help-modal" class="help-modal">
-            <div class="help-modal-content">
-                
-                <h2 class="help-title" style="margin-top: 20px; text-align: center; font-size: 32px;">🎮 Aterbot 控制面板使用指南</h2>
-                
-                <div class="help-section" style="max-width: 1000px; margin: 0 auto 25px auto;">
-                    <h3 class="help-section-title quick-start">📋 快速开始</h3>
-                    <ol class="help-list">
-                        <li><strong>配置服务器:</strong> 在"基础配置"中填入Minecraft服务器地址</li>
-                        <li><strong>设置用户名:</strong> 为机器人选择一个合适的用户名</li>
-                        <li><strong>点击启动:</strong> 保存配置后点击"启动机器人"按钮</li>
-                        <li><strong>开始控制:</strong> 启动后可以发送聊天消息和执行命令</li>
-                    </ol>
-                </div>
-
-                <div class="help-section" style="max-width: 1000px; margin: 0 auto 25px auto;">
-                    <h3 class="help-section-title features">⚙️ 主要功能</h3>
-                    <ul class="help-list">
-                        <li><strong>🎨 皮肤配置:</strong> 支持默认皮肤、自定义URL、LittleSkin皮肤站</li>
-                        <li><strong>🔧 模组支持:</strong> 自适应检测服务器mod或手动配置</li>
-                        <li><strong>💬 实时聊天:</strong> 查看服务器消息并发送聊天</li>
-                        <li><strong>📋 命令执行:</strong> 执行Minecraft命令并查看响应</li>
-                        <li><strong>📊 日志监控:</strong> 实时查看机器人运行状态</li>
-                    </ul>
-                </div>
-
-                <div class="help-section" style="max-width: 1000px; margin: 0 auto 25px auto;">
-                    <h3 class="help-section-title troubleshoot">🛠️ 常见问题</h3>
-                    <div class="help-faq-item">
-                        <strong>Q: 机器人无法连接服务器？</strong><br>
-                        A: 检查服务器地址、端口是否正确，确认服务器为Java版且未开启正版验证
-                    </div>
-                    <div class="help-faq-item">
-                        <strong>Q: 用户名包含非法字符？</strong><br>
-                        A: 只能使用字母和数字，不支持中文、下划线等特殊字符
-                    </div>
-                    <div class="help-faq-item">
-                        <strong>Q: 机器人被踢出服务器？</strong><br>
-                        A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系服务器管理员
-                    </div>
-                </div>
-
-                <div class="help-footer" style="max-width: 1000px; margin: 30px auto 0 auto; padding: 30px 0;">
-                    <button onclick="setHelpShown(); hideHelp();" class="help-confirm-btn" style="padding: 15px 40px; font-size: 18px;">
-                        ✅ 我知道了，开始使用
-                    </button>
-                </div>
-            </div>
-        </div>
+        
 
         <div class="config-section">
             <h3>基础配置</h3>
@@ -611,23 +378,39 @@
         function checkFirstTimeUser() {
             const hasShownHelp = localStorage.getItem('aterbot_help_shown');
             if (!hasShownHelp) {
-                // 延迟显示帮助，让页面完全加载
-                setTimeout(() => {
-                    showHelp();
-                }, 1000);
+                showHelp();
+                setHelpShown();
             }
         }
 
         // 显示帮助弹窗
         function showHelp() {
-            document.getElementById('help-modal').style.display = 'block';
-            document.body.style.overflow = 'hidden'; // 防止背景滚动
-        }
+            const helpText = `🎮 Aterbot 控制面板使用指南
 
-        // 隐藏帮助弹窗
-        function hideHelp() {
-            document.getElementById('help-modal').style.display = 'none';
-            document.body.style.overflow = 'auto'; // 恢复滚动
+📋 快速开始:
+1. 配置服务器: 在"基础配置"中填入Minecraft服务器地址
+2. 设置用户名: 为机器人选择一个合适的用户名  
+3. 点击启动: 保存配置后点击"启动机器人"按钮
+4. 开始控制: 启动后可以发送聊天消息和执行命令
+
+⚙️ 主要功能:
+• 🎨 皮肤配置: 支持默认皮肤、自定义URL、LittleSkin皮肤站
+• 🔧 模组支持: 自适应检测服务器mod或手动配置  
+• 💬 实时聊天: 查看服务器消息并发送聊天
+• 📋 命令执行: 执行Minecraft命令并查看响应
+• 📊 日志监控: 实时查看机器人运行状态
+
+🛠️ 常见问题:
+Q: 机器人无法连接服务器？
+A: 检查服务器地址、端口是否正确，确认服务器为Java版且未开启正版验证
+
+Q: 用户名包含非法字符？
+A: 只能使用字母和数字，不支持中文、下划线等特殊字符
+
+Q: 机器人被踢出服务器？
+A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系服务器管理员`;
+
+            alert(helpText);
         }
 
         // 标记帮助已显示
