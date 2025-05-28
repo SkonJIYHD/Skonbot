@@ -1086,25 +1086,18 @@ modList.style.pointerEvents = 'none';
                         const data = JSON.parse(event.data);
 
                         if (data.type === 'chat') {
-                            // 聊天消息
                             addServerMessage(data.message, data.timestamp, 'chat');
                         } else if (data.type === 'system') {
-                            // 系统消息
                             addServerMessage(`🔧 ${data.message}`, data.timestamp, 'system');
                         } else if (data.type === 'server') {
-                            // 服务器反馈消息（命令输出等）
                             addServerMessage(`📋 ${data.message}`, data.timestamp, 'server');
                         } else if (data.type === 'game') {
-                            // 游戏信息消息
                             addServerMessage(`🎮 ${data.message}`, data.timestamp, 'game');
                         } else if (data.type === 'error') {
-                            // 错误消息
                             addServerMessage(data.message, data.timestamp, 'error');
                         } else if (data.type === 'connected') {
-                            // 连接确认消息
                             addServerMessage(`🔗 ${data.message}`, data.timestamp, 'system');
                         } else {
-                            // 未知消息类型，但仍然显示
                             console.log('🔍 未知消息类型:', data);
                             if (data.message) {
                                 addServerMessage(`❓ ${data.message}`, data.timestamp, 'unknown');
