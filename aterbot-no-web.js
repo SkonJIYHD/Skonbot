@@ -344,9 +344,12 @@ async function createBot() {
         console.log('✅ 机器人已静默进入服务器');
     });
 
-    // 聊天消息事件 - 监听所有消息类型
+    // 聊天消息事件 - 监听所有消息类型，特别关注命令反馈
     bot.on('message', (jsonMsg, position) => {
         const message = jsonMsg.toString();
+        
+        // 详细记录所有消息类型，便于调试
+        console.log(`📨 收到消息 [类型:${position || 'unknown'}]: ${message}`);
         
         // 处理不同类型的消息
         if (position === 'chat') {
@@ -376,12 +379,55 @@ async function createBot() {
         } else {
             // 其他类型的消息（包括命令反馈）
             console.log(`📋 服务器消息 [${position || 'unknown'}]: ${message}`);
+            
+            // 特别检查是否是命令反馈
+            if (message.includes('权限不足') || 
+                message.includes('Unknown command') || 
+                message.includes('No permission') ||
+                message.includes('You do not have permission') ||
+                message.includes('种子') ||
+                message.includes('Seed') ||
+                message.includes('在线玩家') ||
+                message.includes('players online') ||
+                message.includes('There are') ||
+                message.includes('当前有')) {
+                console.log(`⚠️ 检测到可能的命令反馈: ${message}`);
+            }
+            
             // 发送到控制面板作为服务器消息
             try {
                 process.stdout.write(`SERVER_MESSAGE:${message}\n`);
             } catch (error) {
                 console.error('发送服务器消息到控制面板失败:', error);
             }
+        }
+    });
+    
+    // 添加更多事件监听器来捕获可能遗漏的消息
+    bot.on('windowOpen', (window) => {
+        console.log(`🪟 窗口打开: ${window.type || '未知'} - ${window.title || '无标题'}`);
+    });
+    
+    bot.on('actionBar', (message) => {
+        console.log(`📊 操作栏消息: ${message.toString()}`);
+        try {
+            process.stdout.write(`ACTIONBAR_MESSAGE:${message.toString()}\n`);
+        } catch (error) {
+            console.error('发送操作栏消息失败:', error);
+        }
+    });
+    
+    // 监听原始数据包，查看是否有遗漏的消息
+    bot._client.on('packet', (data, meta) => {
+        // 只记录可能包含文本消息的数据包
+        if (meta.name && (
+            meta.name.includes('chat') ||
+            meta.name.includes('message') ||
+            meta.name.includes('system') ||
+            meta.name === 'game_message' ||
+            meta.name === 'actionbar'
+        )) {
+            console.log(`🔍 数据包 [${meta.name}]:`, data);
         }
     });
 
@@ -510,6 +556,41 @@ async function createBot() {
                     const cleanCommand = sanitizeMessage(command);
                     console.log(`📤 准备执行命令: "${cleanCommand}"`);
                     console.log(`🤖 机器人状态: 已连接=${isConnected}, 实体存在=${!!bot.entity}`);
+                    
+                    // 检查是否是需要权限的命令
+                    if (cleanCommand.startsWith('/list') || cleanCommand.startsWith('/seed') || 
+                        cleanCommand.startsWith('/gamemode') || cleanCommand.startsWith('/tp') ||
+                        cleanCommand.startsWith('/time') || cleanCommand.startsWith('/weather')) {
+                        console.log(`⚠️ 注意: "${cleanCommand}" 通常需要管理员权限`);
+                        console.log(`💡 如果没有收到反馈，请在服务器控制台执行: /op BotSkon`);
+                    }
+
+                    // 设置监听超时，如果3秒内没有收到任何消息，提示可能的问题
+                    let responseTimeout = setTimeout(() => {
+                        console.log(`⏰ 命令 "${cleanCommand}" 执行3秒后无响应`);
+                        console.log(`🔍 可能原因:`);
+                        console.log(`   1. 机器人没有执行此命令的权限`);
+                        console.log(`   2. 服务器未返回反馈消息`);
+                        console.log(`   3. 消息过滤器有问题`);
+                        console.log(`💡 建议: 尝试执行 /help 或发送普通聊天消息测试`);
+                    }, 3000);
+
+                    // 临时消息监听器，监听这个命令的响应
+                    const commandResponseListener = (jsonMsg, position) => {
+                        const message = jsonMsg.toString();
+                        if (message.toLowerCase().includes('seed') || 
+                            message.toLowerCase().includes('online') ||
+                            message.toLowerCase().includes('permission') ||
+                            message.toLowerCase().includes('权限') ||
+                            message.toLowerCase().includes('种子') ||
+                            message.toLowerCase().includes('玩家')) {
+                            console.log(`🎯 检测到命令相关响应: ${message}`);
+                            clearTimeout(responseTimeout);
+                            bot.removeListener('message', commandResponseListener);
+                        }
+                    };
+                    
+                    bot.on('message', commandResponseListener);
 
                     // 直接使用bot.chat发送命令
                     bot.chat(cleanCommand);
