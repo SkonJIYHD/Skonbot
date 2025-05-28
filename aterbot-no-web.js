@@ -377,6 +377,8 @@ async function createBot() {
             console.log(`💬 聊天消息: ${message}`);
             try {
                 process.stdout.write(`CHAT_MESSAGE:${message}\n`);
+                // 立即刷新输出缓冲区，确保消息被立即发送
+                process.stdout.uncork();
             } catch (error) {
                 console.error('发送聊天消息到控制面板失败:', error);
             }
@@ -398,11 +400,22 @@ async function createBot() {
             // 所有其他消息类型 - 包括命令反馈
             console.log(`📋 服务器反馈 [${position || 'unknown'}]: ${message}`);
 
-            // 发送到控制面板作为服务器消息
-            try {
-                process.stdout.write(`SERVER_MESSAGE:${message}\n`);
-            } catch (error) {
-                console.error('发送服务器消息到控制面板失败:', error);
+            // 检查是否是公聊消息（常见格式：<玩家名> 消息内容）
+            if (message.match(/^<[\w\u4e00-\u9fa5]+>\s*.+/)) {
+                console.log(`🗣️ 检测到公聊消息格式: ${message}`);
+                try {
+                    process.stdout.write(`CHAT_MESSAGE:${message}\n`);
+                    process.stdout.uncork();
+                } catch (error) {
+                    console.error('发送公聊消息到控制面板失败:', error);
+                }
+            } else {
+                // 发送到控制面板作为服务器消息
+                try {
+                    process.stdout.write(`SERVER_MESSAGE:${message}\n`);
+                } catch (error) {
+                    console.error('发送服务器消息到控制面板失败:', error);
+                }
             }
         }
     });

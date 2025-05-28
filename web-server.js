@@ -252,18 +252,22 @@ function startBot(mode = null) {
                 
                 // 检查CHAT_MESSAGE的所有可能格式
                 if (output.includes('CHAT_MESSAGE:')) {
-                    console.log('🚨 发现CHAT_MESSAGE输出，准备处理！');
+                    console.log('🚨 发现CHAT_MESSAGE输出，立即处理！');
                     console.log('🔍 输出详细分析:');
                     console.log('  - 原始长度:', output.length);
-                    console.log('  - 开头10个字符:', JSON.stringify(output.substring(0, 10)));
+                    console.log('  - 开头20个字符:', JSON.stringify(output.substring(0, 20)));
                     console.log('  - startsWith检测结果:', output.startsWith('CHAT_MESSAGE:'));
                     console.log('  - 是否包含前缀:', output.includes('CHAT_MESSAGE:'));
                     
                     // 强制提取CHAT_MESSAGE内容，不管格式如何
                     const chatIndex = output.indexOf('CHAT_MESSAGE:');
+                    console.log('  - CHAT_MESSAGE:索引位置:', chatIndex);
+                    
                     if (chatIndex >= 0) {
                         const chatMessage = output.substring(chatIndex + 'CHAT_MESSAGE:'.length).trim();
-                        console.log('🎯 强制提取聊天消息内容:', chatMessage);
+                        console.log('🎯 强制提取聊天消息内容:', `"${chatMessage}"`);
+                        console.log('  - 提取消息长度:', chatMessage.length);
+                        console.log('  - 消息是否为空:', chatMessage === '');
                         
                         if (chatMessage && chatMessage.length > 0) {
                             logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
@@ -277,8 +281,12 @@ function startBot(mode = null) {
                             console.log('📡 准备广播强制提取的聊天消息:', messageData);
                             broadcastMessage(messageData);
                             console.log('✅ 强制提取的聊天消息已通过SSE广播完成');
+                        } else {
+                            console.log('⚠️ 强制提取的消息为空，跳过广播');
                         }
                         return; // 处理完成后返回
+                    } else {
+                        console.log('❌ 未找到CHAT_MESSAGE:前缀位置');
                     }
                 }
 
