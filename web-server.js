@@ -249,6 +249,11 @@ function startBot(mode = null) {
             botProcess.stdout.on('data', (data) => {
                 const output = data.toString().trim();
                 console.log(`Bot输出: ${output}`);
+                
+                // 特别检查CHAT_MESSAGE前缀
+                if (output.includes('CHAT_MESSAGE:')) {
+                    console.log('🚨 发现CHAT_MESSAGE输出，立即处理！');
+                }
 
                 // 优先处理标准消息前缀
                 if (output.startsWith('CHAT_MESSAGE:')) {
@@ -266,12 +271,9 @@ function startBot(mode = null) {
 
                         console.log('📡 准备广播聊天消息数据:', messageData);
                         
-                        try {
-                            broadcastMessage(messageData);
-                            console.log('✅ 聊天消息已广播完成');
-                        } catch (error) {
-                            console.error('❌ 聊天消息广播失败:', error);
-                        }
+                        // 立即广播聊天消息
+                        broadcastMessage(messageData);
+                        console.log('✅ 聊天消息已通过SSE广播完成');
                     } else {
                         console.log('⚠️ 聊天消息为空，跳过广播');
                     }
