@@ -905,7 +905,7 @@ function startServer(port = 5000) {
 
     server.listen(port, '0.0.0.0', () => {
         console.log(`Aterbot控制面板启动在 http://0.0.0.0:${port}`);
-        console.log('请在Replit中点击Webview进行访问');
+        console.log('请访问: https://你的repl域名 或者在Replit中点击Webview');
         loadConfig();
     });
 
