@@ -182,7 +182,13 @@ async function createBot() {
         username: config.username || 'aterbot',
         version: config.version || '1.21.1',
         auth: config.auth || 'offline',
-        hideErrors: false
+        hideErrors: false,
+        // 增加协议兼容性设置
+        checkTimeoutInterval: 30000, // 30秒超时检查
+        keepAlive: true,
+        // 添加更宽松的协议处理
+        protocolVersion: null, // 让mineflayer自动检测
+        skipValidation: true // 跳过一些严格的验证
     };
 
     // LittleSkin皮肤站支持
@@ -336,6 +342,16 @@ async function createBot() {
     // 错误处理
     bot.on('error', (err) => {
         console.error('🚨 机器人错误:', err.message);
+        
+        // 特殊处理协议错误
+        if (err.message.includes('PartialReadError') || err.message.includes('Read error')) {
+            console.log('🔄 检测到协议解析错误，可能是以下原因：');
+            console.log('  1. 服务器协议版本不匹配');
+            console.log('  2. 网络传输问题');
+            console.log('  3. 服务器发送异常数据包');
+            console.log('💡 建议：检查服务器版本，尝试重新连接');
+        }
+        
         isConnected = false;
     });
 
