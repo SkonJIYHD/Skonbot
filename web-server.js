@@ -250,12 +250,12 @@ function startBot(mode = null) {
                 const output = data.toString().trim();
                 console.log(`Bot输出: ${output}`);
                 
-                // 检查CHAT_MESSAGE的所有可能格式
+                // 检查CHAT_MESSAGE的所有可能格式 - 强制优先处理
                 if (output.includes('CHAT_MESSAGE:')) {
                     console.log('🚨 发现CHAT_MESSAGE输出，立即处理！');
                     console.log('🔍 输出详细分析:');
                     console.log('  - 原始长度:', output.length);
-                    console.log('  - 开头20个字符:', JSON.stringify(output.substring(0, 20)));
+                    console.log('  - 完整输出:', JSON.stringify(output));
                     console.log('  - startsWith检测结果:', output.startsWith('CHAT_MESSAGE:'));
                     console.log('  - 是否包含前缀:', output.includes('CHAT_MESSAGE:'));
                     
@@ -270,6 +270,7 @@ function startBot(mode = null) {
                         console.log('  - 消息是否为空:', chatMessage === '');
                         
                         if (chatMessage && chatMessage.length > 0) {
+                            console.log('✅ 聊天消息有效，开始处理和广播');
                             logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
 
                             const messageData = {
@@ -284,18 +285,19 @@ function startBot(mode = null) {
                         } else {
                             console.log('⚠️ 强制提取的消息为空，跳过广播');
                         }
-                        return; // 处理完成后返回
+                        return; // 处理完成后返回，阻止进入下面的其他处理逻辑
                     } else {
                         console.log('❌ 未找到CHAT_MESSAGE:前缀位置');
                     }
                 }
 
-                // 优先处理标准消息前缀
+                // 优先处理标准消息前缀（如果上面的强制提取没有处理的话）
                 if (output.startsWith('CHAT_MESSAGE:')) {
                     const chatMessage = output.substring(13).trim();
-                    console.log('🎯 检测到CHAT_MESSAGE前缀，消息内容:', chatMessage);
+                    console.log('🎯 检测到标准CHAT_MESSAGE前缀，消息内容:', chatMessage);
 
                     if (chatMessage && chatMessage.length > 0) {
+                        console.log('✅ 标准格式聊天消息有效，开始处理和广播');
                         logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
 
                         const messageData = {
@@ -304,13 +306,13 @@ function startBot(mode = null) {
                             timestamp: new Date().toISOString()
                         };
 
-                        console.log('📡 准备广播聊天消息数据:', messageData);
+                        console.log('📡 准备广播标准格式聊天消息数据:', messageData);
                         
                         // 立即广播聊天消息
                         broadcastMessage(messageData);
-                        console.log('✅ 聊天消息已通过SSE广播完成');
+                        console.log('✅ 标准格式聊天消息已通过SSE广播完成');
                     } else {
-                        console.log('⚠️ 聊天消息为空，跳过广播');
+                        console.log('⚠️ 标准格式聊天消息为空，跳过广播');
                     }
                     return; // 重要：处理完成后立即返回，避免重复处理
                 } else if (output.startsWith('SYSTEM_MESSAGE:')) {
