@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -154,14 +155,14 @@
             <h3>基础配置</h3>
             <div class="form-group">
                 <label>服务器地址:</label>
-                <input type="text" id="server-address" placeholder="服务器地址:端口 (如: gm.rainplay.cn:25384)" oninput="parseServerAddress(this)">
+                <input type="text" id="server-address" placeholder="服务器地址:端口 (如: gm.rainplay.cn:25384)">
                 <div style="margin-top: 5px; font-size: 12px; color: #666;">
                     输入格式: 服务器地址:端口，如果不填端口默认使用25565
                 </div>
             </div>
             <div class="form-group">
                 <label>用户名:</label>
-                <input type="text" id="username" placeholder="机器人用户名" oninput="validateUsername(this)">
+                <input type="text" id="username" placeholder="机器人用户名">
                 <div style="margin-top: 5px;">
                     <button type="button" onclick="suggestUsername()" style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 3px; font-size: 12px;">🎲 随机推荐用户名</button>
                     <small style="margin-left: 10px; color: #666;">如果当前用户名被踢出，可以尝试其他名字喵</small>
@@ -250,7 +251,7 @@
         </div>
 
         <div class="config-section">
-            <h3>模组配置</h3>
+            <h3>🔧 模组配置</h3>
             <div class="form-group">
                 <label style="display: flex; align-items: center; cursor: pointer;">
                     <input type="checkbox" id="adaptive-mods" onchange="updateAdaptiveMode()" style="margin-right: 8px;"> 
@@ -261,9 +262,17 @@
                 </div>
             </div>
             <div id="manual-mods-section">
-                <div id="mod-list" class="mod-list"></div>
-                <button type="button" onclick="addMod()">添加假mod</button>
-                <button type="button" onclick="addCommonMods()" style="margin-left: 10px; background-color: #17a2b8; color: white;">添加常用mod</button>
+                <div class="form-group">
+                    <label>手动添加mod列表:</label>
+                    <div style="margin: 8px 0; padding: 8px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
+                        <strong>📝 手动模式:</strong> 在关闭自适应模式时，你可以手动添加服务器需要的mod名称。常见的mod如：forge、optifine、jei、journeymap等。
+                    </div>
+                    <div id="mod-list" class="mod-list"></div>
+                    <div style="margin-top: 10px;">
+                        <button type="button" onclick="addMod()" style="background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 4px; margin-right: 10px;">➕ 添加mod</button>
+                        <button type="button" onclick="addCommonMods()" style="background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 4px;">🎯 添加常用mod</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -308,7 +317,6 @@
     </div>
 
     <script>
-        let currentMode = 'java';
         let config = {};
         let mods = [];
         let eventSource = null;
@@ -321,7 +329,6 @@
             setInterval(updateStatus, 2000);
         };
 
-        // 解析服务器地址函数
         function parseServerAddress(input) {
             const value = input.value.trim();
             if (!value) return;
@@ -349,7 +356,6 @@
             }
         }
 
-        // 用户名验证函数
         function validateUsername(input) {
             const username = input.value;
             const warningEl = document.getElementById('username-warning');
@@ -827,7 +833,7 @@
             }
         }
 
-        function addServerMessage(message, timestamp, type = 'chat') {
+        function addServerMessage(message, timestamp, messageType) {
             const messagesEl = document.getElementById('server-messages');
             if (!messagesEl) return;
 
@@ -866,7 +872,6 @@
             const suggestedName = simpleNames[Math.floor(Math.random() * simpleNames.length)];
 
             document.getElementById('username').value = suggestedName;
-            validateUsername(document.getElementById('username'));
 
             alert(`💡 推荐用户名: ${suggestedName}\n\n这个名字完全符合Minecraft服务器要求，可以尝试使用喵！`);
         }
@@ -883,6 +888,15 @@
                 if (e.key === 'Enter') {
                     sendChatMessage();
                 }
+            });
+
+            // 添加输入框事件监听器
+            document.getElementById('server-address').addEventListener('input', function() {
+                parseServerAddress(this);
+            });
+
+            document.getElementById('username').addEventListener('input', function() {
+                validateUsername(this);
             });
         });
     </script>
