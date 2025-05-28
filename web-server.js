@@ -7,13 +7,34 @@ const { spawn } = require('child_process');
 const clients = new Set();
 
 function broadcastMessage(message) {
+    if (clients.size === 0) {
+        console.log('📡 没有连接的客户端，跳过消息广播');
+        return;
+    }
+    
     const data = `data: ${JSON.stringify(message)}\n\n`;
+    console.log(`📡 向 ${clients.size} 个客户端广播消息:`, message);
+    
+    const toRemove = [];
     clients.forEach(client => {
         try {
-            client.write(data);
+            if (client.writable && !client.destroyed) {
+                client.write(data);
+                console.log('✅ 消息发送成功');
+            } else {
+                console.log('⚠️ 客户端连接已断开，标记移除');
+                toRemove.push(client);
+            }
         } catch (error) {
-            clients.delete(client);
+            console.error('❌ 向客户端发送消息失败:', error);
+            toRemove.push(client);
         }
+    });
+    
+    // 清理无效连接
+    toRemove.forEach(client => {
+        clients.delete(client);
+        console.log('🧹 已移除无效客户端连接');
     });
 }
 
@@ -206,7 +227,7 @@ function startBot(mode = null) {
 
         if (botProcess) {
             botProcess.stdout.on('data', (data) => {
-                const output = data.toString();
+                const output = data.toString().trim();
                 console.log(`Bot输出: ${output}`);
                 
                 // 检查是否是聊天消息
@@ -214,10 +235,32 @@ function startBot(mode = null) {
                     const chatMessage = output.substring(13).trim();
                     logger.log(`📢 服务器消息: ${chatMessage}`, 'chat');
                     
+                    console.log('🎯 检测到聊天消息，准备广播:', chatMessage);
+                    
                     // 广播给所有连接的客户端
-                    broadcastMessage({
+                    const messageData = {
                         type: 'chat',
                         message: chatMessage,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    console.log('📡 广播消息数据:', messageData);
+                    broadcastMessage(messageData);
+                }
+                
+                // 也检查其他可能的系统消息
+                if (output.includes('机器人已成功进入服务器')) {
+                    broadcastMessage({
+                        type: 'system',
+                        message: '🎉 机器人已成功连接到服务器！',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+                
+                if (output.includes('机器人被踢出')) {
+                    broadcastMessage({
+                        type: 'system',
+                        message: '⚠️ 机器人被服务器踢出',
                         timestamp: new Date().toISOString()
                     });
                 }
@@ -413,19 +456,57 @@ const server = http.createServer((req, res) => {
 
     } else if (req.method === 'GET' && req.url === '/api/events') {
         // Server-Sent Events端点，用于实时推送服务器消息
+        console.log('🔗 新的SSE连接建立');
+        
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
-            'Access-Control-Allow-Origin': '*'
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Cache-Control'
         });
         
         clients.add(res);
+        console.log(`📊 当前SSE连接数: ${clients.size}`);
         
         // 发送连接确认
-        res.write('data: {"type":"connected","message":"已连接到消息流"}\n\n');
+        const welcomeMsg = JSON.stringify({
+            type: "connected",
+            message: "已连接到消息流，开始监控服务器消息",
+            timestamp: new Date().toISOString()
+        });
+        
+        try {
+            res.write(`data: ${welcomeMsg}\n\n`);
+            console.log('✅ 发送SSE连接确认消息');
+        } catch (error) {
+            console.error('❌ 发送SSE连接确认失败:', error);
+        }
+        
+        // 发送一条测试消息，确保连接正常
+        setTimeout(() => {
+            if (res.writable && !res.destroyed) {
+                const testMsg = JSON.stringify({
+                    type: "system",
+                    message: "消息流连接测试成功！等待服务器消息...",
+                    timestamp: new Date().toISOString()
+                });
+                try {
+                    res.write(`data: ${testMsg}\n\n`);
+                    console.log('✅ 发送SSE测试消息');
+                } catch (error) {
+                    console.error('❌ 发送SSE测试消息失败:', error);
+                }
+            }
+        }, 1000);
         
         req.on('close', () => {
+            clients.delete(res);
+            console.log(`🔌 SSE连接断开，当前连接数: ${clients.size}`);
+        });
+        
+        req.on('error', (error) => {
+            console.error('❌ SSE连接错误:', error);
             clients.delete(res);
         });
         
