@@ -250,17 +250,14 @@ function startBot(mode = null) {
                 const output = data.toString().trim();
                 console.log(`Bot输出: ${output}`);
 
-                // 检查消息类型并处理
+                // 优先处理标准消息前缀
                 if (output.startsWith('CHAT_MESSAGE:')) {
                     const chatMessage = output.substring(13).trim();
+                    console.log('🎯 检测到CHAT_MESSAGE前缀，消息内容:', chatMessage);
 
-                    // 确保消息不为空
                     if (chatMessage && chatMessage.length > 0) {
                         logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
 
-                        console.log('🎯 检测到聊天消息，准备广播:', chatMessage);
-
-                        // 立即广播给所有连接的客户端
                         const messageData = {
                             type: 'chat',
                             message: chatMessage,
@@ -269,7 +266,6 @@ function startBot(mode = null) {
 
                         console.log('📡 准备广播聊天消息数据:', messageData);
                         
-                        // 立即广播，不使用setTimeout
                         try {
                             broadcastMessage(messageData);
                             console.log('✅ 聊天消息已广播完成');
@@ -279,15 +275,14 @@ function startBot(mode = null) {
                     } else {
                         console.log('⚠️ 聊天消息为空，跳过广播');
                     }
+                    return; // 重要：处理完成后立即返回，避免重复处理
                 } else if (output.startsWith('SYSTEM_MESSAGE:')) {
                     const systemMessage = output.substring(15).trim();
+                    console.log('🎯 检测到SYSTEM_MESSAGE前缀，消息内容:', systemMessage);
 
                     if (systemMessage && systemMessage.length > 0) {
                         logger.log(`🔧 系统消息: ${systemMessage}`, 'system');
 
-                        console.log('🎯 检测到系统消息，准备广播:', systemMessage);
-
-                        // 广播给所有连接的客户端
                         const messageData = {
                             type: 'system',
                             message: systemMessage,
@@ -298,15 +293,15 @@ function startBot(mode = null) {
                     } else {
                         console.log('⚠️ 系统消息为空，跳过广播');
                     }
+                    return; // 处理完成后立即返回
+                    
                 } else if (output.startsWith('SERVER_MESSAGE:')) {
                     const serverMessage = output.substring(15).trim();
+                    console.log('🎯 检测到SERVER_MESSAGE前缀，消息内容:', serverMessage);
 
                     if (serverMessage && serverMessage.length > 0) {
                         logger.log(`📋 服务器反馈: ${serverMessage}`, 'server');
 
-                        console.log('🎯 检测到服务器反馈，准备广播:', serverMessage);
-
-                        // 广播给所有连接的客户端
                         const messageData = {
                             type: 'server',
                             message: serverMessage,
@@ -317,15 +312,14 @@ function startBot(mode = null) {
                     } else {
                         console.log('⚠️ 服务器消息为空，跳过广播');
                     }
+                    return; // 处理完成后立即返回
                 } else if (output.startsWith('GAME_MESSAGE:')) {
                     const gameMessage = output.substring(13).trim();
+                    console.log('🎯 检测到GAME_MESSAGE前缀，消息内容:', gameMessage);
 
                     if (gameMessage && gameMessage.length > 0) {
                         logger.log(`🎮 游戏信息: ${gameMessage}`, 'game');
 
-                        console.log('🎯 检测到游戏信息，准备广播:', gameMessage);
-
-                        // 广播给所有连接的客户端
                         const messageData = {
                             type: 'game',
                             message: gameMessage,
@@ -336,8 +330,11 @@ function startBot(mode = null) {
                     } else {
                         console.log('⚠️ 游戏消息为空，跳过广播');
                     }
+                    return; // 处理完成后立即返回
+                    
                 } else if (output.startsWith('ACTIONBAR_MESSAGE:')) {
                     const actionBarMessage = output.substring(18).trim();
+                    console.log('🎯 检测到ACTIONBAR_MESSAGE前缀，消息内容:', actionBarMessage);
 
                     if (actionBarMessage && actionBarMessage.length > 0) {
                         logger.log(`📊 操作栏: ${actionBarMessage}`, 'actionbar');
@@ -350,8 +347,11 @@ function startBot(mode = null) {
 
                         broadcastMessage(messageData);
                     }
+                    return; // 处理完成后立即返回
+                    
                 } else if (output.startsWith('TITLE_MESSAGE:')) {
                     const titleMessage = output.substring(14).trim();
+                    console.log('🎯 检测到TITLE_MESSAGE前缀，消息内容:', titleMessage);
 
                     if (titleMessage && titleMessage.length > 0) {
                         logger.log(`📺 标题: ${titleMessage}`, 'title');
@@ -364,8 +364,11 @@ function startBot(mode = null) {
 
                         broadcastMessage(messageData);
                     }
+                    return; // 处理完成后立即返回
+                    
                 } else if (output.startsWith('PACKET_MESSAGE:')) {
                     const packetMessage = output.substring(15).trim();
+                    console.log('🎯 检测到PACKET_MESSAGE前缀，消息内容:', packetMessage);
 
                     if (packetMessage && packetMessage.length > 0) {
                         logger.log(`📦 数据包消息: ${packetMessage}`, 'packet');
@@ -378,6 +381,7 @@ function startBot(mode = null) {
 
                         broadcastMessage(messageData);
                     }
+                    return; // 处理完成后立即返回
                 }
 
                 // 也检查其他可能的系统消息
