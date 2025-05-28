@@ -25,7 +25,8 @@ function loadConfig() {
         port: 25565,
         username: 'aterbot',
         version: '1.21.1',
-        auth: 'offline'
+        auth: 'offline',
+        logLevel: ['error', 'log'] // 默认只显示错误和重要日志，不包含debug
     };
 }
 
@@ -319,15 +320,12 @@ async function createBot() {
 
     // 添加原始数据包处理器，忽略Fabric mod相关的问题数据包
     bot._client.on('packet', (data, meta) => {
-        // 忽略可能导致PartialReadError的Fabric mod数据包
-        if (meta.name && (
-            meta.name.includes('custom_payload') ||
-            meta.name.includes('plugin_message') ||
-            meta.name.includes('mod_list') ||
-            meta.name.includes('fabric')
-        )) {
-            // 静默忽略这些可能有问题的数据包
-            return;
+        // 只记录重要的数据包，避免刷屏
+        if (config.logLevel && config.logLevel.includes('debug')) {
+            const importantPackets = ['chat', 'login', 'disconnect', 'kick_disconnect'];
+            if (importantPackets.includes(meta.name)) {
+                console.log(`收到重要数据包: ${meta.name}`, data);
+            }
         }
     });
 
@@ -347,10 +345,10 @@ async function createBot() {
     // 增强消息监听 - 捕获所有可能的服务器反馈
     bot.on('message', (jsonMsg, position) => {
         const message = jsonMsg.toString();
-        
+
         // 详细记录所有消息类型，便于调试
         console.log(`📨 收到消息 [类型:${position || 'unknown'}]: ${message}`);
-        
+
         // 检查是否包含命令相关关键字
         const isCommandResponse = message.includes('种子') || 
                                  message.includes('Seed') || 
@@ -372,7 +370,7 @@ async function createBot() {
         if (isCommandResponse) {
             console.log(`🎯 检测到命令反馈: ${message}`);
         }
-        
+
         // 处理不同类型的消息
         if (position === 'chat') {
             console.log(`💬 聊天消息: ${message}`);
@@ -398,7 +396,7 @@ async function createBot() {
         } else {
             // 所有其他消息类型 - 包括命令反馈
             console.log(`📋 服务器反馈 [${position || 'unknown'}]: ${message}`);
-            
+
             // 发送到控制面板作为服务器消息
             try {
                 process.stdout.write(`SERVER_MESSAGE:${message}\n`);
@@ -407,12 +405,12 @@ async function createBot() {
             }
         }
     });
-    
+
     // 增强事件监听器 - 特别针对Forge服务器
     bot.on('windowOpen', (window) => {
         console.log(`🪟 窗口打开: ${window.type || '未知'} - ${window.title || '无标题'}`);
     });
-    
+
     bot.on('actionBar', (message) => {
         const actionBarText = message.toString();
         console.log(`📊 操作栏消息: ${actionBarText}`);
@@ -444,7 +442,7 @@ async function createBot() {
             console.error('发送子标题消息失败:', error);
         }
     });
-    
+
     // 增强数据包监听 - 特别关注Forge服务器的反馈
     bot._client.on('packet', (data, meta) => {
         // 扩展监听范围，包含更多可能的消息类型
@@ -460,7 +458,7 @@ async function createBot() {
             meta.name === 'disconnect'
         )) {
             console.log(`🔍 监听到数据包 [${meta.name}]:`, JSON.stringify(data, null, 2));
-            
+
             // 如果是可能包含文本的数据包，尝试提取文本
             if (data && typeof data === 'object') {
                 const possibleText = extractTextFromData(data);
@@ -479,7 +477,7 @@ async function createBot() {
     // 错误处理
     bot.on('error', (err) => {
         console.error('🚨 机器人错误:', err.message);
-        
+
         // 特殊处理协议错误
         if (err.message.includes('PartialReadError') || err.message.includes('Read error')) {
             console.log('🔄 检测到协议解析错误，可能是以下原因：');
@@ -488,11 +486,11 @@ async function createBot() {
             console.log('  3. 网络传输问题');
             console.log('💡 这是Fabric mod服务器的已知问题，机器人功能通常不受影响');
             console.log('✅ 机器人已成功连接，错误可以忽略');
-            
+
             // 不要断开连接，因为这只是数据包解析问题
             return;
         }
-        
+
         isConnected = false;
     });
 
@@ -529,24 +527,35 @@ async function createBot() {
         bot = null;
     });
 
+    // 监听机器人位置变化 - 减少输出频率
+    let lastPositionLog = 0;
+    bot.on('move', () => {
+        const now = Date.now();
+        // 每10秒最多输出一次位置信息
+        if (now - lastPositionLog > 10000) {
+            console.log(`当前位置: (${bot.entity.position.x.toFixed(1)}, ${bot.entity.position.y.toFixed(1)}, ${bot.entity.position.z.toFixed(1)})`);
+            lastPositionLog = now;
+        }
+    });
+
     // 从数据包中提取可能的文本内容
     function extractTextFromData(data) {
         if (!data || typeof data !== 'object') return null;
-        
+
         // 递归搜索可能的文本字段
         function searchForText(obj, depth = 0) {
             if (depth > 3) return null; // 限制递归深度
-            
+
             for (const key in obj) {
                 const value = obj[key];
-                
+
                 // 检查常见的文本字段名
                 if ((key === 'text' || key === 'message' || key === 'content' || 
                      key === 'translate' || key === 'extra') && 
                     typeof value === 'string' && value.trim()) {
                     return value.trim();
                 }
-                
+
                 // 递归检查嵌套对象
                 if (typeof value === 'object' && value !== null) {
                     const result = searchForText(value, depth + 1);
@@ -555,7 +564,7 @@ async function createBot() {
             }
             return null;
         }
-        
+
         return searchForText(data);
     }
 
@@ -631,7 +640,7 @@ async function createBot() {
                     const cleanCommand = sanitizeMessage(command);
                     console.log(`📤 准备执行命令: "${cleanCommand}"`);
                     console.log(`🤖 机器人状态: 已连接=${isConnected}, 实体存在=${!!bot.entity}`);
-                    
+
                     // 检查是否是需要权限的命令
                     if (cleanCommand.startsWith('/list') || cleanCommand.startsWith('/seed') || 
                         cleanCommand.startsWith('/gamemode') || cleanCommand.startsWith('/tp') ||
@@ -664,7 +673,7 @@ async function createBot() {
                             bot.removeListener('message', commandResponseListener);
                         }
                     };
-                    
+
                     bot.on('message', commandResponseListener);
 
                     // 直接使用bot.chat发送命令
