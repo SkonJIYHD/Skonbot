@@ -1,4 +1,3 @@
-
 # Minecraft Bot Manager
 
 🤖 一个功能强大的Minecraft机器人管理系统，支持LittleSkin皮肤站集成和Web控制面板。
@@ -25,8 +24,8 @@ npm install
 在Web控制面板中配置以下信息：
 - 服务器地址和端口
 - 机器人用户名
-- 认证模式（正版/离线）
-- LittleSkin皮肤站账户（可选）
+- 认证模式（仅离线）
+- 皮肤站账户（可选）
 
 ### 3. 启动管理面板
 
@@ -45,19 +44,18 @@ node web-server.js
    - 端口：服务器端口（默认25565）
 
 2. **认证模式**
-   - **正版模式**：需要正版Minecraft账号
    - **离线模式**：仅需用户名，无需正版验证
 
-3. **LittleSkin皮肤站**
-   - 用户名：LittleSkin用户名
-   - 密码：LittleSkin密码
+3. **yggdrasil皮肤站**
+   - 用户名：皮肤站用户名
+   - 密码：皮肤站密码
    - 自动获取皮肤和披风
 
 ### Web控制面板功能
 
 - **🎮 机器人控制**：启动/停止机器人
 - **💬 聊天功能**：发送聊天消息到游戏中
-- **📊 实时日志**：查看机器人状态和聊天记录
+- **📊 实时日志**：查看机器人状态和指令记录
 - **⚙️ 配置管理**：保存和加载配置
 
 ## 🔧 配置文件说明
@@ -71,7 +69,7 @@ node web-server.js
     "port": 25565,
     "username": "机器人用户名",
     "version": "1.20.1",
-    "auth": "microsoft", // 或 "offline"
+    "auth": "offline"
     "littleskinUsername": "LittleSkin用户名",
     "littleskinPassword": "LittleSkin密码"
   }
@@ -145,4 +143,4 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ---
 
-**⭐ 如果这个项目对你有帮助，请给个Star支持一下！**
+**⭐ 如果这个项目对你有帮助，请给个Star支持一下！**# aterbot
