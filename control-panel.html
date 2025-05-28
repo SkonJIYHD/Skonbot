@@ -137,6 +137,13 @@
             border-color: #f5c6cb !important;
             color: #721c24 !important;
         }
+        
+        .message {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid #ddd;
+        }
 
         .control-buttons {
             margin-top: 20px;
@@ -1101,6 +1108,8 @@ modList.style.pointerEvents = 'none';
                             console.log('🔍 未知消息类型:', data);
                             if (data.message) {
                                 addServerMessage(`❓ ${data.message}`, data.timestamp, 'unknown');
+                            }
+                        }
                             }
                         }
                     } catch (error) {
