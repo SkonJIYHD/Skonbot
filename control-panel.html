@@ -186,31 +186,7 @@
             box-shadow: none;
         }
         
-        .help-close-btn {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            background: rgba(108, 117, 125, 0.1);
-            border: 2px solid #6c757d;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            font-size: 20px;
-            cursor: pointer;
-            color: #6c757d;
-            line-height: 1;
-            transition: all 0.3s ease;
-            z-index: 1001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .help-close-btn:hover {
-            color: #dc3545;
-            background: rgba(220, 53, 69, 0.1);
-            border-color: #dc3545;
-            transform: scale(1.1);
-        }
+        
 
         /* 响应式设计 - 移动端优化 */
         @media (max-width: 768px) {
@@ -218,13 +194,7 @@
                 padding: 15px;
             }
             
-            .help-close-btn {
-                top: 10px;
-                right: 10px;
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-            }
+            
             
             .help-title {
                 font-size: 24px !important;
@@ -270,13 +240,7 @@
                 padding: 25px;
             }
             
-            .help-close-btn {
-                top: 15px;
-                right: 20px;
-                width: 48px;
-                height: 48px;
-                font-size: 22px;
-            }
+            
             
             .help-title {
                 font-size: 28px !important;
@@ -294,10 +258,7 @@
                 padding: 30px 40px;
             }
             
-            .help-close-btn {
-                top: 20px;
-                right: 30px;
-            }
+            
             
             .help-section {
                 max-width: 1000px !important;
@@ -406,7 +367,6 @@
         <!-- 帮助弹窗 -->
         <div id="help-modal" class="help-modal">
             <div class="help-modal-content">
-                <button onclick="hideHelp()" class="help-close-btn">×</button>
                 
                 <h2 class="help-title" style="margin-top: 20px; text-align: center; font-size: 32px;">🎮 Aterbot 控制面板使用指南</h2>
                 
@@ -448,7 +408,7 @@
                 </div>
 
                 <div class="help-footer" style="max-width: 1000px; margin: 30px auto 0 auto; padding: 30px 0;">
-                    <button onclick="hideHelp(); setHelpShown();" class="help-confirm-btn" style="padding: 15px 40px; font-size: 18px;">
+                    <button onclick="setHelpShown(); hideHelp();" class="help-confirm-btn" style="padding: 15px 40px; font-size: 18px;">
                         ✅ 我知道了，开始使用
                     </button>
                 </div>
