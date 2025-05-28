@@ -8,7 +8,7 @@ const clients = new Set();
 
 function broadcastMessage(message) {
     console.log('🔥 broadcastMessage被调用，参数:', message);
-    
+
     if (clients.size === 0) {
         console.log('📡 没有连接的客户端，跳过消息广播');
         return;
@@ -249,7 +249,7 @@ function startBot(mode = null) {
             botProcess.stdout.on('data', (data) => {
                 const output = data.toString().trim();
                 console.log(`Bot输出: ${output}`);
-                
+
                 // 检查CHAT_MESSAGE的所有可能格式 - 强制优先处理
                 if (output.includes('CHAT_MESSAGE:')) {
                     console.log('🚨 发现CHAT_MESSAGE输出，立即处理！');
@@ -258,30 +258,42 @@ function startBot(mode = null) {
                     console.log('  - 完整输出:', JSON.stringify(output));
                     console.log('  - startsWith检测结果:', output.startsWith('CHAT_MESSAGE:'));
                     console.log('  - 是否包含前缀:', output.includes('CHAT_MESSAGE:'));
-                    
+
                     try {
                         // 强制提取CHAT_MESSAGE内容，不管格式如何
                         const chatIndex = output.indexOf('CHAT_MESSAGE:');
                         console.log('  - CHAT_MESSAGE:索引位置:', chatIndex);
-                        
+
                         if (chatIndex >= 0) {
                             const chatMessage = output.substring(chatIndex + 'CHAT_MESSAGE:'.length).trim();
                             console.log('🎯 强制提取聊天消息内容:', `"${chatMessage}"`);
                             console.log('  - 提取消息长度:', chatMessage.length);
                             console.log('  - 消息是否为空:', chatMessage === '');
-                            
+
                             if (chatMessage && chatMessage.length > 0) {
                                 console.log('✅ 聊天消息有效，开始处理和广播');
-                                logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
+
+                                // 检查是否为私聊消息并格式化
+                                let formattedMessage = chatMessage;
+                                const whisperPattern = /^(\w+)\s+whispers\s+to\s+you:\s*(.+)$/i;
+                                const whisperMatch = chatMessage.match(whisperPattern);
+
+                                if (whisperMatch) {
+                                    const [, username, content] = whisperMatch;
+                                    formattedMessage = `[${username}-私聊]: ${content}`;
+                                    console.log(`🔄 私聊消息格式化: "${chatMessage}" -> "${formattedMessage}"`);
+                                }
+
+                                logger.log(`💬 聊天消息: ${formattedMessage}`, 'chat');
 
                                 const messageData = {
                                     type: 'chat',
-                                    message: chatMessage,
+                                    message: formattedMessage,
                                     timestamp: new Date().toISOString()
                                 };
 
                                 console.log('📡 准备广播强制提取的聊天消息数据:', JSON.stringify(messageData));
-                                
+
                                 // 调用广播函数
                                 broadcastMessage(messageData);
                                 console.log('✅ 强制提取的聊天消息已通过SSE广播完成');
@@ -295,7 +307,7 @@ function startBot(mode = null) {
                         console.error('❌ CHAT_MESSAGE处理过程中发生错误:', error);
                         console.error('错误堆栈:', error.stack);
                     }
-                    
+
                     // 无论成功与否都返回，避免重复处理
                     console.log('🔄 CHAT_MESSAGE处理完成，返回避免重复处理');
                     return;
@@ -307,17 +319,29 @@ function startBot(mode = null) {
                     console.log('🎯 检测到标准CHAT_MESSAGE前缀，消息内容:', chatMessage);
 
                     if (chatMessage && chatMessage.length > 0) {
-                        console.log('✅ 标准格式聊天消息有效，开始处理和广播');
-                        logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
+                        console.log('✅ 聊天消息有效，开始处理和广播');
+
+                        // 检查是否为私聊消息并格式化
+                        let formattedMessage = chatMessage;
+                        const whisperPattern = /^(\w+)\s+whispers\s+to\s+you:\s*(.+)$/i;
+                        const whisperMatch = chatMessage.match(whisperPattern);
+
+                        if (whisperMatch) {
+                            const [, username, content] = whisperMatch;
+                            formattedMessage = `[${username}-私聊]: ${content}`;
+                            console.log(`🔄 私聊消息格式化: "${chatMessage}" -> "${formattedMessage}"`);
+                        }
+
+                        logger.log(`💬 聊天消息: ${formattedMessage}`, 'chat');
 
                         const messageData = {
                             type: 'chat',
-                            message: chatMessage,
+                            message: formattedMessage,
                             timestamp: new Date().toISOString()
                         };
 
                         console.log('📡 准备广播标准格式聊天消息数据:', messageData);
-                        
+
                         // 立即广播聊天消息
                         broadcastMessage(messageData);
                         console.log('✅ 标准格式聊天消息已通过SSE广播完成');
@@ -343,7 +367,7 @@ function startBot(mode = null) {
                         console.log('⚠️ 系统消息为空，跳过广播');
                     }
                     return; // 处理完成后立即返回
-                    
+
                 } else if (output.startsWith('SERVER_MESSAGE:')) {
                     const serverMessage = output.substring(15).trim();
                     console.log('🎯 检测到SERVER_MESSAGE前缀，消息内容:', serverMessage);
@@ -380,7 +404,7 @@ function startBot(mode = null) {
                         console.log('⚠️ 游戏消息为空，跳过广播');
                     }
                     return; // 处理完成后立即返回
-                    
+
                 } else if (output.startsWith('ACTIONBAR_MESSAGE:')) {
                     const actionBarMessage = output.substring(18).trim();
                     console.log('🎯 检测到ACTIONBAR_MESSAGE前缀，消息内容:', actionBarMessage);
@@ -397,7 +421,7 @@ function startBot(mode = null) {
                         broadcastMessage(messageData);
                     }
                     return; // 处理完成后立即返回
-                    
+
                 } else if (output.startsWith('TITLE_MESSAGE:')) {
                     const titleMessage = output.substring(14).trim();
                     console.log('🎯 检测到TITLE_MESSAGE前缀，消息内容:', titleMessage);
@@ -414,7 +438,7 @@ function startBot(mode = null) {
                         broadcastMessage(messageData);
                     }
                     return; // 处理完成后立即返回
-                    
+
                 } else if (output.startsWith('PACKET_MESSAGE:')) {
                     const packetMessage = output.substring(15).trim();
                     console.log('🎯 检测到PACKET_MESSAGE前缀，消息内容:', packetMessage);
