@@ -706,10 +706,16 @@
             }
         }
 
+        let statusCheckErrors = 0;
+        const maxStatusErrors = 3;
+
         function updateStatus() {
             fetch('/api/bot/status')
                 .then(response => response.json())
                 .then(data => {
+                    // 状态检查成功，重置错误计数
+                    statusCheckErrors = 0;
+
                     const statusEl = document.getElementById('status');
                     const errorEl = document.getElementById('error-info');
                     const commandSection = document.getElementById('command-section');
@@ -744,7 +750,21 @@
                     }
                 })
                 .catch(error => {
-                    console.error('获取状态失败:', error);
+                    statusCheckErrors++;
+                    
+                    // 只在前几次错误时显示日志
+                    if (statusCheckErrors <= maxStatusErrors) {
+                        console.error(`获取状态失败 (${statusCheckErrors}/${maxStatusErrors}):`, error);
+                    }
+                    
+                    // 如果错误次数过多，显示离线状态
+                    if (statusCheckErrors > maxStatusErrors) {
+                        const statusEl = document.getElementById('status');
+                        statusEl.textContent = '机器人状态: 连接服务器失败';
+                        statusEl.className = 'status stopped';
+                        statusEl.style.backgroundColor = '#f8d7da';
+                        statusEl.style.color = '#721c24';
+                    }
                 });
         }
 
@@ -820,18 +840,31 @@
             });
         }
 
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        let reconnectTimeout = null;
+
         function connectToMessageStream() {
             if (eventSource) {
                 eventSource.close();
                 eventSource = null;
             }
 
-            console.log('🔗 正在连接到消息流...');
+            // 减少控制台日志输出
+            if (reconnectAttempts === 0) {
+                console.log('🔗 正在连接到消息流...');
+            }
 
             try {
                 eventSource = new EventSource('/api/events');
 
                 eventSource.onopen = function(event) {
+                    // 连接成功，重置重连计数器
+                    reconnectAttempts = 0;
+                    if (reconnectTimeout) {
+                        clearTimeout(reconnectTimeout);
+                        reconnectTimeout = null;
+                    }
                     console.log('✅ 消息流连接成功');
                 };
 
@@ -840,21 +873,53 @@
                         const data = JSON.parse(event.data);
                         addServerMessage(data.message, data.timestamp, data.type);
                     } catch (error) {
-                        console.error('❌ 解析消息失败:', error);
+                        // 减少错误日志输出
+                        if (reconnectAttempts < 3) {
+                            console.error('❌ 解析消息失败:', error);
+                        }
                     }
                 };
 
                 eventSource.onerror = function(error) {
-                    console.error('💥 消息流连接错误:', error);
-                    setTimeout(() => {
-                        if (document.getElementById('status').className === 'status running') {
-                            connectToMessageStream();
+                    // 避免重复的错误日志
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        
+                        // 只在前几次尝试时显示错误
+                        if (reconnectAttempts <= 2) {
+                            console.error(`💥 消息流连接错误 (${reconnectAttempts}/${maxReconnectAttempts}):`, error);
                         }
-                    }, 3000);
+
+                        // 清除之前的重连定时器
+                        if (reconnectTimeout) {
+                            clearTimeout(reconnectTimeout);
+                        }
+
+                        // 指数退避重连策略
+                        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 10000);
+                        
+                        reconnectTimeout = setTimeout(() => {
+                            if (document.getElementById('status').className === 'status running') {
+                                connectToMessageStream();
+                            }
+                        }, delay);
+                    } else {
+                        console.error('❌ SSE连接失败次数过多，停止重连');
+                        // 显示连接状态在UI上
+                        const messagesEl = document.getElementById('server-messages');
+                        if (messagesEl) {
+                            const errorDiv = document.createElement('div');
+                            errorDiv.style.cssText = 'color: #dc3545; font-weight: bold; padding: 10px; border: 1px solid #dc3545; border-radius: 4px; margin: 5px 0;';
+                            errorDiv.textContent = '⚠️ 消息流连接失败，请重启机器人重新连接';
+                            messagesEl.appendChild(errorDiv);
+                        }
+                    }
                 };
 
             } catch (error) {
-                console.error('💥 创建消息流连接失败:', error);
+                if (reconnectAttempts < 2) {
+                    console.error('💥 创建消息流连接失败:', error);
+                }
             }
         }
 

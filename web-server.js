@@ -530,18 +530,26 @@ const server = http.createServer((req, res) => {
 
     } else if (req.method === 'GET' && req.url === '/api/events') {
         // Server-Sent Events端点，用于实时推送服务器消息
-        console.log('🔗 新的SSE连接建立');
+        // 减少连接日志输出
+        if (clients.size === 0) {
+            console.log('🔗 新的SSE连接建立');
+        }
         
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Cache-Control'
+            'Access-Control-Allow-Headers': 'Cache-Control',
+            'X-Accel-Buffering': 'no' // 禁用nginx缓冲
         });
         
         clients.add(res);
-        console.log(`📊 当前SSE连接数: ${clients.size}`);
+        
+        // 减少日志输出 - 只在连接数变化较大时输出
+        if (clients.size % 5 === 1 || clients.size <= 3) {
+            console.log(`📊 当前SSE连接数: ${clients.size}`);
+        }
         
         // 发送连接确认
         const welcomeMsg = JSON.stringify({
@@ -552,36 +560,46 @@ const server = http.createServer((req, res) => {
         
         try {
             res.write(`data: ${welcomeMsg}\n\n`);
-            console.log('✅ 发送SSE连接确认消息');
+            // 只在第一个连接时显示确认日志
+            if (clients.size === 1) {
+                console.log('✅ 发送SSE连接确认消息');
+            }
         } catch (error) {
             console.error('❌ 发送SSE连接确认失败:', error);
+            clients.delete(res);
         }
         
-        // 发送一条测试消息，确保连接正常（减少日志输出）
-        setTimeout(() => {
+        // 设置keepalive心跳，避免连接超时
+        const heartbeat = setInterval(() => {
             if (res.writable && !res.destroyed) {
-                const testMsg = JSON.stringify({
-                    type: "system",
-                    message: "消息流连接测试成功！等待服务器消息...",
-                    timestamp: new Date().toISOString()
-                });
                 try {
-                    res.write(`data: ${testMsg}\n\n`);
-                    // 减少调试日志输出
+                    res.write(`data: ${JSON.stringify({type: "heartbeat", timestamp: new Date().toISOString()})}\n\n`);
                 } catch (error) {
-                    console.error('❌ 发送SSE测试消息失败:', error);
+                    clearInterval(heartbeat);
+                    clients.delete(res);
                 }
+            } else {
+                clearInterval(heartbeat);
+                clients.delete(res);
             }
-        }, 1000);
+        }, 30000); // 30秒心跳
         
         req.on('close', () => {
+            clearInterval(heartbeat);
             clients.delete(res);
-            console.log(`🔌 SSE连接断开，当前连接数: ${clients.size}`);
+            // 减少断开连接的日志输出
+            if (clients.size % 5 === 0 || clients.size <= 2) {
+                console.log(`🔌 SSE连接断开，当前连接数: ${clients.size}`);
+            }
         });
         
         req.on('error', (error) => {
-            console.error('❌ SSE连接错误:', error);
+            clearInterval(heartbeat);
             clients.delete(res);
+            // 减少错误日志频率
+            if (Math.random() < 0.1) { // 只有10%的错误会被记录
+                console.error('❌ SSE连接错误:', error.code || error.message);
+            }
         });
         
     } else if (req.method === 'POST' && req.url === '/api/bot/chat') {
@@ -630,13 +648,15 @@ const server = http.createServer((req, res) => {
     }
 });
 
-// 处理端口冲突，尝试多个端口
+// 防止端口冲突和重复启动
 function startServer(port = 5000) {
-    // 防止重复启动
-    if (server.listening) {
-        console.log('服务器已经在运行中，跳过启动');
+    // 强制防止重复启动
+    if (server.listening || global.serverInstance) {
+        console.log('服务器已经在运行中，跳过重复启动');
         return;
     }
+
+    global.serverInstance = server;
 
     server.listen(port, '0.0.0.0', () => {
         console.log(`Aterbot控制面板启动在 http://0.0.0.0:${port}`);
@@ -645,21 +665,23 @@ function startServer(port = 5000) {
     });
 
     server.on('error', (error) => {
-        if (error.code === 'EADDRINUSE' && port < 5010) {
+        if (error.code === 'EADDRINUSE' && port < 5005) {
             console.log(`端口 ${port} 被占用，尝试端口 ${port + 1}...`);
-            // 延迟一下再尝试下一个端口，避免快速重复
+            // 重置全局标记，允许下一个端口尝试
+            global.serverInstance = null;
             setTimeout(() => {
                 startServer(port + 1);
-            }, 100);
+            }, 200);
         } else {
             console.error('服务器启动失败:', error);
+            global.serverInstance = null;
             process.exit(1);
         }
     });
 }
 
-// 防止重复调用
-if (!global.serverStarted) {
+// 严格防止重复调用
+if (!global.serverStarted && !global.serverInstance) {
     global.serverStarted = true;
     startServer();
 }
