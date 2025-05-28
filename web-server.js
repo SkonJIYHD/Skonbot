@@ -27,12 +27,16 @@ function broadcastMessage(message) {
 
     const data = `data: ${JSON.stringify(messageData)}\n\n`;
     console.log(`📡 向 ${clients.size} 个客户端广播消息 [${messageData.type}]:`, messageData.message);
+    console.log('📦 发送的数据:', data.trim());
 
+    let successCount = 0;
     const toRemove = [];
     clients.forEach(client => {
         try {
             if (client.writable && !client.destroyed) {
                 client.write(data);
+                successCount++;
+                console.log(`✅ 消息发送到客户端成功 (${successCount}/${clients.size})`);
             } else {
                 console.log('⚠️ 客户端连接已断开，标记移除');
                 toRemove.push(client);
@@ -252,14 +256,18 @@ function startBot(mode = null) {
 
                         console.log('🎯 检测到聊天消息，准备广播:', chatMessage);
 
-                        // 广播给所有连接的客户端
+                        // 立即广播给所有连接的客户端
                         const messageData = {
                             type: 'chat',
                             message: chatMessage,
                             timestamp: new Date().toISOString()
                         };
 
-                        broadcastMessage(messageData);
+                        // 确保立即发送
+                        setTimeout(() => {
+                            broadcastMessage(messageData);
+                            console.log('✅ 聊天消息已广播完成');
+                        }, 10);
                     } else {
                         console.log('⚠️ 聊天消息为空，跳过广播');
                     }
