@@ -262,7 +262,7 @@ function startBot(mode = null) {
                     // 强制提取CHAT_MESSAGE内容，不管格式如何
                     const chatIndex = output.indexOf('CHAT_MESSAGE:');
                     if (chatIndex >= 0) {
-                        const chatMessage = output.substring(chatIndex + 13).trim();
+                        const chatMessage = output.substring(chatIndex + 'CHAT_MESSAGE:'.length).trim();
                         console.log('🎯 强制提取聊天消息内容:', chatMessage);
                         
                         if (chatMessage && chatMessage.length > 0) {
