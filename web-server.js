@@ -27,9 +27,8 @@ function broadcastMessage(message) {
 
     const data = `data: ${JSON.stringify(messageData)}\n\n`;
     console.log(`📡 向 ${clients.size} 个客户端广播消息 [${messageData.type}]:`, messageData.message);
-    console.log('📦 发送的数据:', data.trim());
+    console.log('📦 发送的完整SSE数据:', data.trim());
 
-    let successCount = 0;
     const toRemove = [];
     clients.forEach(client => {
         try {
@@ -249,7 +248,7 @@ function startBot(mode = null) {
                 // 检查消息类型并处理
                 if (output.startsWith('CHAT_MESSAGE:')) {
                     const chatMessage = output.substring(13).trim();
-                    
+
                     // 确保消息不为空
                     if (chatMessage && chatMessage.length > 0) {
                         logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
@@ -273,7 +272,7 @@ function startBot(mode = null) {
                     }
                 } else if (output.startsWith('SYSTEM_MESSAGE:')) {
                     const systemMessage = output.substring(15).trim();
-                    
+
                     if (systemMessage && systemMessage.length > 0) {
                         logger.log(`🔧 系统消息: ${systemMessage}`, 'system');
 
@@ -292,7 +291,7 @@ function startBot(mode = null) {
                     }
                 } else if (output.startsWith('SERVER_MESSAGE:')) {
                     const serverMessage = output.substring(15).trim();
-                    
+
                     if (serverMessage && serverMessage.length > 0) {
                         logger.log(`📋 服务器反馈: ${serverMessage}`, 'server');
 
@@ -311,7 +310,7 @@ function startBot(mode = null) {
                     }
                 } else if (output.startsWith('GAME_MESSAGE:')) {
                     const gameMessage = output.substring(13).trim();
-                    
+
                     if (gameMessage && gameMessage.length > 0) {
                         logger.log(`🎮 游戏信息: ${gameMessage}`, 'game');
 
@@ -330,7 +329,7 @@ function startBot(mode = null) {
                     }
                 } else if (output.startsWith('ACTIONBAR_MESSAGE:')) {
                     const actionBarMessage = output.substring(18).trim();
-                    
+
                     if (actionBarMessage && actionBarMessage.length > 0) {
                         logger.log(`📊 操作栏: ${actionBarMessage}`, 'actionbar');
 
@@ -344,7 +343,7 @@ function startBot(mode = null) {
                     }
                 } else if (output.startsWith('TITLE_MESSAGE:')) {
                     const titleMessage = output.substring(14).trim();
-                    
+
                     if (titleMessage && titleMessage.length > 0) {
                         logger.log(`📺 标题: ${titleMessage}`, 'title');
 
@@ -358,7 +357,7 @@ function startBot(mode = null) {
                     }
                 } else if (output.startsWith('PACKET_MESSAGE:')) {
                     const packetMessage = output.substring(15).trim();
-                    
+
                     if (packetMessage && packetMessage.length > 0) {
                         logger.log(`📦 数据包消息: ${packetMessage}`, 'packet');
 
