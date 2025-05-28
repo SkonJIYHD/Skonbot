@@ -407,6 +407,15 @@
             </div>
 
             <div class="form-group">
+                <label>服务器消息监控:</label>
+                <div id="server-messages" style="height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: #f0f8ff; font-family: 'Courier New', monospace; font-size: 12px; margin-bottom: 10px;">
+                    <!-- 服务器消息将在这里显示 -->
+                </div>
+                <button onclick="clearServerMessages()" style="background-color: #6c757d; color: white; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 10px;">清除消息</button>
+                <button onclick="toggleAutoScroll()" id="auto-scroll-btn" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 3px;">自动滚动: 开</button>
+            </div>
+
+            <div class="form-group">
                 <label>命令执行记录:</label>
                 <div id="command-log" style="height: 150px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: #f8f9fa; font-family: 'Courier New', monospace; font-size: 12px;">
                     <!-- 命令执行记录将在这里显示 -->
@@ -911,11 +920,22 @@
                         errorEl.className = 'error-info hidden'; // 隐藏错误信息
                         commandSection.style.display = 'block'; // 显示命令控制界面
                         updateToggleButton(true); // 更新按钮为停止状态
+                        
+                        // 连接到消息流
+                        if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
+                            connectToMessageStream();
+                        }
                     } else {
                         statusEl.textContent = '机器人状态: 已停止';
                         statusEl.className = 'status stopped';
                         commandSection.style.display = 'none'; // 隐藏命令控制界面
                         updateToggleButton(false); // 更新按钮为启动状态
+                        
+                        // 断开消息流连接
+                        if (eventSource) {
+                            eventSource.close();
+                            eventSource = null;
+                        }
 
                         // 显示错误信息（如果有的话）
                         if (data.error) {
@@ -1025,6 +1045,141 @@
         // 清除命令记录
         function clearCommandLog() {
             document.getElementById('command-log').textContent = '';
+        }
+
+        // 服务器消息相关功能
+        let eventSource = null;
+        let autoScroll = true;
+        let reconnectTimer = null;
+        let maxReconnectAttempts = 10;
+        let reconnectAttempts = 0;
+
+        function connectToMessageStream() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+
+            console.log('🔗 正在连接到消息流...');
+            addServerMessage('🔗 正在连接到服务器消息流...', new Date().toISOString(), 'system');
+
+            try {
+                eventSource = new EventSource(`${getApiBase()}/api/events`);
+                
+                eventSource.onopen = function(event) {
+                    console.log('✅ 消息流连接成功');
+                    addServerMessage('✅ 消息流连接成功，开始监控服务器消息', new Date().toISOString(), 'system');
+                    reconnectAttempts = 0;
+                };
+                
+                eventSource.onmessage = function(event) {
+                    try {
+                        console.log('📨 收到消息流数据:', event.data);
+                        const data = JSON.parse(event.data);
+                        
+                        if (data.type === 'chat') {
+                            addServerMessage(data.message, data.timestamp || new Date().toISOString());
+                        } else if (data.type === 'connected') {
+                            addServerMessage('🔗 ' + data.message, data.timestamp || new Date().toISOString(), 'system');
+                        } else {
+                            console.log('🔍 未知消息类型:', data);
+                        }
+                    } catch (error) {
+                        console.error('❌ 解析消息失败:', error, '原始数据:', event.data);
+                        addServerMessage(`❌ 消息解析错误: ${error.message}`, new Date().toISOString(), 'error');
+                    }
+                };
+
+                eventSource.onerror = function(error) {
+                    console.error('💥 消息流连接错误:', error);
+                    
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        addServerMessage(`❌ 消息流连接断开，尝试重连 (${reconnectAttempts}/${maxReconnectAttempts})...`, new Date().toISOString(), 'error');
+                        
+                        // 清除之前的重连定时器
+                        if (reconnectTimer) {
+                            clearTimeout(reconnectTimer);
+                        }
+                        
+                        // 3秒后重连，避免过于频繁
+                        reconnectTimer = setTimeout(() => {
+                            if (document.getElementById('status').className === 'status running') {
+                                console.log('🔄 尝试重新连接消息流...');
+                                connectToMessageStream();
+                            }
+                        }, 3000);
+                    } else {
+                        addServerMessage('❌ 消息流重连次数已达上限，请手动刷新页面', new Date().toISOString(), 'error');
+                    }
+                };
+                
+            } catch (error) {
+                console.error('💥 创建消息流连接失败:', error);
+                addServerMessage(`❌ 创建消息流连接失败: ${error.message}`, new Date().toISOString(), 'error');
+            }
+        }
+
+        function addServerMessage(message, timestamp, type = 'chat') {
+            const messagesEl = document.getElementById('server-messages');
+            
+            if (!messagesEl) {
+                console.error('❌ 找不到服务器消息容器元素');
+                return;
+            }
+            
+            const time = new Date(timestamp).toLocaleTimeString();
+            
+            let messageClass = '';
+            let icon = '💬';
+            let bgColor = '';
+            
+            if (type === 'system') {
+                messageClass = 'color: #007bff; font-weight: bold;';
+                icon = '🔧';
+                bgColor = 'background-color: #e7f3ff;';
+            } else if (type === 'error') {
+                messageClass = 'color: #dc3545; font-weight: bold;';
+                icon = '❌';
+                bgColor = 'background-color: #ffe6e6;';
+            } else {
+                // 普通聊天消息
+                icon = '💬';
+                bgColor = 'background-color: #f8f9fa;';
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `margin-bottom: 3px; padding: 8px; border-radius: 4px; border-left: 3px solid #ddd; ${messageClass} ${bgColor}`;
+            messageDiv.innerHTML = `
+                <div style="font-size: 11px; color: #666; margin-bottom: 2px;">[${time}]</div>
+                <div style="font-family: 'Courier New', monospace; font-size: 13px;">${icon} ${message}</div>
+            `;
+            
+            messagesEl.appendChild(messageDiv);
+            
+            // 控制台也输出，方便调试
+            console.log(`📺 [${time}] ${type.toUpperCase()}: ${message}`);
+            
+            // 自动滚动到底部
+            if (autoScroll) {
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+            
+            // 限制消息数量，避免内存溢出
+            while (messagesEl.children.length > 200) {
+                messagesEl.removeChild(messagesEl.firstChild);
+            }
+        }
+
+        function clearServerMessages() {
+            document.getElementById('server-messages').innerHTML = '';
+        }
+
+        function toggleAutoScroll() {
+            autoScroll = !autoScroll;
+            const btn = document.getElementById('auto-scroll-btn');
+            btn.textContent = `自动滚动: ${autoScroll ? '开' : '关'}`;
+            btn.style.backgroundColor = autoScroll ? '#28a745' : '#6c757d';
         }
 
         // 推荐用户名功能

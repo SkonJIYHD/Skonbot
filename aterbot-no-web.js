@@ -120,11 +120,11 @@ async function createBot() {
 
     // 验证并清理用户名 - 超严格模式
     let username = config.username.toString().trim();
-    
+
     console.log('🔍 超严格用户名检查:');
     console.log('  原始用户名:', `"${username}"`);
     console.log('  原始字节:', username.split('').map(c => `${c}(${c.charCodeAt(0)})`).join(' '));
-    
+
     // 检查每个字符的Unicode值
     let hasProblems = false;
     const charAnalysis = username.split('').map(c => {
@@ -135,9 +135,9 @@ async function createBot() {
         if (!isValid) hasProblems = true;
         return `${c}(${code}${isValid ? '✓' : '❌'})`;
     });
-    
+
     console.log('  字符分析:', charAnalysis.join(' '));
-    
+
     if (hasProblems || username.length > 16) {
         console.log('🚨 检测到用户名问题，强制使用纯数字用户名');
         // 如果这个服务器太挑剔，就用最简单的纯数字用户名
@@ -145,17 +145,17 @@ async function createBot() {
         config.username = 'Bot' + timestamp;
         console.log('🔧 强制修改为超安全用户名:', config.username);
     }
-    
+
     // 最终验证
     const finalCheck = config.username.split('').every(c => {
         const code = c.charCodeAt(0);
         return (code >= 48 && code <= 57) || (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
     });
-    
+
     console.log('✅ 最终用户名:', `"${config.username}"`);
     console.log('  长度:', config.username.length);
     console.log('  超严格检查:', finalCheck ? '完全通过' : '仍有问题');
-    
+
     if (!finalCheck) {
         // 如果还有问题，直接用纯数字
         config.username = 'Bot' + Math.floor(Math.random() * 100000000);
@@ -189,24 +189,24 @@ async function createBot() {
     if (config.skinMode === 'littleskin') {
         console.log('🌟 使用LittleSkin皮肤站');
         const littleSkinAPI = new LittleSkinAPI();
-        
+
         if (config.enableLittleskinAuth && config.littleskinPassword && config.littleskinUsername) {
             console.log('🔐 启用LittleSkin Yggdrasil认证');
-            
+
             try {
                 // 尝试加载已保存的认证信息
                 let authData = littleSkinAPI.loadAuthData(config.littleskinUsername);
-                
+
                 // 如果没有认证信息或认证信息无效，重新认证
                 let validationResult = { success: false };
                 if (authData) {
                     validationResult = await littleSkinAPI.validate(authData.accessToken, authData.clientToken);
                 }
-                
+
                 if (!authData || !validationResult.success) {
                     console.log('🔄 正在进行LittleSkin认证...');
                     const authResult = await littleSkinAPI.authenticate(config.littleskinUsername, config.littleskinPassword);
-                    
+
                     if (authResult.success) {
                         authData = authResult;
                         littleSkinAPI.saveAuthData(authData, config.littleskinUsername);
@@ -216,17 +216,17 @@ async function createBot() {
                         console.log('⚠️ 回退到离线模式');
                     }
                 }
-                
+
                 if (authData && authData.success !== false) {
                     // 配置Yggdrasil认证
                     botConfig.auth = 'offline'; // 暂时使用离线模式，因为mineflayer可能不直接支持自定义Yggdrasil
                     botConfig.username = config.littleskinUsername;
-                    
+
                     console.log('🎮 LittleSkin认证已配置:', {
                         username: config.littleskinUsername,
                         uuid: authData.selectedProfile?.id
                     });
-                    
+
                     // 获取皮肤信息用于日志
                     const skinInfo = await littleSkinAPI.getUserSkin(config.littleskinUsername);
                     if (skinInfo.success) {
@@ -237,15 +237,15 @@ async function createBot() {
                     }
                     // 完全静默404错误
                 }
-                
+
             } catch (error) {
                 console.error('🚨 LittleSkin认证过程出错:', error.message);
                 console.log('⚠️ 回退到离线模式');
             }
-            
+
         } else if (config.littleskinUsername) {
             console.log(`🎨 使用LittleSkin用户 "${config.littleskinUsername}" 的皮肤 (离线模式)`);
-            
+
             // 在离线模式下，某些服务器支持通过用户名获取LittleSkin皮肤
             // 获取皮肤信息用于展示
             try {
@@ -276,18 +276,18 @@ async function createBot() {
         // 这主要是为了将来可能的扩展
     }
 
-    
+
 
     if (config.skinMode === 'yggdrasil') {
         console.log('🌟 使用Yggdrasil皮肤站模式');
         console.log('  皮肤站服务器:', config.yggdrasilServer);
         console.log('  皮肤站用户名:', config.yggdrasilUsername);
-        
+
         if (config.yggdrasilServer && config.yggdrasilUsername) {
             // 设置Yggdrasil认证服务器
             botConfig.sessionServer = config.yggdrasilServer;
             botConfig.profileKeysSignatureValidation = false; // 兼容第三方皮肤站
-            
+
             // 尝试从皮肤站获取皮肤信息
             console.log('🔍 正在从皮肤站获取皮肤信息...');
             fetchYggdrasilProfile(config.yggdrasilServer, config.yggdrasilUsername)
@@ -319,8 +319,18 @@ async function createBot() {
     });
 
     // 聊天消息事件
-    bot.on('message', (message) => {
-        console.log('聊天消息:', message.toString());
+    bot.on('message', (jsonMsg, position) => {
+        if (position === 'chat') {
+            const message = jsonMsg.toString();
+            console.log(`聊天消息: ${message}`);
+
+            // 发送消息到控制面板
+            try {
+                process.stdout.write(`CHAT_MESSAGE:${message}\n`);
+            } catch (error) {
+                console.error('发送聊天消息到控制面板失败:', error);
+            }
+        }
     });
 
     // 错误处理
@@ -366,18 +376,18 @@ async function createBot() {
     function sanitizeMessage(message) {
         // 移除Minecraft颜色代码 (§ 和 & 开头的代码)
         let clean = message.replace(/[§&][0-9a-fk-or]/gi, '');
-        
+
         // 移除可能的控制字符
         clean = clean.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
-        
+
         // 确保只包含基本的可打印字符
         clean = clean.replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, '');
-        
+
         // 限制长度（Minecraft聊天通常限制为256字符）
         if (clean.length > 256) {
             clean = clean.substring(0, 253) + '...';
         }
-        
+
         return clean.trim();
     }
 
@@ -388,16 +398,16 @@ async function createBot() {
             // 1. 获取用户UUID
             const profileUrl = `${yggdrasilServer}/sessionserver/session/minecraft/profile`;
             const usernameUrl = `${yggdrasilServer}/api/profiles/minecraft`;
-            
+
             console.log('🔍 查询用户UUID:', username);
-            
+
             // 一些皮肤站使用不同的API结构，尝试多种方式
             const possibleUrls = [
                 `${yggdrasilServer}/sessionserver/session/minecraft/profile/${username}`,
                 `${yggdrasilServer}/api/profiles/minecraft/${username}`,
                 `${yggdrasilServer}/sessionserver/session/minecraft/hasJoined?username=${username}`,
             ];
-            
+
             for (const url of possibleUrls) {
                 try {
                     const fetch = require('node-fetch');
@@ -411,7 +421,7 @@ async function createBot() {
                     // 继续尝试下一个URL
                 }
             }
-            
+
             console.log('⚠️ 无法从皮肤站获取用户信息，将使用默认配置');
             return null;
         } catch (error) {
@@ -428,13 +438,13 @@ async function createBot() {
         if (input.startsWith('COMMAND:')) {
             const command = input.replace('COMMAND:', '');
             console.log(`[控制面板] 解析命令: "${command}"`);
-            
+
             if (bot && isConnected) {
                 try {
                     const cleanCommand = sanitizeMessage(command);
                     console.log(`📤 准备执行命令: "${cleanCommand}"`);
                     console.log(`🤖 机器人状态: 已连接=${isConnected}, 实体存在=${!!bot.entity}`);
-                    
+
                     // 直接使用bot.chat发送命令
                     bot.chat(cleanCommand);
                     console.log(`✅ 命令已发送到服务器: ${cleanCommand}`);
@@ -448,7 +458,7 @@ async function createBot() {
         } else if (input.startsWith('CHAT:')) {
             const message = input.replace('CHAT:', '');
             console.log(`[控制面板] 解析聊天消息: "${message}"`);
-            
+
             if (bot && isConnected) {
                 try {
                     const cleanMessage = sanitizeMessage(message);
