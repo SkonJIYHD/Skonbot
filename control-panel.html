@@ -202,6 +202,13 @@
             display: none;
         }
 
+        .message.chat { color: #28a745; }
+        .message.error { color: #dc3545; background-color: #f8d7da; }
+        .message.system { color: #007bff; background-color: #e7f3ff; }
+        .message.server { color: #6f42c1; background-color: #f3e8ff; border-left: 3px solid #6f42c1; }
+        .message.game { color: #fd7e14; background-color: #fff3e0; }
+        .message.unknown { color: #6c757d; background-color: #f8f9fa; }
+
     </style>
 </head>
 <body>
@@ -641,7 +648,8 @@
 
             if (isAdaptive) {
                 manualSection.style.opacity = '0.5';
-                modList.style.pointerEvents = 'none';
+                ```text
+modList.style.pointerEvents = 'none';
                 addButtons.forEach(btn => btn.disabled = true);
             } else {
                 manualSection.style.opacity = '1';
@@ -920,7 +928,7 @@
                         errorEl.className = 'error-info hidden'; // 隐藏错误信息
                         commandSection.style.display = 'block'; // 显示命令控制界面
                         updateToggleButton(true); // 更新按钮为停止状态
-                        
+
                         // 连接到消息流
                         if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
                             connectToMessageStream();
@@ -930,7 +938,7 @@
                         statusEl.className = 'status stopped';
                         commandSection.style.display = 'none'; // 隐藏命令控制界面
                         updateToggleButton(false); // 更新按钮为启动状态
-                        
+
                         // 断开消息流连接
                         if (eventSource) {
                             eventSource.close();
@@ -1065,25 +1073,43 @@
 
             try {
                 eventSource = new EventSource(`${getApiBase()}/api/events`);
-                
+
                 eventSource.onopen = function(event) {
                     console.log('✅ 消息流连接成功');
                     addServerMessage('✅ 消息流连接成功，开始监控服务器消息', new Date().toISOString(), 'system');
                     reconnectAttempts = 0;
                 };
-                
+
                 eventSource.onmessage = function(event) {
                     try {
                         console.log('📨 收到消息流数据:', event.data);
                         const data = JSON.parse(event.data);
-                        
+
                         if (data.type === 'chat') {
-                            addServerMessage(data.message, data.timestamp || new Date().toISOString());
-                        } else if (data.type === 'connected') {
-                            addServerMessage('🔗 ' + data.message, data.timestamp || new Date().toISOString(), 'system');
-                        } else {
-                            console.log('🔍 未知消息类型:', data);
-                        }
+                // 聊天消息
+                addServerMessage(data.message, 'chat');
+            } else if (data.type === 'system') {
+                // 系统消息
+                addServerMessage(`🔧 ${data.message}`, 'system');
+            } else if (data.type === 'server') {
+                // 服务器反馈消息（命令输出等）
+                addServerMessage(`📋 ${data.message}`, 'server');
+            } else if (data.type === 'game') {
+                // 游戏信息消息
+                addServerMessage(`🎮 ${data.message}`, 'game');
+            } else if (data.type === 'error') {
+                // 错误消息
+                addServerMessage(data.message, 'error');
+            } else if (data.type === 'connected') {
+                // 连接确认消息
+                addServerMessage(`🔗 ${data.message}`, 'system');
+            } else {
+                // 未知消息类型，但仍然显示
+                console.log('🔍 未知消息类型:', data);
+                if (data.message) {
+                    addServerMessage(`❓ ${data.message}`, 'unknown');
+                }
+            }
                     } catch (error) {
                         console.error('❌ 解析消息失败:', error, '原始数据:', event.data);
                         addServerMessage(`❌ 消息解析错误: ${error.message}`, new Date().toISOString(), 'error');
@@ -1092,16 +1118,16 @@
 
                 eventSource.onerror = function(error) {
                     console.error('💥 消息流连接错误:', error);
-                    
+
                     if (reconnectAttempts < maxReconnectAttempts) {
                         reconnectAttempts++;
                         addServerMessage(`❌ 消息流连接断开，尝试重连 (${reconnectAttempts}/${maxReconnectAttempts})...`, new Date().toISOString(), 'error');
-                        
+
                         // 清除之前的重连定时器
                         if (reconnectTimer) {
                             clearTimeout(reconnectTimer);
                         }
-                        
+
                         // 3秒后重连，避免过于频繁
                         reconnectTimer = setTimeout(() => {
                             if (document.getElementById('status').className === 'status running') {
@@ -1113,7 +1139,7 @@
                         addServerMessage('❌ 消息流重连次数已达上限，请手动刷新页面', new Date().toISOString(), 'error');
                     }
                 };
-                
+
             } catch (error) {
                 console.error('💥 创建消息流连接失败:', error);
                 addServerMessage(`❌ 创建消息流连接失败: ${error.message}`, new Date().toISOString(), 'error');
@@ -1122,18 +1148,18 @@
 
         function addServerMessage(message, timestamp, type = 'chat') {
             const messagesEl = document.getElementById('server-messages');
-            
+
             if (!messagesEl) {
                 console.error('❌ 找不到服务器消息容器元素');
                 return;
             }
-            
+
             const time = new Date(timestamp).toLocaleTimeString();
-            
+
             let messageClass = '';
             let icon = '💬';
             let bgColor = '';
-            
+
             if (type === 'system') {
                 messageClass = 'color: #007bff; font-weight: bold;';
                 icon = '🔧';
@@ -1147,24 +1173,24 @@
                 icon = '💬';
                 bgColor = 'background-color: #f8f9fa;';
             }
-            
+
             const messageDiv = document.createElement('div');
             messageDiv.style.cssText = `margin-bottom: 3px; padding: 8px; border-radius: 4px; border-left: 3px solid #ddd; ${messageClass} ${bgColor}`;
             messageDiv.innerHTML = `
                 <div style="font-size: 11px; color: #666; margin-bottom: 2px;">[${time}]</div>
                 <div style="font-family: 'Courier New', monospace; font-size: 13px;">${icon} ${message}</div>
             `;
-            
+
             messagesEl.appendChild(messageDiv);
-            
+
             // 控制台也输出，方便调试
             console.log(`📺 [${time}] ${type.toUpperCase()}: ${message}`);
-            
+
             // 自动滚动到底部
             if (autoScroll) {
                 messagesEl.scrollTop = messagesEl.scrollHeight;
             }
-            
+
             // 限制消息数量，避免内存溢出
             while (messagesEl.children.length > 200) {
                 messagesEl.removeChild(messagesEl.firstChild);
