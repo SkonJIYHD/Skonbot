@@ -177,7 +177,7 @@
         .help-modal-content {
             background: white;
             margin: 0;
-            padding: 30px;
+            padding: 20px;
             border-radius: 0;
             width: 100vw;
             height: 100vh;
@@ -188,14 +188,14 @@
         
         .help-close-btn {
             position: fixed;
-            top: 20px;
-            right: 30px;
+            top: 15px;
+            right: 15px;
             background: rgba(108, 117, 125, 0.1);
             border: 2px solid #6c757d;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 24px;
+            width: 45px;
+            height: 45px;
+            font-size: 20px;
             cursor: pointer;
             color: #6c757d;
             line-height: 1;
@@ -210,6 +210,104 @@
             background: rgba(220, 53, 69, 0.1);
             border-color: #dc3545;
             transform: scale(1.1);
+        }
+
+        /* 响应式设计 - 移动端优化 */
+        @media (max-width: 768px) {
+            .help-modal-content {
+                padding: 15px;
+            }
+            
+            .help-close-btn {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .help-title {
+                font-size: 24px !important;
+                margin-top: 10px !important;
+                text-align: center !important;
+            }
+            
+            .help-section {
+                margin: 0 0 15px 0 !important;
+                padding: 15px !important;
+            }
+            
+            .help-section-title {
+                font-size: 16px !important;
+            }
+            
+            .help-list {
+                font-size: 14px;
+                line-height: 1.6;
+            }
+            
+            .help-faq-item {
+                padding: 12px !important;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+            
+            .help-footer {
+                padding: 20px 0 !important;
+            }
+            
+            .help-confirm-btn {
+                padding: 12px 25px !important;
+                font-size: 16px !important;
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+
+        /* 平板设备优化 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .help-modal-content {
+                padding: 25px;
+            }
+            
+            .help-close-btn {
+                top: 15px;
+                right: 20px;
+                width: 48px;
+                height: 48px;
+                font-size: 22px;
+            }
+            
+            .help-title {
+                font-size: 28px !important;
+            }
+            
+            .help-section {
+                max-width: 90% !important;
+                margin: 0 auto 20px auto !important;
+            }
+        }
+
+        /* 大屏设备优化 */
+        @media (min-width: 1025px) {
+            .help-modal-content {
+                padding: 30px 40px;
+            }
+            
+            .help-close-btn {
+                top: 20px;
+                right: 30px;
+            }
+            
+            .help-section {
+                max-width: 1000px !important;
+                margin: 0 auto 25px auto !important;
+            }
+            
+            .help-footer {
+                max-width: 1000px !important;
+                margin: 30px auto 0 auto !important;
+            }
         }
         
         .help-title {
