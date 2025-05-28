@@ -557,7 +557,7 @@ const server = http.createServer((req, res) => {
             console.error('❌ 发送SSE连接确认失败:', error);
         }
         
-        // 发送一条测试消息，确保连接正常
+        // 发送一条测试消息，确保连接正常（减少日志输出）
         setTimeout(() => {
             if (res.writable && !res.destroyed) {
                 const testMsg = JSON.stringify({
@@ -567,7 +567,7 @@ const server = http.createServer((req, res) => {
                 });
                 try {
                     res.write(`data: ${testMsg}\n\n`);
-                    console.log('✅ 发送SSE测试消息');
+                    // 减少调试日志输出
                 } catch (error) {
                     console.error('❌ 发送SSE测试消息失败:', error);
                 }
