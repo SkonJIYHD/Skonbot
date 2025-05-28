@@ -7,6 +7,8 @@ const { spawn } = require('child_process');
 const clients = new Set();
 
 function broadcastMessage(message) {
+    console.log('🔥 broadcastMessage被调用，参数:', message);
+    
     if (clients.size === 0) {
         console.log('📡 没有连接的客户端，跳过消息广播');
         return;
@@ -19,9 +21,11 @@ function broadcastMessage(message) {
         timestamp: message.timestamp || new Date().toISOString()
     };
 
+    console.log('🔧 处理后的消息数据:', messageData);
+
     // 验证消息内容不为空
     if (!messageData.message || messageData.message.trim() === '') {
-        console.log('⚠️ 消息内容为空，跳过广播');
+        console.log('⚠️ 消息内容为空，跳过广播，原始message:', message);
         return;
     }
 
@@ -263,11 +267,15 @@ function startBot(mode = null) {
                             timestamp: new Date().toISOString()
                         };
 
-                        // 确保立即发送
-                        setTimeout(() => {
+                        console.log('📡 准备广播聊天消息数据:', messageData);
+                        
+                        // 立即广播，不使用setTimeout
+                        try {
                             broadcastMessage(messageData);
                             console.log('✅ 聊天消息已广播完成');
-                        }, 10);
+                        } catch (error) {
+                            console.error('❌ 聊天消息广播失败:', error);
+                        }
                     } else {
                         console.log('⚠️ 聊天消息为空，跳过广播');
                     }
