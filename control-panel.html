@@ -313,6 +313,15 @@
                 <button onclick="clearServerMessages()" style="background-color: #6c757d; color: white; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 10px;">清除消息</button>
                 <button onclick="toggleAutoScroll()" id="auto-scroll-btn" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 3px;">自动滚动: 开</button>
             </div>
+
+            <div class="form-group">
+                <label>📋 指令执行日志:</label>
+                <div id="command-logs" style="height: 150px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: #f8f8ff; font-family: 'Courier New', monospace; font-size: 12px; margin-bottom: 10px;">
+                    <!-- 指令日志将在这里显示 -->
+                </div>
+                <button onclick="clearCommandLogs()" style="background-color: #6c757d; color: white; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 10px;">清除日志</button>
+                <button onclick="exportCommandLogs()" style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 3px;">导出日志</button>
+            </div>
         </div>
     </div>
 
@@ -321,6 +330,8 @@
         let mods = [];
         let eventSource = null;
         let autoScroll = true;
+        let commandLogs = [];
+        let maxCommandLogs = 100;
 
         // 页面加载时获取当前配置
         window.onload = function() {
@@ -745,6 +756,10 @@
             }
 
             const fullCommand = command.startsWith('/') ? command : '/' + command;
+            const timestamp = new Date().toISOString();
+
+            // 记录命令到日志
+            addCommandLog(`📤 执行命令: ${fullCommand}`, timestamp, 'command');
 
             fetch('/api/bot/command', {
                 method: 'POST',
@@ -757,13 +772,16 @@
             .then(data => {
                 if (data.success) {
                     console.log(`✅ 命令执行: ${fullCommand}`);
+                    addCommandLog(`✅ 命令已发送: ${fullCommand}`, new Date().toISOString(), 'success');
                     document.getElementById('minecraft-command').value = '';
                 } else {
                     console.log(`❌ 命令失败: ${fullCommand} - ${data.message}`);
+                    addCommandLog(`❌ 命令失败: ${fullCommand} - ${data.message}`, new Date().toISOString(), 'error');
                 }
             })
             .catch(error => {
                 console.log(`❌ 网络错误: ${fullCommand} - ${error.message}`);
+                addCommandLog(`❌ 网络错误: ${fullCommand} - ${error.message}`, new Date().toISOString(), 'error');
             });
         }
 
@@ -773,6 +791,10 @@
                 alert('请输入消息喵！');
                 return;
             }
+
+            const timestamp = new Date().toISOString();
+            // 记录聊天到日志
+            addCommandLog(`💬 发送聊天: ${message}`, timestamp, 'chat');
 
             fetch('/api/bot/chat', {
                 method: 'POST',
@@ -785,13 +807,16 @@
             .then(data => {
                 if (data.success) {
                     console.log(`💬 聊天发送: ${message}`);
+                    addCommandLog(`✅ 聊天已发送: ${message}`, new Date().toISOString(), 'success');
                     document.getElementById('chat-message').value = '';
                 } else {
                     console.log(`❌ 聊天失败: ${message} - ${data.message}`);
+                    addCommandLog(`❌ 聊天失败: ${message} - ${data.message}`, new Date().toISOString(), 'error');
                 }
             })
             .catch(error => {
                 console.log(`❌ 网络错误: ${message} - ${error.message}`);
+                addCommandLog(`❌ 网络错误: ${message} - ${error.message}`, new Date().toISOString(), 'error');
             });
         }
 
@@ -847,6 +872,32 @@
 
             messagesEl.appendChild(messageDiv);
 
+            // 检查是否是命令相关的服务器响应，如果是则也记录到指令日志
+            const isCommandResponse = message.includes('种子') || 
+                                     message.includes('Seed') || 
+                                     message.includes('seed:') ||
+                                     message.includes('在线玩家') || 
+                                     message.includes('players online') ||
+                                     message.includes('There are') ||
+                                     message.includes('当前有') ||
+                                     message.includes('list:') ||
+                                     message.includes('gamemode') ||
+                                     message.includes('模式') ||
+                                     message.includes('tp') ||
+                                     message.includes('传送') ||
+                                     message.includes('time') ||
+                                     message.includes('时间') ||
+                                     message.includes('weather') ||
+                                     message.includes('天气') ||
+                                     message.includes('Unknown command') ||
+                                     message.includes('未知命令') ||
+                                     message.includes('权限') ||
+                                     message.includes('permission');
+
+            if (isCommandResponse) {
+                addCommandLog(`📥 服务器响应: ${message}`, timestamp, 'response');
+            }
+
             if (autoScroll) {
                 messagesEl.scrollTop = messagesEl.scrollHeight;
             }
@@ -865,6 +916,117 @@
             const btn = document.getElementById('auto-scroll-btn');
             btn.textContent = `自动滚动: ${autoScroll ? '开' : '关'}`;
             btn.style.backgroundColor = autoScroll ? '#28a745' : '#6c757d';
+        }
+
+        function addCommandLog(message, timestamp, logType) {
+            const time = new Date(timestamp).toLocaleTimeString();
+            const logEntry = {
+                message: message,
+                timestamp: timestamp,
+                type: logType,
+                time: time
+            };
+
+            commandLogs.push(logEntry);
+
+            // 限制日志数量
+            if (commandLogs.length > maxCommandLogs) {
+                commandLogs = commandLogs.slice(-maxCommandLogs);
+            }
+
+            updateCommandLogDisplay();
+        }
+
+        function updateCommandLogDisplay() {
+            const logsEl = document.getElementById('command-logs');
+            if (!logsEl) return;
+
+            // 只显示最近的日志条目，避免DOM过大
+            const displayLogs = commandLogs.slice(-50);
+            logsEl.innerHTML = '';
+
+            displayLogs.forEach(log => {
+                const logDiv = document.createElement('div');
+                let bgColor = '#f8f9fa';
+                let borderColor = '#ddd';
+                let textColor = '#333';
+
+                switch (log.type) {
+                    case 'command':
+                        bgColor = '#fff3e0';
+                        borderColor = '#ff9800';
+                        textColor = '#e65100';
+                        break;
+                    case 'chat':
+                        bgColor = '#e8f5e8';
+                        borderColor = '#4caf50';
+                        textColor = '#2e7d32';
+                        break;
+                    case 'success':
+                        bgColor = '#e8f5e8';
+                        borderColor = '#4caf50';
+                        textColor = '#2e7d32';
+                        break;
+                    case 'error':
+                        bgColor = '#ffebee';
+                        borderColor = '#f44336';
+                        textColor = '#c62828';
+                        break;
+                    case 'response':
+                        bgColor = '#e3f2fd';
+                        borderColor = '#2196f3';
+                        textColor = '#1565c0';
+                        break;
+                }
+
+                logDiv.style.cssText = `
+                    margin-bottom: 3px; 
+                    padding: 6px; 
+                    border-radius: 4px; 
+                    border-left: 3px solid ${borderColor}; 
+                    background-color: ${bgColor};
+                    color: ${textColor};
+                `;
+
+                logDiv.innerHTML = `
+                    <div style="font-size: 10px; color: #666; margin-bottom: 2px;">[${log.time}]</div>
+                    <div style="font-family: 'Courier New', monospace; font-size: 12px;">${log.message}</div>
+                `;
+
+                logsEl.appendChild(logDiv);
+            });
+
+            // 自动滚动到底部
+            logsEl.scrollTop = logsEl.scrollHeight;
+        }
+
+        function clearCommandLogs() {
+            commandLogs = [];
+            document.getElementById('command-logs').innerHTML = '';
+            addCommandLog('📋 指令日志已清除', new Date().toISOString(), 'success');
+        }
+
+        function exportCommandLogs() {
+            if (commandLogs.length === 0) {
+                alert('没有日志可以导出喵！');
+                return;
+            }
+
+            const logText = commandLogs.map(log => {
+                return `[${new Date(log.timestamp).toLocaleString()}] ${log.message}`;
+            }).join('\n');
+
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `aterbot-命令日志-${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            addCommandLog(`📁 已导出 ${commandLogs.length} 条日志记录`, new Date().toISOString(), 'success');
         }
 
         function suggestUsername() {
