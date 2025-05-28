@@ -344,17 +344,43 @@ async function createBot() {
         console.log('✅ 机器人已静默进入服务器');
     });
 
-    // 聊天消息事件
+    // 聊天消息事件 - 监听所有消息类型
     bot.on('message', (jsonMsg, position) => {
+        const message = jsonMsg.toString();
+        
+        // 处理不同类型的消息
         if (position === 'chat') {
-            const message = jsonMsg.toString();
-            console.log(`聊天消息: ${message}`);
-
-            // 发送消息到控制面板
+            console.log(`💬 聊天消息: ${message}`);
+            // 发送聊天消息到控制面板
             try {
                 process.stdout.write(`CHAT_MESSAGE:${message}\n`);
             } catch (error) {
                 console.error('发送聊天消息到控制面板失败:', error);
+            }
+        } else if (position === 'system') {
+            console.log(`🔧 系统消息: ${message}`);
+            // 发送系统消息到控制面板
+            try {
+                process.stdout.write(`SYSTEM_MESSAGE:${message}\n`);
+            } catch (error) {
+                console.error('发送系统消息到控制面板失败:', error);
+            }
+        } else if (position === 'game_info') {
+            console.log(`🎮 游戏信息: ${message}`);
+            // 发送游戏信息到控制面板
+            try {
+                process.stdout.write(`GAME_MESSAGE:${message}\n`);
+            } catch (error) {
+                console.error('发送游戏信息到控制面板失败:', error);
+            }
+        } else {
+            // 其他类型的消息（包括命令反馈）
+            console.log(`📋 服务器消息 [${position || 'unknown'}]: ${message}`);
+            // 发送到控制面板作为服务器消息
+            try {
+                process.stdout.write(`SERVER_MESSAGE:${message}\n`);
+            } catch (error) {
+                console.error('发送服务器消息到控制面板失败:', error);
             }
         }
     });

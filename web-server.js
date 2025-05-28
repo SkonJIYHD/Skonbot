@@ -230,16 +230,58 @@ function startBot(mode = null) {
                 const output = data.toString().trim();
                 console.log(`Bot输出: ${output}`);
                 
-                // 检查是否是聊天消息
+                // 检查消息类型并处理
                 if (output.startsWith('CHAT_MESSAGE:')) {
                     const chatMessage = output.substring(13).trim();
-                    logger.log(`📢 服务器消息: ${chatMessage}`, 'chat');
+                    logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
                     
                     console.log('🎯 检测到聊天消息，准备广播:', chatMessage);
                     
                     // 广播给所有连接的客户端
                     const messageData = {
                         type: 'chat',
+                        message: chatMessage,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    broadcastToClients(JSON.stringify(messageData));
+                } else if (output.startsWith('SYSTEM_MESSAGE:')) {
+                    const systemMessage = output.substring(15).trim();
+                    logger.log(`🔧 系统消息: ${systemMessage}`, 'system');
+                    
+                    console.log('🎯 检测到系统消息，准备广播:', systemMessage);
+                    
+                    // 广播给所有连接的客户端
+                    const messageData = {
+                        type: 'system',
+                        message: systemMessage,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    broadcastToClients(JSON.stringify(messageData));
+                } else if (output.startsWith('SERVER_MESSAGE:')) {
+                    const serverMessage = output.substring(15).trim();
+                    logger.log(`📋 服务器反馈: ${serverMessage}`, 'server');
+                    
+                    console.log('🎯 检测到服务器反馈，准备广播:', serverMessage);
+                    
+                    // 广播给所有连接的客户端
+                    const messageData = {
+                        type: 'server',
+                        message: serverMessage,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    broadcastToClients(JSON.stringify(messageData));
+                } else if (output.startsWith('GAME_MESSAGE:')) {
+                    const gameMessage = output.substring(13).trim();
+                    logger.log(`🎮 游戏信息: ${gameMessage}`, 'game');
+                    
+                    console.log('🎯 检测到游戏信息，准备广播:', gameMessage);
+                    
+                    // 广播给所有连接的客户端
+                    const messageData = {
+                        type: 'game',
                         message: chatMessage,
                         timestamp: new Date().toISOString()
                     };
