@@ -250,9 +250,36 @@ function startBot(mode = null) {
                 const output = data.toString().trim();
                 console.log(`Bot输出: ${output}`);
                 
-                // 特别检查CHAT_MESSAGE前缀
+                // 检查CHAT_MESSAGE的所有可能格式
                 if (output.includes('CHAT_MESSAGE:')) {
-                    console.log('🚨 发现CHAT_MESSAGE输出，立即处理！');
+                    console.log('🚨 发现CHAT_MESSAGE输出，准备处理！');
+                    console.log('🔍 输出详细分析:');
+                    console.log('  - 原始长度:', output.length);
+                    console.log('  - 开头10个字符:', JSON.stringify(output.substring(0, 10)));
+                    console.log('  - startsWith检测结果:', output.startsWith('CHAT_MESSAGE:'));
+                    console.log('  - 是否包含前缀:', output.includes('CHAT_MESSAGE:'));
+                    
+                    // 强制提取CHAT_MESSAGE内容，不管格式如何
+                    const chatIndex = output.indexOf('CHAT_MESSAGE:');
+                    if (chatIndex >= 0) {
+                        const chatMessage = output.substring(chatIndex + 13).trim();
+                        console.log('🎯 强制提取聊天消息内容:', chatMessage);
+                        
+                        if (chatMessage && chatMessage.length > 0) {
+                            logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
+
+                            const messageData = {
+                                type: 'chat',
+                                message: chatMessage,
+                                timestamp: new Date().toISOString()
+                            };
+
+                            console.log('📡 准备广播强制提取的聊天消息:', messageData);
+                            broadcastMessage(messageData);
+                            console.log('✅ 强制提取的聊天消息已通过SSE广播完成');
+                        }
+                        return; // 处理完成后返回
+                    }
                 }
 
                 // 优先处理标准消息前缀
