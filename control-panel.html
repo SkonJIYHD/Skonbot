@@ -841,8 +841,10 @@
         }
 
         let reconnectAttempts = 0;
-        const maxReconnectAttempts = 5;
+        const maxReconnectAttempts = 10;
         let reconnectTimeout = null;
+        let lastMessageTime = Date.now();
+        let connectionStable = false;
 
         function connectToMessageStream() {
             if (eventSource) {
@@ -861,14 +863,25 @@
                 eventSource.onopen = function(event) {
                     // 连接成功，重置重连计数器
                     reconnectAttempts = 0;
+                    connectionStable = true;
                     if (reconnectTimeout) {
                         clearTimeout(reconnectTimeout);
                         reconnectTimeout = null;
                     }
                     console.log('✅ 消息流连接成功');
+                    
+                    // 连接稳定后，在消息区域显示连接状态
+                    setTimeout(() => {
+                        if (connectionStable) {
+                            addServerMessage('🔗 消息流连接已建立，开始监控服务器消息', new Date().toISOString(), 'system');
+                        }
+                    }, 500);
                 };
 
                 eventSource.onmessage = function(event) {
+                    lastMessageTime = Date.now();
+                    connectionStable = true;
+                    
                     try {
                         console.log('📥 收到原始SSE数据:', event.data);
                         const data = JSON.parse(event.data);
@@ -876,7 +889,8 @@
                         
                         // 处理心跳消息
                         if (data && data.type === 'heartbeat') {
-                            // 心跳消息不需要显示，直接返回
+                            // 心跳消息不需要显示，但可以确认连接活跃
+                            console.log('💓 心跳正常');
                             return;
                         }
                         
@@ -889,30 +903,51 @@
                         // 验证聊天和系统消息
                         if (data && data.type && data.message !== undefined && data.message !== null && data.message !== '') {
                             console.log(`🎯 准备显示消息 [${data.type}]:`, data.message);
-                            addServerMessage(data.message, data.timestamp, data.type);
+                            
+                            // 立即显示消息，并添加时间戳验证
+                            try {
+                                addServerMessage(data.message, data.timestamp, data.type);
+                                console.log('✅ 消息已成功显示到界面');
+                            } catch (displayError) {
+                                console.error('❌ 显示消息到界面失败:', displayError);
+                            }
                         } else {
-                            // 记录所有无效的消息数据用于调试
-                            console.log('⚠️ 收到无效消息数据:', {
-                                hasType: !!data.type,
-                                hasMessage: data.message !== undefined,
-                                messageValue: data.message,
-                                fullData: data
-                            });
+                            // 只记录真正异常的消息数据
+                            if (data && Object.keys(data).length > 0) {
+                                console.log('⚠️ 收到无效消息数据:', {
+                                    hasType: !!data.type,
+                                    hasMessage: data.message !== undefined,
+                                    messageValue: data.message,
+                                    fullData: data
+                                });
+                            }
                         }
                     } catch (error) {
                         // 显示所有解析错误用于调试
                         console.error('❌ 解析消息失败:', error, '原始数据:', event.data);
+                        
+                        // 尝试将原始数据作为纯文本显示
+                        if (event.data && event.data.trim()) {
+                            addServerMessage(`原始数据: ${event.data}`, new Date().toISOString(), 'debug');
+                        }
                     }
                 };
 
                 eventSource.onerror = function(error) {
+                    connectionStable = false;
+                    
                     // 避免重复的错误日志
                     if (reconnectAttempts < maxReconnectAttempts) {
                         reconnectAttempts++;
                         
                         // 只在前几次尝试时显示错误
-                        if (reconnectAttempts <= 2) {
+                        if (reconnectAttempts <= 3) {
                             console.error(`💥 消息流连接错误 (${reconnectAttempts}/${maxReconnectAttempts}):`, error);
+                            
+                            // 在界面显示连接问题
+                            if (reconnectAttempts === 1) {
+                                addServerMessage('⚠️ 消息流连接中断，正在尝试重连...', new Date().toISOString(), 'system');
+                            }
                         }
 
                         // 清除之前的重连定时器
@@ -920,24 +955,19 @@
                             clearTimeout(reconnectTimeout);
                         }
 
-                        // 指数退避重连策略
-                        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 10000);
+                        // 更快速的重连策略（减少延迟）
+                        const delay = Math.min(500 * reconnectAttempts, 3000);
                         
                         reconnectTimeout = setTimeout(() => {
                             if (document.getElementById('status').className === 'status running') {
+                                console.log(`🔄 尝试重连 (${reconnectAttempts}/${maxReconnectAttempts})...`);
                                 connectToMessageStream();
                             }
                         }, delay);
                     } else {
                         console.error('❌ SSE连接失败次数过多，停止重连');
                         // 显示连接状态在UI上
-                        const messagesEl = document.getElementById('server-messages');
-                        if (messagesEl) {
-                            const errorDiv = document.createElement('div');
-                            errorDiv.style.cssText = 'color: #dc3545; font-weight: bold; padding: 10px; border: 1px solid #dc3545; border-radius: 4px; margin: 5px 0;';
-                            errorDiv.textContent = '⚠️ 消息流连接失败，请重启机器人重新连接';
-                            messagesEl.appendChild(errorDiv);
-                        }
+                        addServerMessage('❌ 消息流连接失败次数过多，请刷新页面或重启机器人', new Date().toISOString(), 'system');
                     }
                 };
 
@@ -950,12 +980,23 @@
 
         function addServerMessage(message, timestamp, messageType) {
             const messagesEl = document.getElementById('server-messages');
-            if (!messagesEl) return;
+            if (!messagesEl) {
+                console.error('❌ 找不到消息显示容器');
+                return;
+            }
 
             // 验证消息不为空或undefined
             if (!message || message === 'undefined' || message.trim() === '') {
                 console.log('⚠️ 收到空消息，跳过显示');
                 return;
+            }
+
+            console.log(`🎨 正在显示消息到界面: [${messageType}] ${message}`);
+
+            // 验证时间戳
+            if (!timestamp) {
+                timestamp = new Date().toISOString();
+                console.log('⚠️ 消息缺少时间戳，使用当前时间');
             }
 
             const time = new Date(timestamp).toLocaleTimeString();
