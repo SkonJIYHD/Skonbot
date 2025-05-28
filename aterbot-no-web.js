@@ -320,11 +320,12 @@ async function createBot() {
 
     // 添加原始数据包处理器，忽略Fabric mod相关的问题数据包
     bot._client.on('packet', (data, meta) => {
-        // 只记录重要的数据包，避免刷屏
+        // 完全静默数据包输出，避免数字刷屏
+        // 只在发生重要事件时记录
         if (config.logLevel && config.logLevel.includes('debug')) {
-            const importantPackets = ['chat', 'login', 'disconnect', 'kick_disconnect'];
-            if (importantPackets.includes(meta.name)) {
-                console.log(`收到重要数据包: ${meta.name}`, data);
+            const criticalPackets = ['disconnect', 'kick_disconnect'];
+            if (criticalPackets.includes(meta.name)) {
+                console.log(`收到关键数据包: ${meta.name}`);
             }
         }
     });
@@ -443,26 +444,18 @@ async function createBot() {
         }
     });
 
-    // 增强数据包监听 - 特别关注Forge服务器的反馈
+    // 增强数据包监听 - 只关注真正重要的消息，避免数字刷屏
     bot._client.on('packet', (data, meta) => {
-        // 扩展监听范围，包含更多可能的消息类型
+        // 只监听真正重要的数据包，避免过多输出
         if (meta.name && (
             meta.name.includes('chat') ||
             meta.name.includes('message') ||
-            meta.name.includes('system') ||
-            meta.name.includes('game_info') ||
-            meta.name.includes('actionbar') ||
-            meta.name.includes('title') ||
-            meta.name.includes('server_data') ||
-            meta.name.includes('custom_payload') ||
             meta.name === 'disconnect'
         )) {
-            console.log(`🔍 监听到数据包 [${meta.name}]:`, JSON.stringify(data, null, 2));
-
-            // 如果是可能包含文本的数据包，尝试提取文本
+            // 如果是可能包含文本的数据包，尝试提取文本（不输出原始数据）
             if (data && typeof data === 'object') {
                 const possibleText = extractTextFromData(data);
-                if (possibleText) {
+                if (possibleText && possibleText.length > 3) { // 只处理有意义的文本
                     console.log(`📝 提取的文本: ${possibleText}`);
                     try {
                         process.stdout.write(`PACKET_MESSAGE:${possibleText}\n`);
