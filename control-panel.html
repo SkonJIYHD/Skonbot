@@ -145,6 +145,137 @@
         .message.server { color: #6f42c1; background-color: #f3e8ff; border-left: 3px solid #6f42c1; }
         .message.game { color: #fd7e14; background-color: #fff3e0; }
         .message.unknown { color: #6c757d; background-color: #f8f9fa; }
+        
+        /* 帮助相关样式 */
+        .help-btn {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        .help-btn:hover {
+            background-color: #138496;
+        }
+        
+        .help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            font-family: Arial, sans-serif;
+        }
+        
+        .help-modal-content {
+            background: white;
+            margin: 30px auto;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 650px;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .help-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #6c757d;
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+        .help-close-btn:hover {
+            color: #dc3545;
+        }
+        
+        .help-title {
+            color: #007bff;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 24px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .help-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        
+        .help-section-title {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .help-section-title.quick-start {
+            color: #28a745;
+        }
+        .help-section-title.features {
+            color: #fd7e14;
+        }
+        .help-section-title.troubleshoot {
+            color: #6f42c1;
+        }
+        
+        .help-list {
+            line-height: 1.8;
+            margin: 0;
+            padding-left: 20px;
+        }
+        .help-list li {
+            margin-bottom: 8px;
+        }
+        
+        .help-faq-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 12px;
+            border: 1px solid #e9ecef;
+            line-height: 1.6;
+        }
+        .help-faq-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .help-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .help-confirm-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .help-confirm-btn:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
@@ -153,21 +284,21 @@
         
         <!-- 帮助按钮 -->
         <div style="text-align: right; margin-bottom: 15px;">
-            <button onclick="showHelp()" style="background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+            <button onclick="showHelp()" class="help-btn">
                 ❓ 使用帮助
             </button>
         </div>
 
         <!-- 帮助弹窗 -->
-        <div id="help-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
-            <div style="background: white; margin: 50px auto; padding: 30px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative;">
-                <button onclick="hideHelp()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">×</button>
+        <div id="help-modal" class="help-modal">
+            <div class="help-modal-content">
+                <button onclick="hideHelp()" class="help-close-btn">×</button>
                 
-                <h2 style="color: #007bff; margin-top: 0;">🎮 Aterbot 控制面板使用指南</h2>
+                <h2 class="help-title">🎮 Aterbot 控制面板使用指南</h2>
                 
-                <div style="margin-bottom: 20px;">
-                    <h3 style="color: #28a745;">📋 快速开始</h3>
-                    <ol style="line-height: 1.8;">
+                <div class="help-section">
+                    <h3 class="help-section-title quick-start">📋 快速开始</h3>
+                    <ol class="help-list">
                         <li><strong>配置服务器:</strong> 在"基础配置"中填入Minecraft服务器地址</li>
                         <li><strong>设置用户名:</strong> 为机器人选择一个合适的用户名</li>
                         <li><strong>点击启动:</strong> 保存配置后点击"启动机器人"按钮</li>
@@ -175,9 +306,9 @@
                     </ol>
                 </div>
 
-                <div style="margin-bottom: 20px;">
-                    <h3 style="color: #fd7e14;">⚙️ 主要功能</h3>
-                    <ul style="line-height: 1.8;">
+                <div class="help-section">
+                    <h3 class="help-section-title features">⚙️ 主要功能</h3>
+                    <ul class="help-list">
                         <li><strong>🎨 皮肤配置:</strong> 支持默认皮肤、自定义URL、LittleSkin皮肤站</li>
                         <li><strong>🔧 模组支持:</strong> 自适应检测服务器mod或手动配置</li>
                         <li><strong>💬 实时聊天:</strong> 查看服务器消息并发送聊天</li>
@@ -186,24 +317,24 @@
                     </ul>
                 </div>
 
-                <div style="margin-bottom: 20px;">
-                    <h3 style="color: #6f42c1;">🛠️ 常见问题</h3>
-                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 10px;">
+                <div class="help-section">
+                    <h3 class="help-section-title troubleshoot">🛠️ 常见问题</h3>
+                    <div class="help-faq-item">
                         <strong>Q: 机器人无法连接服务器？</strong><br>
                         A: 检查服务器地址、端口是否正确，确认服务器为Java版且未开启正版验证
                     </div>
-                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 10px;">
+                    <div class="help-faq-item">
                         <strong>Q: 用户名包含非法字符？</strong><br>
                         A: 只能使用字母和数字，不支持中文、下划线等特殊字符
                     </div>
-                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    <div class="help-faq-item">
                         <strong>Q: 机器人被踢出服务器？</strong><br>
                         A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系服务器管理员
                     </div>
                 </div>
 
-                <div style="text-align: center; margin-top: 20px;">
-                    <button onclick="hideHelp(); setHelpShown();" style="background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                <div class="help-footer">
+                    <button onclick="hideHelp(); setHelpShown();" class="help-confirm-btn">
                         ✅ 我知道了
                     </button>
                 </div>
