@@ -18,21 +18,6 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .mode-selector {
-            margin-bottom: 20px;
-        }
-        .mode-selector button {
-            padding: 10px 20px;
-            margin-right: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-        }
-        .mode-selector button.active {
-            background-color: #28a745;
-        }
         .config-section {
             margin-bottom: 20px;
             padding: 15px;
@@ -77,77 +62,9 @@
             border-radius: 3px;
             cursor: pointer;
         }
-
-        .log-container {
-            margin-top: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            height: 300px;
-            overflow-y: auto;
-            background-color: #f8f9fa;
-        }
-
-        .log-content {
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
-        }
-
-        .log-controls {
-            margin-bottom: 10px;
-        }
-
-        .log-controls button {
-            margin-right: 10px;
-            padding: 5px 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .log-entry {
-            margin-bottom: 5px;
-            padding: 2px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .log-timestamp {
-            color: #666;
-            font-size: 11px;
-        }
-
-        .log-compressed {
-            color: #ff6b35;
-            font-weight: bold;
-        }
-        .character-warning {
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .character-warning.error {
-            background-color: #f8d7da !important;
-            border-color: #f5c6cb !important;
-            color: #721c24 !important;
-        }
-        
-        .message {
-            padding: 8px;
-            margin: 5px 0;
-            border-radius: 4px;
-            border-left: 3px solid #ddd;
-        }
-
         .control-buttons {
             margin-top: 20px;
-            display: flex !important;
+            display: flex;
             gap: 15px;
             justify-content: center;
             align-items: center;
@@ -200,29 +117,38 @@
             max-height: 200px;
             overflow-y: auto;
         }
-        .error-info h4 {
-            margin: 0 0 10px 0;
-            color: #721c24;
-            font-family: Arial, sans-serif;
-        }
         .hidden {
             display: none;
         }
-
+        .character-warning {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .character-warning.error {
+            background-color: #f8d7da !important;
+            border-color: #f5c6cb !important;
+            color: #721c24 !important;
+        }
+        .message {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid #ddd;
+        }
         .message.chat { color: #28a745; }
         .message.error { color: #dc3545; background-color: #f8d7da; }
         .message.system { color: #007bff; background-color: #e7f3ff; }
         .message.server { color: #6f42c1; background-color: #f3e8ff; border-left: 3px solid #6f42c1; }
         .message.game { color: #fd7e14; background-color: #fff3e0; }
         .message.unknown { color: #6c757d; background-color: #f8f9fa; }
-
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Aterbot 控制面板</h1>
-
-
 
         <div class="config-section">
             <h3>基础配置</h3>
@@ -271,10 +197,6 @@
 
         <div class="config-section">
             <h3>🎨 皮肤配置</h3>
-            <div style="margin-bottom: 15px; padding: 10px; background-color: #e7f3ff; border: 1px solid #b8daff; border-radius: 4px; font-size: 12px; color: #004085;">
-                <strong>💡 皮肤说明:</strong> 机器人可以使用不同的皮肤模式，包括默认皮肤、自定义皮肤URL或第三方皮肤站喵！
-            </div>
-
             <div class="form-group">
                 <label>皮肤模式:</label>
                 <select id="skinMode" onchange="updateSkinMode()">
@@ -288,9 +210,6 @@
             <div id="skin-url-section" class="form-group" style="display: none;">
                 <label>皮肤URL:</label>
                 <input type="url" id="skinUrl" placeholder="https://example.com/skin.png">
-                <div style="margin-top: 5px; font-size: 12px; color: #666;">
-                    输入一个有效的皮肤图片URL（64x64或64x32像素的PNG格式）
-                </div>
             </div>
 
             <div id="yggdrasil-section" style="display: none;">
@@ -299,16 +218,13 @@
                     <select id="skinServer" onchange="updateYggdrasilUrl()">
                         <option value="https://littleskin.cn/api/yggdrasil">LittleSkin</option>
                         <option value="https://auth.mc-user.com:233">统一通行证</option>
-                        <option value="https://auth.mc-user.com:233/api/yggdrasil">MC-User</option>
                         <option value="custom">自定义服务器</option>
                     </select>
                 </div>
-
                 <div id="custom-yggdrasil" class="form-group" style="display: none;">
                     <label>自定义Yggdrasil URL:</label>
                     <input type="url" id="customYggdrasilUrl" placeholder="https://your-server.com/api/yggdrasil">
                 </div>
-
                 <div class="form-group">
                     <label>皮肤站用户名:</label>
                     <input type="text" id="yggdrasilUsername" placeholder="在皮肤站的用户名">
@@ -320,78 +236,50 @@
                     <label>LittleSkin用户名:</label>
                     <input type="text" id="littleskinUsername" placeholder="LittleSkin用户名">
                 </div>
-
                 <div class="form-group">
                     <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="enableLittleskinAuth" onchange="updateLittleskinAuth()" style="margin-right: 8px; vertical-align: middle;"> 
-                        <span style="line-height: 1.2;">启用LittleSkin认证</span>
+                        <input type="checkbox" id="enableLittleskinAuth" onchange="updateLittleskinAuth()" style="margin-right: 8px;"> 
+                        启用LittleSkin认证
                     </label>
-                    <div style="margin-top: 5px; font-size: 12px; color: #666;">
-                        启用后可以使用LittleSkin的完整功能，需要提供密码
-                    </div>
                 </div>
-
                 <div id="littleskin-auth-section" class="form-group" style="display: none;">
                     <label>LittleSkin密码:</label>
                     <input type="password" id="littleskinPassword" placeholder="LittleSkin账户密码">
-                    <div style="margin-top: 5px; font-size: 12px; color: #856404; background-color: #fff3cd; padding: 5px; border-radius: 3px;">
-                        <strong>⚠️ 注意:</strong> 密码将用于获取Yggdrasil认证令牌，本地存储加密后的认证信息
-                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="java-config" class="config-section">
+        <div class="config-section">
             <h3>模组配置</h3>
-
             <div class="form-group">
-                <label>模组列表 (假mod列表):</label>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="adaptive-mods" onchange="updateAdaptiveMode()" style="margin-right: 8px; vertical-align: middle;"> 
-                        <span style="line-height: 1.2;">启用自适应mod模式</span>
-                    </label>
-                    <div style="margin: 8px 0; padding: 8px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; font-size: 12px;">
-                        <strong>🔥 自适应模式:</strong> 机器人会自动检测服务器要求的mod列表，然后伪装成拥有这些mod，无需手动配置喵！
-                        <br>当启用时，下面的手动mod列表会被忽略。
-                    </div>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="adaptive-mods" onchange="updateAdaptiveMode()" style="margin-right: 8px;"> 
+                    启用自适应mod模式
+                </label>
+                <div style="margin: 8px 0; padding: 8px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; font-size: 12px;">
+                    <strong>🔥 自适应模式:</strong> 机器人会自动检测服务器要求的mod列表，然后伪装成拥有这些mod，无需手动配置喵！
                 </div>
-                <div id="manual-mods-section">
-                    <div style="margin-bottom: 10px; padding: 8px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
-                        <strong>💡 手动模式:</strong> 这里填写固定的mod名称，机器人会向服务器声明已安装这些mod喵！
-                        <br>常用格式: <code>modname</code> 或 <code>modname@version</code>
-                    </div>
-                </div>
-                <div id="mod-list" class="mod-list">
-                    <!-- 模组列表将在这里动态生成 -->
-                </div>
+            </div>
+            <div id="manual-mods-section">
+                <div id="mod-list" class="mod-list"></div>
                 <button type="button" onclick="addMod()">添加假mod</button>
-                <button type="button" onclick="addCommonMods()" style="margin-left: 10px; background-color: #17a2b8;">添加常用mod</button>
+                <button type="button" onclick="addCommonMods()" style="margin-left: 10px; background-color: #17a2b8; color: white;">添加常用mod</button>
             </div>
         </div>
 
         <div class="config-section">
             <h3>🎮 机器人控制面板</h3>
-            <div style="margin-bottom: 15px; padding: 10px; background-color: #e7f3ff; border: 1px solid #b8daff; border-radius: 4px; font-size: 12px; color: #004085;">
-                <strong>💡 操作指南:</strong> 先保存配置，再启动机器人。启动后可以使用下方的命令控制功能喵！
-            </div>
-
             <div class="control-buttons">
                 <button class="save-btn" onclick="saveConfig()">💾 保存配置</button>
                 <button id="toggle-btn" class="start-btn" onclick="toggleBot()">▶️ 启动机器人</button>
             </div>
-
             <div id="status" class="status stopped">机器人状态: 已停止</div>
         </div>
+
         <div id="error-info" class="error-info hidden"></div>
 
-        <!-- 命令执行界面 -->
         <div class="config-section" id="command-section" style="display: none;">
             <h3>🎮 机器人命令控制</h3>
-            <div style="margin-bottom: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
-                <strong>💡 安全提示:</strong> 在控制面板执行命令比在游戏内更安全，避免了恶意玩家的风险。
-            </div>
-
             <div class="form-group">
                 <label>执行Minecraft命令:</label>
                 <div style="display: flex; gap: 10px;">
@@ -409,32 +297,12 @@
             </div>
 
             <div class="form-group">
-                <label>快捷命令:</label>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
-                    <button onclick="executeQuickCommand('/time set day')" style="background-color: #ffc107; color: #212529;">设为白天</button>
-                    <button onclick="executeQuickCommand('/time set night')" style="background-color: #6c757d; color: white;">设为夜晚</button>
-                    <button onclick="executeQuickCommand('/weather clear')" style="background-color: #17a2b8; color: white;">清除天气</button>
-                    <button onclick="executeQuickCommand('/gamemode creative @s')" style="background-color: #28a745; color: white;">创造模式</button>
-                    <button onclick="executeQuickCommand('/gamemode spectator @s')" style="background-color: #6f42c1; color: white;">观察者模式</button>
-                    <button onclick="executeQuickCommand('/tp @s ~ ~10 ~')" style="background-color: #fd7e14; color: white;">向上传送</button>
-                </div>
-            </div>
-
-            <div class="form-group">
                 <label>服务器消息监控:</label>
                 <div id="server-messages" style="height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: #f0f8ff; font-family: 'Courier New', monospace; font-size: 12px; margin-bottom: 10px;">
                     <!-- 服务器消息将在这里显示 -->
                 </div>
                 <button onclick="clearServerMessages()" style="background-color: #6c757d; color: white; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 10px;">清除消息</button>
                 <button onclick="toggleAutoScroll()" id="auto-scroll-btn" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 3px;">自动滚动: 开</button>
-            </div>
-
-            <div class="form-group">
-                <label>命令执行记录:</label>
-                <div id="command-log" style="height: 150px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: #f8f9fa; font-family: 'Courier New', monospace; font-size: 12px;">
-                    <!-- 命令执行记录将在这里显示 -->
-                </div>
-                <button onclick="clearCommandLog()" style="margin-top: 5px; background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px;">清除记录</button>
             </div>
         </div>
     </div>
@@ -443,21 +311,14 @@
         let currentMode = 'java';
         let config = {};
         let mods = [];
+        let eventSource = null;
+        let autoScroll = true;
 
         // 页面加载时获取当前配置
         window.onload = function() {
-            currentMode = ''; // 初始化为空，避免重复设置
             loadConfig();
             updateStatus();
-            setInterval(updateStatus, 2000); // 每2秒更新状态
-
-            // 检查是否是第一次访问
-            if (localStorage.getItem('firstVisit') === null) {
-                // 显示教程
-                showTutorial();
-                // 设置标志，表示已经访问过
-                localStorage.setItem('firstVisit', 'true');
-            }
+            setInterval(updateStatus, 2000);
         };
 
         // 解析服务器地址函数
@@ -465,20 +326,16 @@
             const value = input.value.trim();
             if (!value) return;
 
-            // 检查是否包含端口
             if (value.includes(':')) {
                 const parts = value.split(':');
                 if (parts.length === 2) {
                     const host = parts[0].trim();
                     const port = parts[1].trim();
 
-                    // 验证端口是否为数字
                     if (port && !/^\d+$/.test(port)) {
-                        // 如果端口不是数字，显示提示
                         input.style.borderColor = '#dc3545';
                         input.title = '端口必须是数字喵！';
                     } else if (port && (parseInt(port) < 1 || parseInt(port) > 65535)) {
-                        // 端口范围检查
                         input.style.borderColor = '#dc3545';
                         input.title = '端口范围必须在1-65535之间喵！';
                     } else {
@@ -487,7 +344,6 @@
                     }
                 }
             } else {
-                // 没有端口，使用默认端口
                 input.style.borderColor = '#17a2b8';
                 input.title = `服务器: ${value}，端口: 25565 (默认)`;
             }
@@ -498,7 +354,6 @@
             const username = input.value;
             const warningEl = document.getElementById('username-warning');
 
-            // 检查非法字符：只允许字母和数字
             const illegalChars = username.match(/[^a-zA-Z0-9]/g);
 
             if (illegalChars && illegalChars.length > 0) {
@@ -506,9 +361,6 @@
                 const suggestionName = username.replace(/[^a-zA-Z0-9]/g, '') || 'BotSkon';
                 warningEl.innerHTML = `
                     <strong>🚫 用户名包含非法字符: ${uniqueChars.join(', ')}</strong><br>
-                    <div style="margin: 5px 0; padding: 5px; background-color: #ffe6e6; border-left: 3px solid #ff4444; font-size: 11px;">
-                        <strong>错误说明：</strong>Minecraft服务器会拒绝包含特殊字符的用户名，机器人将被踢出并显示 "illegal_characters" 错误喵！
-                    </div>
                     <strong>💡 建议修改为:</strong> <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">${suggestionName}</code><br>
                     <small>只允许使用字母(a-z, A-Z)和数字(0-9)，不支持下划线、空格、中文等特殊字符喵~</small>
                 `;
@@ -517,32 +369,14 @@
             } else if (username.length > 16) {
                 warningEl.innerHTML = `
                     <strong>📏 用户名过长！</strong><br>
-                    <div style="margin: 5px 0; padding: 5px; background-color: #ffe6e6; border-left: 3px solid #ff4444; font-size: 11px;">
-                        Minecraft用户名限制为最多16个字符，当前长度: ${username.length} 个字符
-                    </div>
-                    <strong>建议缩短为:</strong> <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">${username.substring(0, 16)}</code>
+                    Minecraft用户名限制为最多16个字符，当前长度: ${username.length} 个字符<br>
+                    <strong>建议缩短为:</strong> <code>${username.substring(0, 16)}</code>
                 `;
                 warningEl.className = 'character-warning error';
                 warningEl.style.display = 'block';
-            } else if (username.length < 3 && username.length > 0) {
-                warningEl.innerHTML = `
-                    <strong>⚠️ 用户名太短了喵！</strong><br>
-                    建议使用至少3个字符的用户名，当前只有 ${username.length} 个字符<br>
-                    <small>虽然技术上可行，但某些服务器可能不接受过短的用户名</small>
-                `;
-                warningEl.className = 'character-warning';
-                warningEl.style.display = 'block';
-                warningEl.style.backgroundColor = '#fff3cd';
-                warningEl.style.borderColor = '#ffeaa7';
-                warningEl.style.color = '#856404';
             } else if (username.length >= 3) {
                 warningEl.innerHTML = `
                     <strong>✅ 用户名格式完全正确喵！</strong><br>
-                    <div style="margin: 5px 0; padding: 5px; background-color: #e6ffe6; border-left: 3px solid #00aa00; font-size: 11px;">
-                        ✓ 只包含字母和数字<br>
-                        ✓ 长度符合要求 (${username.length}/16 字符)<br>
-                        ✓ 符合Minecraft服务器标准
-                    </div>
                     机器人可以正常使用此用户名进入服务器喵~
                 `;
                 warningEl.className = 'character-warning';
@@ -555,24 +389,8 @@
             }
         }
 
-        function showTutorial() {
-            alert('欢迎使用 Aterbot 控制面板！\n\n📖 使用步骤：\n1. 在"基础配置"中填写服务器地址、端口和机器人用户名。\n2. 在"JAVA模式配置"中选择游戏版本和认证方式。\n3. 根据需要，添加或选择假mod。\n4. 点击"保存配置"保存设置。\n5. 点击"启动机器人"启动机器人。\n\n⚠️ 重要提示：\n• 如果服务器开启了正版验证（online-mode=true），机器人将无法进入服务器！\n机器人只能连接到离线模式的服务器（online-mode=false）。\n\n💡 服务器管理建议：\n• 建议将机器人设置为创造模式（/gamemode creative 机器人名字）\n• 建议将机器人困在一个封闭的房间内，避免到处乱跑影响其他玩家\n• 这样可以让机器人更稳定地保持在线状态\n\n尽情享受吧！');
-        }
-
-        function switchMode(mode) {
-            if (currentMode === mode) return; // 防止重复切换
-
-            currentMode = mode;
-            document.getElementById('java-mode').classList.toggle('active', mode === 'java');
-            document.getElementById('java-config').classList.toggle('hidden', mode !== 'java');
-
-            // 切换模式时加载对应的配置
-            loadConfig(mode);
-        }
-
-        function loadConfig(mode = null) {
-            const url = mode ? `/api/config?mode=${mode}` : '/api/config';
-            fetch(url)
+        function loadConfig() {
+            fetch('/api/config')
                 .then(response => response.json())
                 .then(data => {
                     config = data;
@@ -582,24 +400,21 @@
         }
 
         function updateUI() {
-            // 组合服务器地址和端口
             const host = config.client?.host || '';
             const port = config.client?.port || '';
             const serverAddress = host && port ? `${host}:${port}` : (host || '');
+
             document.getElementById('server-address').value = serverAddress;
             document.getElementById('username').value = config.client?.username || '';
             document.getElementById('java-version').value = config.client?.version || '1.21.1';
             document.getElementById('auth').value = config.client?.auth || 'offline';
 
-            // 加载模组列表
             mods = config.client?.mods || [];
             updateModList();
 
-            // 设置自适应mod模式
             document.getElementById('adaptive-mods').checked = config.client?.adaptiveMods || false;
             updateAdaptiveMode();
 
-            // 恢复皮肤设置
             if (config.client?.skinMode) {
                 document.getElementById('skinMode').value = config.client.skinMode;
                 updateSkinMode();
@@ -607,25 +422,19 @@
             if (config.client?.skinUrl) {
                 document.getElementById('skinUrl').value = config.client.skinUrl;
             }
-
-            // 恢复Yggdrasil设置
             if (config.client?.yggdrasilServer) {
                 const serverSelect = document.getElementById('skinServer');
-                if (serverSelect) {
-                    if ([...serverSelect.options].some(option => option.value === config.client.yggdrasilServer)) {
-                        serverSelect.value = config.client.yggdrasilServer;
-                    } else {
-                        serverSelect.value = 'custom';
-                        document.getElementById('customYggdrasilUrl').value = config.client.yggdrasilServer;
-                    }
-                    updateYggdrasilUrl();
+                if ([...serverSelect.options].some(option => option.value === config.client.yggdrasilServer)) {
+                    serverSelect.value = config.client.yggdrasilServer;
+                } else {
+                    serverSelect.value = 'custom';
+                    document.getElementById('customYggdrasilUrl').value = config.client.yggdrasilServer;
                 }
+                updateYggdrasilUrl();
             }
             if (config.client?.yggdrasilUsername) {
                 document.getElementById('yggdrasilUsername').value = config.client.yggdrasilUsername;
             }
-
-            // 恢复LittleSkin设置
             if (config.client?.littleskinUsername) {
                 document.getElementById('littleskinUsername').value = config.client.littleskinUsername;
             }
@@ -636,678 +445,6 @@
                 document.getElementById('enableLittleskinAuth').checked = config.client.enableLittleskinAuth;
                 updateLittleskinAuth();
             }
-
-            // 只在页面首次加载时设置模式，避免循环
-            if (!currentMode || currentMode === '') {
-                if (config.client?.mode === 'bedrock') {
-                  switchMode('java');
-                } else {
-                    switchMode('java');
-                }
-            }
-        }
-
-        function updateAdaptiveMode() {
-            const isAdaptive = document.getElementById('adaptive-mods').checked;
-            const manualSection = document.getElementById('manual-mods-section');
-            const modList = document.getElementById('mod-list');
-            const addButtons = document.querySelectorAll('button[onclick*="addMod"], button[onclick*="addCommonMods"]');
-
-            if (isAdaptive) {
-                manualSection.style.opacity = '0.5';
-                ```text
-modList.style.pointerEvents = 'none';
-                addButtons.forEach(btn => btn.disabled = true);
-            } else {
-                manualSection.style.opacity = '1';
-                modList.style.pointerEvents = 'auto';
-                addButtons.forEach(btn => btn.disabled = false);
-            }
-        }
-
-        function addMod() {
-            mods.push('');
-            updateModList();
-        }
-
-        function removeMod(index) {
-            mods.splice(index, 1);
-            updateModList();
-        }
-
-        function updateModList() {
-            const modListEl = document.getElementById('mod-list');
-            modListEl.innerHTML = '';
-
-            mods.forEach((mod, index) => {
-                const modItem = document.createElement('div');
-                modItem.className = 'mod-item';
-                modItem.innerHTML = `
-                    <input type="text" value="${mod}" placeholder="mod名称 (如: forge, optifine, jei)" 
-                           onchange="mods[${index}] = this.value">
-                    <button onclick="removeMod(${index})">删除</button>
-                `;
-                modListEl.appendChild(modItem);
-            });
-        }
-
-        function addCommonMods() {
-            const commonMods = [
-                'forge',
-                'optifine', 
-                'jei',
-                'journeymap',
-                'waila',
-                'nei',
-                'buildcraft',
-                'industrialcraft2',
-                'thermalexpansion',
-                'tinkersconstruct'
-            ];
-
-            const selectedMods = [];
-            let modalHtml = '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">';
-            modalHtml += '<div style="background: white; padding: 20px; border-radius: 10px; max-width: 400px; max-height: 500px; overflow-y: auto;">';
-            modalHtml += '<h3>选择常用mod:</h3>';
-
-            commonMods.forEach((mod, index) => {
-                modalHtml += `<label style="display: block; margin: 5px 0;"><input type="checkbox" value="${mod}" onchange="toggleMod('${mod}', this.checked)"> ${mod}</label>`;
-            });
-
-            modalHtml += '<div style="margin-top: 15px;"><button onclick="confirmAddMods()" style="margin-right: 10px; padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px;">确认添加</button>';
-            modalHtml += '<button onclick="closeModal()" style="padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px;">取消</button></div>';
-            modalHtml += '</div></div>';
-
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-            window.selectedMods = [];
-            window.toggleMod = function(mod, checked) {
-                if (checked) {
-                    window.selectedMods.push(mod);
-                } else {
-                    const index = window.selectedMods.indexOf(mod);
-                    if (index > -1) window.selectedMods.splice(index, 1);
-                }
-            };
-
-            window.confirmAddMods = function() {
-                window.selectedMods.forEach(mod => {
-                    if (!mods.includes(mod)) {
-                        mods.push(mod);
-                    }
-                });
-                updateModList();
-                closeModal();
-            };
-
-            window.closeModal = function() {
-                const modal = document.querySelector('div[style*="position: fixed"]');
-                if (modal) modal.remove();
-            };
-        }
-
-        function saveConfig() {
-            // 验证用户名
-            const username = document.getElementById('username').value;
-            const illegalChars = username.match(/[^a-zA-Z0-9]/g);
-
-            if (!username.trim()) {
-                alert(`🚫 用户名不能为空喵！\n\n请输入一个有效的机器人用户名。\n建议使用: BotSkon, AterBot, MyBot 等格式。`);
-                return;
-            }
-
-            if (illegalChars && illegalChars.length > 0) {
-                const suggestion = username.replace(/[^a-zA-Z0-9]/g, '') || 'BotSkon';
-                alert(`🚫 用户名包含非法字符: ${[...new Set(illegalChars)].join(', ')}\n\n❌ 这些字符会导致机器人被服务器踢出，显示 "illegal_characters" 错误！\n\n💡 建议修改为: ${suggestion}\n\n只能使用字母(a-z, A-Z)和数字(0-9)喵~`);
-                return;
-            }
-
-            if (username.length > 16) {
-                alert(`📏 用户名过长！\n\nMinecraft用户名不能超过16个字符\n当前长度: ${username.length} 个字符\n\n建议缩短为: ${username.substring(0, 16)}`);
-                return;
-            }
-
-            if (username.length < 3) {
-                if (!confirm(`⚠️ 用户名有点短哦！\n\n当前用户名只有 ${username.length} 个字符，某些服务器可能不接受。\n\n是否仍要保存此配置？`)) {
-                    return;
-                }
-            }
-
-            const skinMode = document.getElementById('skinMode').value;
-            const skinUrl = document.getElementById('skinUrl').value;
-
-            // 解析服务器地址
-            const serverAddress = document.getElementById('server-address').value.trim();
-            let host = '';
-            let port = '';
-
-            if (serverAddress.includes(':')) {
-                const parts = serverAddress.split(':');
-                host = parts[0].trim();
-                port = parts[1].trim();
-            } else {
-                host = serverAddress;
-                port = '25565'; // 默认端口
-            }
-
-            const newConfig = {
-                ...config,
-                client: {
-                    ...config.client,
-                    host: host,
-                    port: port,
-                    username: document.getElementById('username').value,
-                    mode: currentMode,
-                    auth: 'offline' // 机器人只支持离线模式
-                }
-            };
-
-            if (currentMode === 'java') {
-                newConfig.client.version = document.getElementById('java-version').value;
-                newConfig.client.adaptiveMods = document.getElementById('adaptive-mods').checked;
-                newConfig.client.mods = mods.filter(mod => mod.trim() !== '');
-                newConfig.client.skinMode = skinMode;
-                newConfig.client.skinUrl = skinUrl || null;
-
-                // Yggdrasil皮肤站配置
-                if (skinMode === 'yggdrasil') {
-                    const skinServer = document.getElementById('skinServer').value;
-                    const customUrl = document.getElementById('customYggdrasilUrl').value;
-                    const yggdrasilUsername = document.getElementById('yggdrasilUsername').value;
-
-                    newConfig.client.yggdrasilServer = skinServer === 'custom' ? customUrl : skinServer;
-                    newConfig.client.yggdrasilUsername = yggdrasilUsername;
-                }
-
-                // LittleSkin皮肤站配置
-                if (skinMode === 'littleskin') {
-                    const littleskinUsername = document.getElementById('littleskinUsername').value;
-                    const enableLittleskinAuth = document.getElementById('enableLittleskinAuth').checked;
-                    const littleskinPassword = document.getElementById('littleskinPassword').value;
-
-                    newConfig.client.littleskinUsername = littleskinUsername;
-                    newConfig.client.enableLittleskinAuth = enableLittleskinAuth;
-                    if (enableLittleskinAuth && littleskinPassword) {
-                        newConfig.client.littleskinPassword = littleskinPassword;
-                    }
-                }
-            }
-
-            fetch(`${getApiBase()}/api/config`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(newConfig)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('配置保存成功！');
-                    config = newConfig;
-                } else {
-                    alert('保存失败: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('保存配置失败:', error);
-                alert('保存配置失败');
-            });
-        }
-
-        // 合并启动和停止按钮
-        function toggleBot() {
-            const statusEl = document.getElementById('status');
-            if (statusEl.className === 'status running') {
-                stopBot(); // 如果正在运行，则停止
-            } else {
-                startBot(); // 如果已停止，则启动
-            }
-        }
-
-        // 启动机器人
-        function startBot() {
-            // 启动时先隐藏错误信息
-            document.getElementById('error-info').className = 'error-info hidden';
-
-            fetch(`${getApiBase()}/api/bot/start`, { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('机器人启动成功！');
-                        // 立即更新状态
-                        setTimeout(updateStatus, 1000);
-                    } else {
-                        alert('启动失败: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('启动机器人失败:', error);
-                    alert('启动机器人失败');
-                });
-        }
-
-        // 停止机器人
-        function stopBot() {
-            fetch(`${getApiBase()}/api/bot/stop`, { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('机器人已停止！');
-                        // 立即更新状态，不等待下次轮询
-                        setTimeout(() => {
-                            updateStatus();
-                        }, 500);
-                    } else {
-                        alert('停止失败: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('停止机器人失败:', error);
-                    alert('停止机器人失败');
-                });
-        }
-
-        // 更新按钮状态
-        function updateToggleButton(isRunning) {
-            const toggleBtn = document.getElementById('toggle-btn');
-            if (isRunning) {
-                toggleBtn.textContent = '⏹️ 停止机器人';
-                toggleBtn.className = 'stop-btn'; // 使用停止按钮的样式
-            } else {
-                toggleBtn.textContent = '▶️ 启动机器人';
-                toggleBtn.className = 'start-btn'; // 使用启动按钮的样式
-            }
-        }
-
-        // 更新状态
-        function updateStatus() {
-            fetch(`${getApiBase()}/api/bot/status`)
-                .then(response => response.json())
-                .then(data => {
-                    const statusEl = document.getElementById('status');
-                    const errorEl = document.getElementById('error-info');
-                    const commandSection = document.getElementById('command-section');
-
-                    if (data.running) {
-                        statusEl.textContent = '机器人状态: 运行中';
-                        statusEl.className = 'status running';
-                        errorEl.className = 'error-info hidden'; // 隐藏错误信息
-                        commandSection.style.display = 'block'; // 显示命令控制界面
-                        updateToggleButton(true); // 更新按钮为停止状态
-
-                        // 连接到消息流
-                        if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
-                            connectToMessageStream();
-                        }
-                    } else {
-                        statusEl.textContent = '机器人状态: 已停止';
-                        statusEl.className = 'status stopped';
-                        commandSection.style.display = 'none'; // 隐藏命令控制界面
-                        updateToggleButton(false); // 更新按钮为启动状态
-
-                        // 断开消息流连接
-                        if (eventSource) {
-                            eventSource.close();
-                            eventSource = null;
-                        }
-
-                        // 显示错误信息（如果有的话）
-                        if (data.error) {
-                            errorEl.innerHTML = '<h4>🚨 启动失败原因:</h4>' + data.error;
-                            errorEl.className = 'error-info';
-                        } else {
-                            errorEl.className = 'error-info hidden';
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('获取状态失败:', error);
-                });
-        }
-
-        // 执行Minecraft命令
-        function executeMinecraftCommand() {
-            const command = document.getElementById('minecraft-command').value.trim();
-            if (!command) {
-                alert('请输入命令喵！');
-                return;
-            }
-
-            const fullCommand = command.startsWith('/') ? command : '/' + command;
-
-            fetch(`${getApiBase()}/api/bot/command`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ command: fullCommand })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    addToCommandLog(`✅ 命令执行: ${fullCommand}`);
-                    document.getElementById('minecraft-command').value = '';
-                } else {
-                    addToCommandLog(`❌ 命令失败: ${fullCommand} - ${data.message}`);
-                }
-            })
-            .catch(error => {
-                addToCommandLog(`❌ 网络错误: ${fullCommand} - ${error.message}`);
-            });
-        }
-
-        // 发送聊天消息
-        function sendChatMessage() {
-            const message = document.getElementById('chat-message').value.trim();
-            if (!message) {
-                alert('请输入消息喵！');
-                return;
-            }
-
-            fetch(`${getApiBase()}/api/bot/chat`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message: message })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    addToCommandLog(`💬 聊天发送: ${message}`);
-                    document.getElementById('chat-message').value = '';
-                } else {
-                    addToCommandLog(`❌ 聊天失败: ${message} - ${data.message}`);
-                }
-            })
-            .catch(error => {
-                addToCommandLog(`❌ 网络错误: ${message} - ${error.message}`);
-            });
-        }
-
-        // 执行快捷命令
-        function executeQuickCommand(command) {
-            fetch(`${getApiBase()}/api/bot/command`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ command: command })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    addToCommandLog(`⚡ 快捷命令: ${command}`);
-                } else {
-                    addToCommandLog(`❌ 快捷命令失败: ${command} - ${data.message}`);
-                }
-            })
-            .catch(error => {
-                addToCommandLog(`❌ 网络错误: ${command} - ${error.message}`);
-            });
-        }
-
-        // 添加到命令记录
-        function addToCommandLog(message) {
-            const logEl = document.getElementById('command-log');
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = `[${timestamp}] ${message}\n`;
-            logEl.textContent += logEntry;
-            logEl.scrollTop = logEl.scrollHeight;
-        }
-
-        // 清除命令记录
-        function clearCommandLog() {
-            document.getElementById('command-log').textContent = '';
-        }
-
-        // 服务器消息相关功能
-        let eventSource = null;
-        let autoScroll = true;
-        let reconnectTimer = null;
-        let maxReconnectAttempts = 10;
-        let reconnectAttempts = 0;
-
-        function connectToMessageStream() {
-            if (eventSource) {
-                eventSource.close();
-                eventSource = null;
-            }
-
-            console.log('🔗 正在连接到消息流...');
-            addServerMessage('🔗 正在连接到服务器消息流...', new Date().toISOString(), 'system');
-
-            try {
-                eventSource = new EventSource(`${getApiBase()}/api/events`);
-
-                eventSource.onopen = function(event) {
-                    console.log('✅ 消息流连接成功');
-                    addServerMessage('✅ 消息流连接成功，开始监控服务器消息', new Date().toISOString(), 'system');
-                    reconnectAttempts = 0;
-                };
-
-                eventSource.onmessage = function(event) {
-                    try {
-                        console.log('📨 收到消息流数据:', event.data);
-                        const data = JSON.parse(event.data);
-
-                        if (data.type === 'chat') {
-                            addServerMessage(data.message, data.timestamp, 'chat');
-                        } else if (data.type === 'system') {
-                            addServerMessage(`🔧 ${data.message}`, data.timestamp, 'system');
-                        } else if (data.type === 'server') {
-                            addServerMessage(`📋 ${data.message}`, data.timestamp, 'server');
-                        } else if (data.type === 'game') {
-                            addServerMessage(`🎮 ${data.message}`, data.timestamp, 'game');
-                        } else if (data.type === 'error') {
-                            addServerMessage(data.message, data.timestamp, 'error');
-                        } else if (data.type === 'connected') {
-                            addServerMessage(`🔗 ${data.message}`, data.timestamp, 'system');
-                        } else {
-                            console.log('🔍 未知消息类型:', data);
-                            if (data.message) {
-                                addServerMessage(`❓ ${data.message}`, data.timestamp, 'unknown');
-                            }
-                        }
-                    } catch (error) {
-                        console.error('❌ 解析消息失败:', error, '原始数据:', event.data);
-                        addServerMessage(`❌ 消息解析错误: ${error.message}`, new Date().toISOString(), 'error');
-                    }
-                };
-
-                eventSource.onerror = function(error) {
-                    console.error('💥 消息流连接错误:', error);
-
-                    if (reconnectAttempts < maxReconnectAttempts) {
-                        reconnectAttempts++;
-                        addServerMessage(`❌ 消息流连接断开，尝试重连 (${reconnectAttempts}/${maxReconnectAttempts})...`, new Date().toISOString(), 'error');
-
-                        // 清除之前的重连定时器
-                        if (reconnectTimer) {
-                            clearTimeout(reconnectTimer);
-                        }
-
-                        // 3秒后重连，避免过于频繁
-                        reconnectTimer = setTimeout(() => {
-                            if (document.getElementById('status').className === 'status running') {
-                                console.log('🔄 尝试重新连接消息流...');
-                                connectToMessageStream();
-                            }
-                        }, 3000);
-                    } else {
-                        addServerMessage('❌ 消息流重连次数已达上限，请手动刷新页面', new Date().toISOString(), 'error');
-                    }
-                };
-
-            } catch (error) {
-                console.error('💥 创建消息流连接失败:', error);
-                addServerMessage(`❌ 创建消息流连接失败: ${error.message}`, new Date().toISOString(), 'error');
-            }
-        }
-
-        function addServerMessage(message, timestamp, type = 'chat') {
-            const messagesEl = document.getElementById('server-messages');
-
-            if (!messagesEl) {
-                console.error('❌ 找不到服务器消息容器元素');
-                return;
-            }
-
-            const time = new Date(timestamp).toLocaleTimeString();
-
-            let messageClass = '';
-            let icon = '💬';
-            let bgColor = '';
-
-            if (type === 'system') {
-                messageClass = 'color: #007bff; font-weight: bold;';
-                icon = '🔧';
-                bgColor = 'background-color: #e7f3ff;';
-            } else if (type === 'error') {
-                messageClass = 'color: #dc3545; font-weight: bold;';
-                icon = '❌';
-                bgColor = 'background-color: #ffe6e6;';
-            } else {
-                // 普通聊天消息
-                icon = '💬';
-                bgColor = 'background-color: #f8f9fa;';
-            }
-
-            const messageDiv = document.createElement('div');
-            messageDiv.style.cssText = `margin-bottom: 3px; padding: 8px; border-radius: 4px; border-left: 3px solid #ddd; ${messageClass} ${bgColor}`;
-            messageDiv.innerHTML = `
-                <div style="font-size: 11px; color: #666; margin-bottom: 2px;">[${time}]</div>
-                <div style="font-family: 'Courier New', monospace; font-size: 13px;">${icon} ${message}</div>
-            `;
-
-            messagesEl.appendChild(messageDiv);
-
-            // 控制台也输出，方便调试
-            console.log(`📺 [${time}] ${type.toUpperCase()}: ${message}`);
-
-            // 自动滚动到底部
-            if (autoScroll) {
-                messagesEl.scrollTop = messagesEl.scrollHeight;
-            }
-
-            // 限制消息数量，避免内存溢出
-            while (messagesEl.children.length > 200) {
-                messagesEl.removeChild(messagesEl.firstChild);
-            }
-        }
-
-        function clearServerMessages() {
-            document.getElementById('server-messages').innerHTML = '';
-        }
-
-        function toggleAutoScroll() {
-            autoScroll = !autoScroll;
-            const btn = document.getElementById('auto-scroll-btn');
-            btn.textContent = `自动滚动: ${autoScroll ? '开' : '关'}`;
-            btn.style.backgroundColor = autoScroll ? '#28a745' : '#6c757d';
-        }
-
-        // 推荐用户名功能
-        function suggestUsername() {
-            const prefixes = ['Bot', 'Ater', 'Auto', 'Helper', 'Player', 'Test', 'Game', 'MC'];
-            const suffixes = ['Skon', 'Bot', 'Helper', 'Player', '2024', '123', 'MC', 'Pro'];
-            const simpleNames = ['BotSkon', 'AterBot', 'AutoBot', 'HelperBot', 'TestBot', 'PlayerBot', 'GameBot', 'MCBot'];
-
-            const randomChoice = Math.random();
-            let suggestedName;
-
-            if (randomChoice < 0.4) {
-                // 使用简单名字
-                suggestedName = simpleNames[Math.floor(Math.random() * simpleNames.length)];
-            } else if (randomChoice < 0.7) {
-                // 组合前缀+后缀
-                const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-                const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-                suggestedName = prefix + suffix;
-            } else {
-                // 添加随机数字
-                const baseName = simpleNames[Math.floor(Math.random() * simpleNames.length)];
-                const number = Math.floor(Math.random() * 999) + 1;
-                suggestedName = baseName + number;
-            }
-
-            // 确保不超过16个字符
-            if (suggestedName.length > 16) {
-                suggestedName = suggestedName.substring(0, 16);
-            }
-
-            document.getElementById('username').value = suggestedName;
-            validateUsername(document.getElementById('username'));
-
-            // 显示提示
-            alert(`💡 推荐用户名: ${suggestedName}\n\n这个名字完全符合Minecraft服务器要求，可以尝试使用喵！`);
-        }
-
-        // 生成随机用户名
-        function generateRandomUsername() {
-            const adjectives = ['快速', '聪明', '强大', '灵活', '勇敢', '智慧', '神奇', '超级'];
-            const nouns = ['机器人', '助手', '伙伴', '守护者', '探索者', '建造者', '冒险家', '战士'];
-
-            const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
-            const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-            const randomNum = Math.floor(Math.random() * 1000);
-
-            // 转换为拼音或英文
-            const englishMap = {
-                '快速': 'Fast', '聪明': 'Smart', '强大': 'Strong', '灵活': 'Agile',
-                '勇敢': 'Brave', '智慧': 'Wise', '神奇': 'Magic', '超级': 'Super',
-                '机器人': 'Bot', '助手': 'Helper', '伙伴': 'Friend', '守护者': 'Guard',
-                '探索者': 'Explorer', '建造者': 'Builder', '冒险家': 'Adventure', '战士': 'Warrior'
-            };
-
-            const username = `${englishMap[randomAdj]}${englishMap[randomNoun]}${randomNum}`;
-            document.getElementById('username').value = username;
-
-            // 触发验证
-            validateUsername(document.getElementById('username'));
-        }
-
-        // 生成超简单兼容用户名（专门对付挑剔的服务器）
-        function generateSimpleUsername() {
-            const simpleNames = [
-                'Bot', 'Player', 'User', 'Guest', 'Helper', 'Builder', 'Miner', 'Crafter',
-                'Steve', 'Alex', 'Notch', 'Herobrine', 'Enderman', 'Creeper', 'Zombie', 'Skeleton'
-            ];
-
-            const randomName = simpleNames[Math.floor(Math.random() * simpleNames.length)];
-            const randomNum = Math.floor(Math.random() * 9999) + 1;
-
-            // 确保用户名简单且长度合适
-            const username = `${randomName}${randomNum}`;
-            document.getElementById('username').value = username;
-
-            // 触发验证
-            validateUsername(document.getElementById('username'));
-
-            // 显示提示
-            alert(`生成了超兼容用户名: ${username}\n这种格式几乎所有服务器都接受喵！`);
-        }
-
-        // 回车键快捷执行
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('minecraft-command').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    executeMinecraftCommand();
-                }
-            });
-
-            document.getElementById('chat-message').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendChatMessage();
-                }
-            });
-        });
-
-        // 获取API基础路径
-        function getApiBase() {
-            // 在Replit环境中，使用当前页面的origin
-            return window.location.origin;
         }
 
         function updateSkinMode() {
@@ -1316,7 +453,6 @@ modList.style.pointerEvents = 'none';
             const yggdrasilSection = document.getElementById('yggdrasil-section');
             const littleskinSection = document.getElementById('littleskin-section');
 
-            // 隐藏所有选项区域
             skinUrlSection.style.display = 'none';
             yggdrasilSection.style.display = 'none';
             littleskinSection.style.display = 'none';
@@ -1351,6 +487,404 @@ modList.style.pointerEvents = 'none';
                 authSection.style.display = 'none';
             }
         }
+
+        function updateAdaptiveMode() {
+            const isAdaptive = document.getElementById('adaptive-mods').checked;
+            const manualSection = document.getElementById('manual-mods-section');
+
+            if (isAdaptive) {
+                manualSection.style.opacity = '0.5';
+                manualSection.style.pointerEvents = 'none';
+            } else {
+                manualSection.style.opacity = '1';
+                manualSection.style.pointerEvents = 'auto';
+            }
+        }
+
+        function addMod() {
+            mods.push('');
+            updateModList();
+        }
+
+        function removeMod(index) {
+            mods.splice(index, 1);
+            updateModList();
+        }
+
+        function updateModList() {
+            const modListEl = document.getElementById('mod-list');
+            modListEl.innerHTML = '';
+
+            mods.forEach((mod, index) => {
+                const modItem = document.createElement('div');
+                modItem.className = 'mod-item';
+                modItem.innerHTML = `
+                    <input type="text" value="${mod}" placeholder="mod名称 (如: forge, optifine, jei)" 
+                           onchange="mods[${index}] = this.value">
+                    <button onclick="removeMod(${index})">删除</button>
+                `;
+                modListEl.appendChild(modItem);
+            });
+        }
+
+        function addCommonMods() {
+            const commonMods = ['forge', 'optifine', 'jei', 'journeymap', 'waila'];
+            const selectedMods = prompt('选择要添加的常用mod (用逗号分隔):\n' + commonMods.join(', '));
+
+            if (selectedMods) {
+                const modsToAdd = selectedMods.split(',').map(m => m.trim()).filter(m => m);
+                modsToAdd.forEach(mod => {
+                    if (!mods.includes(mod)) {
+                        mods.push(mod);
+                    }
+                });
+                updateModList();
+            }
+        }
+
+        function saveConfig() {
+            const username = document.getElementById('username').value;
+            const illegalChars = username.match(/[^a-zA-Z0-9]/g);
+
+            if (!username.trim()) {
+                alert('用户名不能为空喵！');
+                return;
+            }
+
+            if (illegalChars && illegalChars.length > 0) {
+                const suggestion = username.replace(/[^a-zA-Z0-9]/g, '') || 'BotSkon';
+                alert(`用户名包含非法字符: ${[...new Set(illegalChars)].join(', ')}\n建议修改为: ${suggestion}`);
+                return;
+            }
+
+            const serverAddress = document.getElementById('server-address').value.trim();
+            let host = '';
+            let port = '';
+
+            if (serverAddress.includes(':')) {
+                const parts = serverAddress.split(':');
+                host = parts[0].trim();
+                port = parts[1].trim();
+            } else {
+                host = serverAddress;
+                port = '25565';
+            }
+
+            const newConfig = {
+                ...config,
+                client: {
+                    ...config.client,
+                    host: host,
+                    port: port,
+                    username: username,
+                    version: document.getElementById('java-version').value,
+                    auth: 'offline',
+                    adaptiveMods: document.getElementById('adaptive-mods').checked,
+                    mods: mods.filter(mod => mod.trim() !== ''),
+                    skinMode: document.getElementById('skinMode').value,
+                    skinUrl: document.getElementById('skinUrl').value || null
+                }
+            };
+
+            const skinMode = document.getElementById('skinMode').value;
+
+            if (skinMode === 'yggdrasil') {
+                const skinServer = document.getElementById('skinServer').value;
+                const customUrl = document.getElementById('customYggdrasilUrl').value;
+                const yggdrasilUsername = document.getElementById('yggdrasilUsername').value;
+
+                newConfig.client.yggdrasilServer = skinServer === 'custom' ? customUrl : skinServer;
+                newConfig.client.yggdrasilUsername = yggdrasilUsername;
+            }
+
+            if (skinMode === 'littleskin') {
+                const littleskinUsername = document.getElementById('littleskinUsername').value;
+                const enableLittleskinAuth = document.getElementById('enableLittleskinAuth').checked;
+                const littleskinPassword = document.getElementById('littleskinPassword').value;
+
+                newConfig.client.littleskinUsername = littleskinUsername;
+                newConfig.client.enableLittleskinAuth = enableLittleskinAuth;
+                if (enableLittleskinAuth && littleskinPassword) {
+                    newConfig.client.littleskinPassword = littleskinPassword;
+                }
+            }
+
+            fetch('/api/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newConfig)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('配置保存成功！');
+                    config = newConfig;
+                } else {
+                    alert('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存配置失败:', error);
+                alert('保存配置失败');
+            });
+        }
+
+        function toggleBot() {
+            const statusEl = document.getElementById('status');
+            if (statusEl.className === 'status running') {
+                stopBot();
+            } else {
+                startBot();
+            }
+        }
+
+        function startBot() {
+            document.getElementById('error-info').className = 'error-info hidden';
+
+            fetch('/api/bot/start', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('机器人启动成功！');
+                        setTimeout(updateStatus, 1000);
+                    } else {
+                        alert('启动失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('启动机器人失败:', error);
+                    alert('启动机器人失败');
+                });
+        }
+
+        function stopBot() {
+            fetch('/api/bot/stop', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('机器人已停止！');
+                        setTimeout(() => {
+                            updateStatus();
+                        }, 500);
+                    } else {
+                        alert('停止失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('停止机器人失败:', error);
+                    alert('停止机器人失败');
+                });
+        }
+
+        function updateToggleButton(isRunning) {
+            const toggleBtn = document.getElementById('toggle-btn');
+            if (isRunning) {
+                toggleBtn.textContent = '⏹️ 停止机器人';
+                toggleBtn.className = 'stop-btn';
+            } else {
+                toggleBtn.textContent = '▶️ 启动机器人';
+                toggleBtn.className = 'start-btn';
+            }
+        }
+
+        function updateStatus() {
+            fetch('/api/bot/status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusEl = document.getElementById('status');
+                    const errorEl = document.getElementById('error-info');
+                    const commandSection = document.getElementById('command-section');
+
+                    if (data.running) {
+                        statusEl.textContent = '机器人状态: 运行中';
+                        statusEl.className = 'status running';
+                        errorEl.className = 'error-info hidden';
+                        commandSection.style.display = 'block';
+                        updateToggleButton(true);
+
+                        if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
+                            connectToMessageStream();
+                        }
+                    } else {
+                        statusEl.textContent = '机器人状态: 已停止';
+                        statusEl.className = 'status stopped';
+                        commandSection.style.display = 'none';
+                        updateToggleButton(false);
+
+                        if (eventSource) {
+                            eventSource.close();
+                            eventSource = null;
+                        }
+
+                        if (data.error) {
+                            errorEl.innerHTML = '<h4>🚨 启动失败原因:</h4>' + data.error;
+                            errorEl.className = 'error-info';
+                        } else {
+                            errorEl.className = 'error-info hidden';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('获取状态失败:', error);
+                });
+        }
+
+        function executeMinecraftCommand() {
+            const command = document.getElementById('minecraft-command').value.trim();
+            if (!command) {
+                alert('请输入命令喵！');
+                return;
+            }
+
+            const fullCommand = command.startsWith('/') ? command : '/' + command;
+
+            fetch('/api/bot/command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command: fullCommand })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`✅ 命令执行: ${fullCommand}`);
+                    document.getElementById('minecraft-command').value = '';
+                } else {
+                    console.log(`❌ 命令失败: ${fullCommand} - ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.log(`❌ 网络错误: ${fullCommand} - ${error.message}`);
+            });
+        }
+
+        function sendChatMessage() {
+            const message = document.getElementById('chat-message').value.trim();
+            if (!message) {
+                alert('请输入消息喵！');
+                return;
+            }
+
+            fetch('/api/bot/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`💬 聊天发送: ${message}`);
+                    document.getElementById('chat-message').value = '';
+                } else {
+                    console.log(`❌ 聊天失败: ${message} - ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.log(`❌ 网络错误: ${message} - ${error.message}`);
+            });
+        }
+
+        function connectToMessageStream() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+
+            console.log('🔗 正在连接到消息流...');
+
+            try {
+                eventSource = new EventSource('/api/events');
+
+                eventSource.onopen = function(event) {
+                    console.log('✅ 消息流连接成功');
+                };
+
+                eventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        addServerMessage(data.message, data.timestamp, data.type);
+                    } catch (error) {
+                        console.error('❌ 解析消息失败:', error);
+                    }
+                };
+
+                eventSource.onerror = function(error) {
+                    console.error('💥 消息流连接错误:', error);
+                    setTimeout(() => {
+                        if (document.getElementById('status').className === 'status running') {
+                            connectToMessageStream();
+                        }
+                    }, 3000);
+                };
+
+            } catch (error) {
+                console.error('💥 创建消息流连接失败:', error);
+            }
+        }
+
+        function addServerMessage(message, timestamp, type = 'chat') {
+            const messagesEl = document.getElementById('server-messages');
+            if (!messagesEl) return;
+
+            const time = new Date(timestamp).toLocaleTimeString();
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = 'margin-bottom: 3px; padding: 8px; border-radius: 4px; border-left: 3px solid #ddd; background-color: #f8f9fa;';
+            messageDiv.innerHTML = `
+                <div style="font-size: 11px; color: #666; margin-bottom: 2px;">[${time}]</div>
+                <div style="font-family: 'Courier New', monospace; font-size: 13px;">💬 ${message}</div>
+            `;
+
+            messagesEl.appendChild(messageDiv);
+
+            if (autoScroll) {
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+
+            while (messagesEl.children.length > 200) {
+                messagesEl.removeChild(messagesEl.firstChild);
+            }
+        }
+
+        function clearServerMessages() {
+            document.getElementById('server-messages').innerHTML = '';
+        }
+
+        function toggleAutoScroll() {
+            autoScroll = !autoScroll;
+            const btn = document.getElementById('auto-scroll-btn');
+            btn.textContent = `自动滚动: ${autoScroll ? '开' : '关'}`;
+            btn.style.backgroundColor = autoScroll ? '#28a745' : '#6c757d';
+        }
+
+        function suggestUsername() {
+            const simpleNames = ['BotSkon', 'AterBot', 'AutoBot', 'HelperBot', 'TestBot', 'PlayerBot', 'GameBot', 'MCBot'];
+            const suggestedName = simpleNames[Math.floor(Math.random() * simpleNames.length)];
+
+            document.getElementById('username').value = suggestedName;
+            validateUsername(document.getElementById('username'));
+
+            alert(`💡 推荐用户名: ${suggestedName}\n\n这个名字完全符合Minecraft服务器要求，可以尝试使用喵！`);
+        }
+
+        // 回车键快捷执行
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('minecraft-command').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    executeMinecraftCommand();
+                }
+            });
+
+            document.getElementById('chat-message').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendChatMessage();
+                }
+            });
+        });
     </script>
 </body>
 </html>
