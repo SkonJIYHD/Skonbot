@@ -30,6 +30,7 @@ function broadcastMessage(message) {
     console.log('📦 发送的完整SSE数据:', data.trim());
 
     const toRemove = [];
+    let successCount = 0;
     clients.forEach(client => {
         try {
             if (client.writable && !client.destroyed) {
