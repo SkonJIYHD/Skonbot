@@ -11,10 +11,10 @@ function broadcastMessage(message) {
         console.log('📡 没有连接的客户端，跳过消息广播');
         return;
     }
-    
+
     const data = `data: ${JSON.stringify(message)}\n\n`;
     console.log(`📡 向 ${clients.size} 个客户端广播消息:`, message);
-    
+
     const toRemove = [];
     clients.forEach(client => {
         try {
@@ -30,7 +30,7 @@ function broadcastMessage(message) {
             toRemove.push(client);
         }
     });
-    
+
     // 清理无效连接
     toRemove.forEach(client => {
         clients.delete(client);
@@ -229,99 +229,99 @@ function startBot(mode = null) {
             botProcess.stdout.on('data', (data) => {
                 const output = data.toString().trim();
                 console.log(`Bot输出: ${output}`);
-                
+
                 // 检查消息类型并处理
                 if (output.startsWith('CHAT_MESSAGE:')) {
                     const chatMessage = output.substring(13).trim();
                     logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
-                    
+
                     console.log('🎯 检测到聊天消息，准备广播:', chatMessage);
-                    
+
                     // 广播给所有连接的客户端
                     const messageData = {
                         type: 'chat',
                         message: chatMessage,
                         timestamp: new Date().toISOString()
                     };
-                    
-                    broadcastToClients(JSON.stringify(messageData));
+
+                    broadcastMessage(messageData);
                 } else if (output.startsWith('SYSTEM_MESSAGE:')) {
                     const systemMessage = output.substring(15).trim();
                     logger.log(`🔧 系统消息: ${systemMessage}`, 'system');
-                    
+
                     console.log('🎯 检测到系统消息，准备广播:', systemMessage);
-                    
+
                     // 广播给所有连接的客户端
                     const messageData = {
                         type: 'system',
                         message: systemMessage,
                         timestamp: new Date().toISOString()
                     };
-                    
-                    broadcastToClients(JSON.stringify(messageData));
+
+                    broadcastMessage(messageData);
                 } else if (output.startsWith('SERVER_MESSAGE:')) {
                     const serverMessage = output.substring(15).trim();
                     logger.log(`📋 服务器反馈: ${serverMessage}`, 'server');
-                    
+
                     console.log('🎯 检测到服务器反馈，准备广播:', serverMessage);
-                    
+
                     // 广播给所有连接的客户端
                     const messageData = {
                         type: 'server',
                         message: serverMessage,
                         timestamp: new Date().toISOString()
                     };
-                    
-                    broadcastToClients(JSON.stringify(messageData));
+
+                    broadcastMessage(messageData);
                 } else if (output.startsWith('GAME_MESSAGE:')) {
                     const gameMessage = output.substring(13).trim();
                     logger.log(`🎮 游戏信息: ${gameMessage}`, 'game');
-                    
+
                     console.log('🎯 检测到游戏信息，准备广播:', gameMessage);
-                    
+
                     // 广播给所有连接的客户端
                     const messageData = {
                         type: 'game',
                         message: gameMessage,
                         timestamp: new Date().toISOString()
                     };
-                    
+
                     broadcastMessage(messageData);
                 } else if (output.startsWith('ACTIONBAR_MESSAGE:')) {
                     const actionBarMessage = output.substring(18).trim();
                     logger.log(`📊 操作栏: ${actionBarMessage}`, 'actionbar');
-                    
+
                     const messageData = {
                         type: 'actionbar',
                         message: actionBarMessage,
                         timestamp: new Date().toISOString()
                     };
-                    
+
                     broadcastMessage(messageData);
                 } else if (output.startsWith('TITLE_MESSAGE:')) {
                     const titleMessage = output.substring(14).trim();
                     logger.log(`📺 标题: ${titleMessage}`, 'title');
-                    
+
                     const messageData = {
                         type: 'title',
                         message: titleMessage,
                         timestamp: new Date().toISOString()
                     };
-                    
+
                     broadcastMessage(messageData);
                 } else if (output.startsWith('PACKET_MESSAGE:')) {
                     const packetMessage = output.substring(15).trim();
                     logger.log(`📦 数据包消息: ${packetMessage}`, 'packet');
-                    
+
                     const messageData = {
                         type: 'packet',
                         message: packetMessage,
                         timestamp: new Date().toISOString()
                     };
-                    
+
                     broadcastMessage(messageData);
                 }
-                
+
                 // 也检查其他可能的系统消息
                 if (output.includes('机器人已成功进入服务器')) {
                     broadcastMessage({
@@ -330,7 +330,7 @@ function startBot(mode = null) {
                         timestamp: new Date().toISOString()
                     });
                 }
-                
+
                 if (output.includes('机器人被踢出')) {
                     broadcastMessage({
                         type: 'system',
@@ -534,7 +534,7 @@ const server = http.createServer((req, res) => {
         if (clients.size === 0) {
             console.log('🔗 新的SSE连接建立');
         }
-        
+
         res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
@@ -543,21 +543,21 @@ const server = http.createServer((req, res) => {
             'Access-Control-Allow-Headers': 'Cache-Control',
             'X-Accel-Buffering': 'no' // 禁用nginx缓冲
         });
-        
+
         clients.add(res);
-        
+
         // 减少日志输出 - 只在连接数变化较大时输出
         if (clients.size % 5 === 1 || clients.size <= 3) {
             console.log(`📊 当前SSE连接数: ${clients.size}`);
         }
-        
+
         // 发送连接确认
         const welcomeMsg = JSON.stringify({
             type: "connected",
             message: "已连接到消息流，开始监控服务器消息",
             timestamp: new Date().toISOString()
         });
-        
+
         try {
             res.write(`data: ${welcomeMsg}\n\n`);
             // 只在第一个连接时显示确认日志
@@ -568,7 +568,7 @@ const server = http.createServer((req, res) => {
             console.error('❌ 发送SSE连接确认失败:', error);
             clients.delete(res);
         }
-        
+
         // 设置keepalive心跳，避免连接超时
         const heartbeat = setInterval(() => {
             if (res.writable && !res.destroyed) {
@@ -583,7 +583,7 @@ const server = http.createServer((req, res) => {
                 clients.delete(res);
             }
         }, 30000); // 30秒心跳
-        
+
         req.on('close', () => {
             clearInterval(heartbeat);
             clients.delete(res);
@@ -592,7 +592,7 @@ const server = http.createServer((req, res) => {
                 console.log(`🔌 SSE连接断开，当前连接数: ${clients.size}`);
             }
         });
-        
+
         req.on('error', (error) => {
             clearInterval(heartbeat);
             clients.delete(res);
@@ -601,7 +601,7 @@ const server = http.createServer((req, res) => {
                 console.error('❌ SSE连接错误:', error.code || error.message);
             }
         });
-        
+
     } else if (req.method === 'POST' && req.url === '/api/bot/chat') {
         // 发送聊天消息
         let body = '';
