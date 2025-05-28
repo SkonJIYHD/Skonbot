@@ -3,6 +3,20 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 
+// 简单的WebSocket替代方案 - 使用Server-Sent Events
+const clients = new Set();
+
+function broadcastMessage(message) {
+    const data = `data: ${JSON.stringify(message)}\n\n`;
+    clients.forEach(client => {
+        try {
+            client.write(data);
+        } catch (error) {
+            clients.delete(client);
+        }
+    });
+}
+
 let botProcess = null;
 let currentConfig = null;
 
@@ -192,7 +206,21 @@ function startBot(mode = null) {
 
         if (botProcess) {
             botProcess.stdout.on('data', (data) => {
-                console.log(`Bot输出: ${data}`);
+                const output = data.toString();
+                console.log(`Bot输出: ${output}`);
+                
+                // 检查是否是聊天消息
+                if (output.startsWith('CHAT_MESSAGE:')) {
+                    const chatMessage = output.substring(13).trim();
+                    logger.log(`📢 服务器消息: ${chatMessage}`, 'chat');
+                    
+                    // 广播给所有连接的客户端
+                    broadcastMessage({
+                        type: 'chat',
+                        message: chatMessage,
+                        timestamp: new Date().toISOString()
+                    });
+                }
             });
 
             botProcess.stderr.on('data', (data) => {
@@ -383,6 +411,24 @@ const server = http.createServer((req, res) => {
             }
         });
 
+    } else if (req.method === 'GET' && req.url === '/api/events') {
+        // Server-Sent Events端点，用于实时推送服务器消息
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*'
+        });
+        
+        clients.add(res);
+        
+        // 发送连接确认
+        res.write('data: {"type":"connected","message":"已连接到消息流"}\n\n');
+        
+        req.on('close', () => {
+            clients.delete(res);
+        });
+        
     } else if (req.method === 'POST' && req.url === '/api/bot/chat') {
         // 发送聊天消息
         let body = '';
