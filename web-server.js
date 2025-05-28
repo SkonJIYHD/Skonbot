@@ -233,93 +233,123 @@ function startBot(mode = null) {
                 // 检查消息类型并处理
                 if (output.startsWith('CHAT_MESSAGE:')) {
                     const chatMessage = output.substring(13).trim();
-                    logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
+                    
+                    // 确保消息不为空
+                    if (chatMessage && chatMessage.length > 0) {
+                        logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
 
-                    console.log('🎯 检测到聊天消息，准备广播:', chatMessage);
+                        console.log('🎯 检测到聊天消息，准备广播:', chatMessage);
 
-                    // 广播给所有连接的客户端
-                    const messageData = {
-                        type: 'chat',
-                        message: chatMessage,
-                        timestamp: new Date().toISOString()
-                    };
+                        // 广播给所有连接的客户端
+                        const messageData = {
+                            type: 'chat',
+                            message: chatMessage,
+                            timestamp: new Date().toISOString()
+                        };
 
-                    broadcastMessage(messageData);
+                        broadcastMessage(messageData);
+                    } else {
+                        console.log('⚠️ 聊天消息为空，跳过广播');
+                    }
                 } else if (output.startsWith('SYSTEM_MESSAGE:')) {
                     const systemMessage = output.substring(15).trim();
-                    logger.log(`🔧 系统消息: ${systemMessage}`, 'system');
+                    
+                    if (systemMessage && systemMessage.length > 0) {
+                        logger.log(`🔧 系统消息: ${systemMessage}`, 'system');
 
-                    console.log('🎯 检测到系统消息，准备广播:', systemMessage);
+                        console.log('🎯 检测到系统消息，准备广播:', systemMessage);
 
-                    // 广播给所有连接的客户端
-                    const messageData = {
-                        type: 'system',
-                        message: systemMessage,
-                        timestamp: new Date().toISOString()
-                    };
+                        // 广播给所有连接的客户端
+                        const messageData = {
+                            type: 'system',
+                            message: systemMessage,
+                            timestamp: new Date().toISOString()
+                        };
 
-                    broadcastMessage(messageData);
+                        broadcastMessage(messageData);
+                    } else {
+                        console.log('⚠️ 系统消息为空，跳过广播');
+                    }
                 } else if (output.startsWith('SERVER_MESSAGE:')) {
                     const serverMessage = output.substring(15).trim();
-                    logger.log(`📋 服务器反馈: ${serverMessage}`, 'server');
+                    
+                    if (serverMessage && serverMessage.length > 0) {
+                        logger.log(`📋 服务器反馈: ${serverMessage}`, 'server');
 
-                    console.log('🎯 检测到服务器反馈，准备广播:', serverMessage);
+                        console.log('🎯 检测到服务器反馈，准备广播:', serverMessage);
 
-                    // 广播给所有连接的客户端
-                    const messageData = {
-                        type: 'server',
-                        message: serverMessage,
-                        timestamp: new Date().toISOString()
-                    };
+                        // 广播给所有连接的客户端
+                        const messageData = {
+                            type: 'server',
+                            message: serverMessage,
+                            timestamp: new Date().toISOString()
+                        };
 
-                    broadcastMessage(messageData);
+                        broadcastMessage(messageData);
+                    } else {
+                        console.log('⚠️ 服务器消息为空，跳过广播');
+                    }
                 } else if (output.startsWith('GAME_MESSAGE:')) {
                     const gameMessage = output.substring(13).trim();
-                    logger.log(`🎮 游戏信息: ${gameMessage}`, 'game');
+                    
+                    if (gameMessage && gameMessage.length > 0) {
+                        logger.log(`🎮 游戏信息: ${gameMessage}`, 'game');
 
-                    console.log('🎯 检测到游戏信息，准备广播:', gameMessage);
+                        console.log('🎯 检测到游戏信息，准备广播:', gameMessage);
 
-                    // 广播给所有连接的客户端
-                    const messageData = {
-                        type: 'game',
-                        message: gameMessage,
-                        timestamp: new Date().toISOString()
-                    };
+                        // 广播给所有连接的客户端
+                        const messageData = {
+                            type: 'game',
+                            message: gameMessage,
+                            timestamp: new Date().toISOString()
+                        };
 
-                    broadcastMessage(messageData);
+                        broadcastMessage(messageData);
+                    } else {
+                        console.log('⚠️ 游戏消息为空，跳过广播');
+                    }
                 } else if (output.startsWith('ACTIONBAR_MESSAGE:')) {
                     const actionBarMessage = output.substring(18).trim();
-                    logger.log(`📊 操作栏: ${actionBarMessage}`, 'actionbar');
+                    
+                    if (actionBarMessage && actionBarMessage.length > 0) {
+                        logger.log(`📊 操作栏: ${actionBarMessage}`, 'actionbar');
 
-                    const messageData = {
-                        type: 'actionbar',
-                        message: actionBarMessage,
-                        timestamp: new Date().toISOString()
-                    };
+                        const messageData = {
+                            type: 'actionbar',
+                            message: actionBarMessage,
+                            timestamp: new Date().toISOString()
+                        };
 
-                    broadcastMessage(messageData);
+                        broadcastMessage(messageData);
+                    }
                 } else if (output.startsWith('TITLE_MESSAGE:')) {
                     const titleMessage = output.substring(14).trim();
-                    logger.log(`📺 标题: ${titleMessage}`, 'title');
+                    
+                    if (titleMessage && titleMessage.length > 0) {
+                        logger.log(`📺 标题: ${titleMessage}`, 'title');
 
-                    const messageData = {
-                        type: 'title',
-                        message: titleMessage,
-                        timestamp: new Date().toISOString()
-                    };
+                        const messageData = {
+                            type: 'title',
+                            message: titleMessage,
+                            timestamp: new Date().toISOString()
+                        };
 
-                    broadcastMessage(messageData);
+                        broadcastMessage(messageData);
+                    }
                 } else if (output.startsWith('PACKET_MESSAGE:')) {
                     const packetMessage = output.substring(15).trim();
-                    logger.log(`📦 数据包消息: ${packetMessage}`, 'packet');
+                    
+                    if (packetMessage && packetMessage.length > 0) {
+                        logger.log(`📦 数据包消息: ${packetMessage}`, 'packet');
 
-                    const messageData = {
-                        type: 'packet',
-                        message: packetMessage,
-                        timestamp: new Date().toISOString()
-                    };
+                        const messageData = {
+                            type: 'packet',
+                            message: packetMessage,
+                            timestamp: new Date().toISOString()
+                        };
 
-                    broadcastMessage(messageData);
+                        broadcastMessage(messageData);
+                    }
                 }
 
                 // 也检查其他可能的系统消息

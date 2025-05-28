@@ -871,11 +871,17 @@
                 eventSource.onmessage = function(event) {
                     try {
                         const data = JSON.parse(event.data);
-                        addServerMessage(data.message, data.timestamp, data.type);
+                        
+                        // 验证数据完整性
+                        if (data && data.message !== undefined && data.message !== null) {
+                            addServerMessage(data.message, data.timestamp, data.type);
+                        } else {
+                            console.log('⚠️ 收到无效消息数据:', data);
+                        }
                     } catch (error) {
                         // 减少错误日志输出
                         if (reconnectAttempts < 3) {
-                            console.error('❌ 解析消息失败:', error);
+                            console.error('❌ 解析消息失败:', error, '原始数据:', event.data);
                         }
                     }
                 };
@@ -926,6 +932,12 @@
         function addServerMessage(message, timestamp, messageType) {
             const messagesEl = document.getElementById('server-messages');
             if (!messagesEl) return;
+
+            // 验证消息不为空或undefined
+            if (!message || message === 'undefined' || message.trim() === '') {
+                console.log('⚠️ 收到空消息，跳过显示');
+                return;
+            }
 
             const time = new Date(timestamp).toLocaleTimeString();
             const messageDiv = document.createElement('div');
