@@ -259,36 +259,46 @@ function startBot(mode = null) {
                     console.log('  - startsWith检测结果:', output.startsWith('CHAT_MESSAGE:'));
                     console.log('  - 是否包含前缀:', output.includes('CHAT_MESSAGE:'));
                     
-                    // 强制提取CHAT_MESSAGE内容，不管格式如何
-                    const chatIndex = output.indexOf('CHAT_MESSAGE:');
-                    console.log('  - CHAT_MESSAGE:索引位置:', chatIndex);
-                    
-                    if (chatIndex >= 0) {
-                        const chatMessage = output.substring(chatIndex + 'CHAT_MESSAGE:'.length).trim();
-                        console.log('🎯 强制提取聊天消息内容:', `"${chatMessage}"`);
-                        console.log('  - 提取消息长度:', chatMessage.length);
-                        console.log('  - 消息是否为空:', chatMessage === '');
+                    try {
+                        // 强制提取CHAT_MESSAGE内容，不管格式如何
+                        const chatIndex = output.indexOf('CHAT_MESSAGE:');
+                        console.log('  - CHAT_MESSAGE:索引位置:', chatIndex);
                         
-                        if (chatMessage && chatMessage.length > 0) {
-                            console.log('✅ 聊天消息有效，开始处理和广播');
-                            logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
+                        if (chatIndex >= 0) {
+                            const chatMessage = output.substring(chatIndex + 'CHAT_MESSAGE:'.length).trim();
+                            console.log('🎯 强制提取聊天消息内容:', `"${chatMessage}"`);
+                            console.log('  - 提取消息长度:', chatMessage.length);
+                            console.log('  - 消息是否为空:', chatMessage === '');
+                            
+                            if (chatMessage && chatMessage.length > 0) {
+                                console.log('✅ 聊天消息有效，开始处理和广播');
+                                logger.log(`💬 聊天消息: ${chatMessage}`, 'chat');
 
-                            const messageData = {
-                                type: 'chat',
-                                message: chatMessage,
-                                timestamp: new Date().toISOString()
-                            };
+                                const messageData = {
+                                    type: 'chat',
+                                    message: chatMessage,
+                                    timestamp: new Date().toISOString()
+                                };
 
-                            console.log('📡 准备广播强制提取的聊天消息:', messageData);
-                            broadcastMessage(messageData);
-                            console.log('✅ 强制提取的聊天消息已通过SSE广播完成');
+                                console.log('📡 准备广播强制提取的聊天消息数据:', JSON.stringify(messageData));
+                                
+                                // 调用广播函数
+                                broadcastMessage(messageData);
+                                console.log('✅ 强制提取的聊天消息已通过SSE广播完成');
+                            } else {
+                                console.log('⚠️ 强制提取的消息为空，跳过广播');
+                            }
                         } else {
-                            console.log('⚠️ 强制提取的消息为空，跳过广播');
+                            console.log('❌ 未找到CHAT_MESSAGE:前缀位置');
                         }
-                        return; // 处理完成后返回，阻止进入下面的其他处理逻辑
-                    } else {
-                        console.log('❌ 未找到CHAT_MESSAGE:前缀位置');
+                    } catch (error) {
+                        console.error('❌ CHAT_MESSAGE处理过程中发生错误:', error);
+                        console.error('错误堆栈:', error.stack);
                     }
+                    
+                    // 无论成功与否都返回，避免重复处理
+                    console.log('🔄 CHAT_MESSAGE处理完成，返回避免重复处理');
+                    return;
                 }
 
                 // 优先处理标准消息前缀（如果上面的强制提取没有处理的话）
