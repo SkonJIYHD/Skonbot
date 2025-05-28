@@ -66,12 +66,18 @@ let botLifecycle = {
     isConnected: false,
     lastConnectTime: null,
     connectionCount: 0,
+    hasShownInitialConnection: false,
+    lastDeathTime: null,
     
-    // 检查是否为重复连接
-    isRepeatedConnection() {
+    // 检查是否为死亡后的重生连接
+    isRespawnConnection() {
         const now = Date.now();
+        // 如果在30秒内死亡过，且现在重连，很可能是重生
+        if (this.lastDeathTime && (now - this.lastDeathTime) < 30000) {
+            return true;
+        }
+        // 如果是很快的重连（10秒内），也可能是重生
         if (this.lastConnectTime && (now - this.lastConnectTime) < 10000) {
-            // 10秒内的重连视为重复连接
             return true;
         }
         return false;
@@ -79,27 +85,52 @@ let botLifecycle = {
     
     // 标记机器人连接
     markConnected() {
-        const wasRepeated = this.isRepeatedConnection();
+        const isRespawn = this.isRespawnConnection();
+        const isFirstConnection = !this.hasShownInitialConnection;
+        
         this.isConnected = true;
         this.lastConnectTime = Date.now();
         this.connectionCount++;
         
-        console.log(`🤖 机器人连接状态更新: 第${this.connectionCount}次连接${wasRepeated ? ' (重复连接)' : ' (新连接)'}`);
-        return !wasRepeated; // 返回是否应该发送通知
+        // 只在第一次连接时发送通知
+        if (isFirstConnection) {
+            this.hasShownInitialConnection = true;
+            console.log(`🎉 机器人首次连接到服务器 (第${this.connectionCount}次)`);
+            return true; // 发送首次连接通知
+        } else if (isRespawn) {
+            console.log(`🔄 机器人重生连接 (第${this.connectionCount}次) - 跳过通知`);
+            return false; // 重生不发送通知
+        } else {
+            console.log(`🔁 机器人重新连接 (第${this.connectionCount}次) - 可能是网络恢复`);
+            return true; // 真正的重连发送通知
+        }
     },
     
-    // 标记机器人断开
-    markDisconnected() {
-        this.isConnected = false;
-        console.log('🤖 机器人断开连接，状态已重置');
+    // 标记机器人死亡（区别于断开连接）
+    markDeath() {
+        this.lastDeathTime = Date.now();
+        console.log('💀 机器人死亡，记录死亡时间（不视为断开连接）');
+        // 注意：死亡时不改变 isConnected 状态，因为机器人还在服务器中
     },
     
-    // 重置状态
+    // 标记机器人真正断开连接
+    markDisconnected(reason = '未知') {
+        if (this.isConnected) {
+            this.isConnected = false;
+            console.log(`❌ 机器人真正断开连接: ${reason}`);
+            return true; // 返回是否应该发送断开通知
+        }
+        return false;
+    },
+    
+    // 重置状态（仅在启动时使用）
     reset() {
         this.isConnected = false;
         this.lastConnectTime = null;
         this.connectionCount = 0;
-        console.log('🔄 机器人生命周期状态已重置');
+        this.hasShownInitialConnection = false;
+        this.lastDeathTime = null;
+        console.log('🔄 机器人生命周期状态已完全重置');
     }
 };
 
@@ -502,32 +533,45 @@ function startBot(mode = null) {
                     return; // 处理完成后立即返回
                 }
 
-                // 也检查其他可能的系统消息
+                // 检查连接成功消息
                 if (output.includes('机器人已成功进入服务器')) {
-                    // 检查是否为重复连接
                     const shouldNotify = botLifecycle.markConnected();
                     
                     if (shouldNotify) {
-                        console.log('✅ 发送新连接通知');
+                        console.log('✅ 发送连接通知');
                         broadcastMessage({
                             type: 'system',
                             message: '🎉 机器人已成功连接到服务器！',
                             timestamp: new Date().toISOString()
                         });
                     } else {
-                        console.log('🔄 检测到重复连接，跳过通知 (10秒内重连)');
+                        console.log('🔄 检测到重生连接，跳过通知');
                     }
                 }
 
-                if (output.includes('机器人被踢出') || output.includes('机器人已断开连接')) {
-                    // 标记机器人断开
-                    botLifecycle.markDisconnected();
+                // 检查死亡消息（死亡不等于断开连接）
+                if (output.includes('died') || output.includes('was killed') || 
+                    output.includes('死亡') || output.includes('被杀死')) {
+                    botLifecycle.markDeath();
+                    // 死亡不发送断开通知
+                }
+
+                // 检查真正的断开连接
+                if (output.includes('机器人被踢出') || 
+                    output.includes('kicked') || 
+                    output.includes('disconnected') ||
+                    output.includes('Connection lost') ||
+                    output.includes('连接丢失')) {
                     
-                    broadcastMessage({
-                        type: 'system',
-                        message: '⚠️ 机器人连接已断开',
-                        timestamp: new Date().toISOString()
-                    });
+                    const shouldNotify = botLifecycle.markDisconnected('被踢出或连接丢失');
+                    
+                    if (shouldNotify) {
+                        broadcastMessage({
+                            type: 'system',
+                            message: '⚠️ 机器人被踢出或连接断开',
+                            timestamp: new Date().toISOString()
+                        });
+                    }
                 }
             });
 
@@ -544,13 +588,14 @@ function startBot(mode = null) {
         const wasRunning = botProcess !== null;
         botProcess = null;
         
-        // 标记机器人断开连接
+        // 标记机器人断开连接（只有在真正的进程退出时才算断开）
+        let shouldNotifyDisconnect = false;
         if (wasRunning) {
-            botLifecycle.markDisconnected();
+            shouldNotifyDisconnect = botLifecycle.markDisconnected('进程退出');
         }
 
-        // 如果不是手动停止（退出码0通常表示正常退出，但在被踢出时也可能是0）
-        if (wasRunning) {
+        // 如果不是手动停止，且应该通知断开，则发送断开消息
+        if (wasRunning && shouldNotifyDisconnect) {
             if (code !== 0 && code !== null) {
                 logger.setError(`机器人异常退出，退出码: ${code}`);
             } else {
@@ -584,8 +629,8 @@ function stopBot() {
         // 记录手动停止的时间
         global.lastManualStop = Date.now();
         
-        // 标记机器人断开连接
-        botLifecycle.markDisconnected();
+        // 手动停止时标记断开，但不发送通知（因为是主动停止）
+        botLifecycle.markDisconnected('手动停止');
         
         botProcess.kill();
         botProcess = null;
