@@ -176,30 +176,40 @@
         
         .help-modal-content {
             background: white;
-            margin: 30px auto;
+            margin: 0;
             padding: 30px;
-            border-radius: 10px;
-            max-width: 650px;
-            max-height: 85vh;
+            border-radius: 0;
+            width: 100vw;
+            height: 100vh;
             overflow-y: auto;
             position: relative;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: none;
         }
         
         .help-close-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: none;
-            border: none;
-            font-size: 28px;
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            background: rgba(108, 117, 125, 0.1);
+            border: 2px solid #6c757d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
             cursor: pointer;
             color: #6c757d;
             line-height: 1;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .help-close-btn:hover {
             color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+            border-color: #dc3545;
+            transform: scale(1.1);
         }
         
         .help-title {
@@ -300,9 +310,9 @@
             <div class="help-modal-content">
                 <button onclick="hideHelp()" class="help-close-btn">×</button>
                 
-                <h2 class="help-title">🎮 Aterbot 控制面板使用指南</h2>
+                <h2 class="help-title" style="margin-top: 20px; text-align: center; font-size: 32px;">🎮 Aterbot 控制面板使用指南</h2>
                 
-                <div class="help-section">
+                <div class="help-section" style="max-width: 1000px; margin: 0 auto 25px auto;">
                     <h3 class="help-section-title quick-start">📋 快速开始</h3>
                     <ol class="help-list">
                         <li><strong>配置服务器:</strong> 在"基础配置"中填入Minecraft服务器地址</li>
@@ -312,7 +322,7 @@
                     </ol>
                 </div>
 
-                <div class="help-section">
+                <div class="help-section" style="max-width: 1000px; margin: 0 auto 25px auto;">
                     <h3 class="help-section-title features">⚙️ 主要功能</h3>
                     <ul class="help-list">
                         <li><strong>🎨 皮肤配置:</strong> 支持默认皮肤、自定义URL、LittleSkin皮肤站</li>
@@ -323,7 +333,7 @@
                     </ul>
                 </div>
 
-                <div class="help-section">
+                <div class="help-section" style="max-width: 1000px; margin: 0 auto 25px auto;">
                     <h3 class="help-section-title troubleshoot">🛠️ 常见问题</h3>
                     <div class="help-faq-item">
                         <strong>Q: 机器人无法连接服务器？</strong><br>
@@ -339,9 +349,9 @@
                     </div>
                 </div>
 
-                <div class="help-footer">
-                    <button onclick="hideHelp(); setHelpShown();" class="help-confirm-btn">
-                        ✅ 我知道了
+                <div class="help-footer" style="max-width: 1000px; margin: 30px auto 0 auto; padding: 30px 0;">
+                    <button onclick="hideHelp(); setHelpShown();" class="help-confirm-btn" style="padding: 15px 40px; font-size: 18px;">
+                        ✅ 我知道了，开始使用
                     </button>
                 </div>
             </div>
