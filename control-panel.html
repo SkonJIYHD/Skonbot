@@ -1110,8 +1110,6 @@ modList.style.pointerEvents = 'none';
                                 addServerMessage(`❓ ${data.message}`, data.timestamp, 'unknown');
                             }
                         }
-                            }
-                        }
                     } catch (error) {
                         console.error('❌ 解析消息失败:', error, '原始数据:', event.data);
                         addServerMessage(`❌ 消息解析错误: ${error.message}`, new Date().toISOString(), 'error');
