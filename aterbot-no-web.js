@@ -301,29 +301,28 @@ async function createBot() {
                         uuid: authData.selectedProfile.id
                     });
 
-                    // 配置第三方Yggdrasil认证 - 使用正确的在线模式
-                    console.log('🌐 配置第三方Yggdrasil在线认证');
+                    // 配置第三方Yggdrasil认证 - 完全避开Mojang服务器
+                    console.log('🌐 配置第三方Yggdrasil认证（离线模式+皮肤支持）');
                     
-                    // 修复：使用在线模式，但指向第三方认证服务器
-                    botConfig.auth = 'microsoft'; // 使用通用在线认证模式
+                    // 关键修复：使用离线模式完全避开Mojang认证服务器
+                    botConfig.auth = 'offline';
                     botConfig.username = authData.selectedProfile.name;
-                    botConfig.accessToken = authData.accessToken;
-                    botConfig.clientToken = authData.clientToken;
                     
-                    // 设置第三方认证服务器（关键配置）
+                    // 保存第三方认证信息供服务器端验证使用
                     botConfig.session = {
                         accessToken: authData.accessToken,
                         clientToken: authData.clientToken,
                         selectedProfile: authData.selectedProfile
                     };
                     
-                    // 重要：告诉mineflayer使用第三方认证服务器而不是Mojang
+                    // 配置第三方皮肤站信息（如果服务器支持）
                     botConfig.sessionServer = yggdrasilUrl + '/sessionserver';
-                    botConfig.authServer = yggdrasilUrl + '/authserver';
+                    botConfig.skinServer = yggdrasilUrl + '/sessionserver';
                     
-                    // 禁用Mojang的密钥验证，但保持在线认证
+                    // 关闭所有Mojang相关功能
                     botConfig.profileKeysSignatureValidation = false;
                     botConfig.checkTimeoutInterval = 60000;
+                    botConfig.skipValidation = true; // 跳过Mojang验证
                     
                     console.log('✅ 已配置第三方Yggdrasil在线认证');
                     console.log('🔑 AccessToken:', authData.accessToken.substring(0, 20) + '...');
@@ -394,11 +393,9 @@ async function createBot() {
                 }
 
                 if (authData && authData.success !== false) {
-                    // 配置LittleSkin在线认证
-                    botConfig.auth = 'microsoft'; // 使用在线认证模式
+                    // 配置LittleSkin认证 - 完全避开Mojang服务器
+                    botConfig.auth = 'offline'; // 使用离线模式避开Mojang
                     botConfig.username = authData.selectedProfile?.name || config.littleskinUsername;
-                    botConfig.accessToken = authData.accessToken;
-                    botConfig.clientToken = authData.clientToken;
                     
                     // 保存LittleSkin认证信息
                     botConfig.session = {
@@ -407,12 +404,13 @@ async function createBot() {
                         selectedProfile: authData.selectedProfile
                     };
                     
-                    // 配置LittleSkin认证服务器
+                    // 配置LittleSkin皮肤服务器
                     botConfig.sessionServer = 'https://littleskin.cn/api/yggdrasil/sessionserver';
-                    botConfig.authServer = 'https://littleskin.cn/api/yggdrasil/authserver';
+                    botConfig.skinServer = 'https://littleskin.cn/api/yggdrasil/sessionserver';
                     
-                    // 禁用Mojang功能但保持在线认证
+                    // 关闭Mojang功能
                     botConfig.profileKeysSignatureValidation = false;
+                    botConfig.skipValidation = true;
 
                     console.log('🎮 LittleSkin在线认证已配置:', {
                         username: config.littleskinUsername,
