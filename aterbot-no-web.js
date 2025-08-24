@@ -43,7 +43,7 @@ const adminDetection = {
                 const text = message.toString();
 
                 // 检测权限相关的消息
-                if (text.includes('你现在是管理员') || 
+                if (text.includes('你现在是管理员') ||
                     text.includes('You are now an operator') ||
                     text.includes('权限等级: 4') ||
                     text.includes('Permission level: 4') ||
@@ -58,8 +58,8 @@ const adminDetection = {
                 }
 
                 // 检测权限移除
-                if (text.includes('你不再是管理员') || 
-                    text.includes('You are no longer an operator') ||
+                if (text.includes('你不再是管理员') ||
+                    text.includes('You no longer an operator') ||
                     text.includes('Deopped') ||
                     text.includes('已移除管理员权限')) {
 
@@ -203,7 +203,7 @@ async function createBot() {
     if (config.auth === 'microsoft') {
         console.log('🔐 使用Microsoft正版登录');
         botConfig.auth = 'microsoft';
-        
+
         // 如果配置了Microsoft认证信息
         if (config.microsoftEmail) {
             console.log('📧 Microsoft账户:', config.microsoftEmail);
@@ -211,7 +211,7 @@ async function createBot() {
         } else {
             console.log('⚠️ 未配置Microsoft账户，将使用交互式登录');
         }
-        
+
         // 设置Microsoft认证的额外选项
         botConfig.profileKeysSignatureValidation = true;
         botConfig.checkTimeoutInterval = 60000; // 增加超时时间给认证流程
@@ -219,19 +219,32 @@ async function createBot() {
     }
 
     // 通用Yggdrasil皮肤站支持
-    if (config.skinMode === 'yggdrasil') {
+    if (config.skinMode === 'yggdrasil' || process.env.ENABLE_YGGDRASIL_AUTH === 'true') {
         console.log('🌟 使用通用Yggdrasil皮肤站');
-        const YggdrasilAPI = require('./yggdrasil-api.js');
-        const yggdrasilAPI = new YggdrasilAPI(config.yggdrasilServer);
 
-        if (config.enableYggdrasilAuth && config.yggdrasilPassword && (config.yggdrasilEmail || config.yggdrasilUsername)) {
+        // 从环境变量获取配置
+        const yggdrasilUrl = process.env.YGGDRASIL_URL || config.yggdrasilServer;
+        const yggdrasilUsername = process.env.YGGDRASIL_USERNAME || config.yggdrasilUsername;
+        const yggdrasilPassword = process.env.YGGDRASIL_PASSWORD || config.yggdrasilPassword;
+
+        if (!yggdrasilUrl) {
+            console.error('❌ 缺少Yggdrasil服务器地址配置');
+            return;
+        }
+
+        const YggdrasilAPI = require('./yggdrasil-api.js');
+        const yggdrasilAPI = new YggdrasilAPI(yggdrasilUrl);
+
+        if (yggdrasilPassword && yggdrasilUsername) {
             console.log('🔐 启用Yggdrasil认证');
+            console.log('📧 认证地址:', yggdrasilUrl);
+            console.log('👤 认证用户:', yggdrasilUsername);
 
             try {
                 // 优先使用邮箱，如果没有邮箱则使用用户名
-                const authUsername = config.yggdrasilEmail || config.yggdrasilUsername;
-                const cacheKey = config.yggdrasilEmail ? config.yggdrasilEmail : config.yggdrasilUsername;
-                
+                const authUsername = yggdrasilUsername;
+                const cacheKey = yggdrasilUsername;
+
                 console.log('📧 认证账户:', authUsername);
 
                 // 尝试加载已保存的认证信息
@@ -245,7 +258,7 @@ async function createBot() {
 
                 if (!validationResult.success) {
                     console.log('🔄 正在进行Yggdrasil认证...');
-                    authData = await yggdrasilAPI.authenticate(authUsername, config.yggdrasilPassword);
+                    authData = await yggdrasilAPI.authenticate(authUsername, yggdrasilPassword);
 
                     if (authData.success) {
                         yggdrasilAPI.saveAuthData(authData, cacheKey);
@@ -258,11 +271,11 @@ async function createBot() {
                 }
 
                 if (authData && authData.success && authData.selectedProfile) {
-                    console.log('🎮 Yggdrasil认证已配置:', { 
-                        username: authData.selectedProfile.name, 
-                        uuid: authData.selectedProfile.id 
+                    console.log('🎮 Yggdrasil认证已配置:', {
+                        username: authData.selectedProfile.name,
+                        uuid: authData.selectedProfile.id
                     });
-                    
+
                     // 配置mineflayer使用第三方Yggdrasil认证
                     botConfig.auth = 'offline'; // 暂时使用离线模式，因为mineflayer对第三方皮肤站支持有限
                     botConfig.username = authData.selectedProfile.name;
@@ -271,8 +284,8 @@ async function createBot() {
                         accessToken: authData.accessToken,
                         clientToken: authData.clientToken,
                         selectedProfile: authData.selectedProfile,
-                        sessionServer: config.yggdrasilServer + '/sessionserver',
-                        authServer: config.yggdrasilServer + '/authserver'
+                        sessionServer: yggdrasilUrl + '/sessionserver',
+                        authServer: yggdrasilUrl + '/authserver'
                     };
                     console.log('✅ 已配置第三方Yggdrasil认证信息（离线模式）');
                 } else {
@@ -284,9 +297,9 @@ async function createBot() {
         }
 
         // 获取皮肤信息
-        if (config.yggdrasilUsername) {
+        if (yggdrasilUsername) {
             try {
-                const skinResult = await yggdrasilAPI.getUserSkin(config.yggdrasilUsername);
+                const skinResult = await yggdrasilAPI.getUserSkin(yggdrasilUsername);
                 if (skinResult.success && skinResult.skinUrl) {
                     console.log('✅ 成功获取Yggdrasil皮肤:', skinResult.skinUrl);
                     skinUrl = skinResult.skinUrl;
@@ -456,10 +469,10 @@ async function createBot() {
         console.log(`📨 收到消息 [类型:${position || 'unknown'}]: ${message}`);
 
         // 检查是否包含命令相关关键字
-        const isCommandResponse = message.includes('种子') || 
-                                 message.includes('Seed') || 
+        const isCommandResponse = message.includes('种子') ||
+                                 message.includes('Seed') ||
                                  message.includes('seed:') ||
-                                 message.includes('在线玩家') || 
+                                 message.includes('在线玩家') ||
                                  message.includes('players online') ||
                                  message.includes('There are') ||
                                  message.includes('当前有') ||
@@ -661,8 +674,8 @@ async function createBot() {
                 const value = obj[key];
 
                 // 检查常见的文本字段名
-                if ((key === 'text' || key === 'message' || key === 'content' || 
-                     key === 'translate' || key === 'extra') && 
+                if ((key === 'text' || key === 'message' || key === 'content' ||
+                     key === 'translate' || key === 'extra') &&
                     typeof value === 'string' && value.trim()) {
                     return value.trim();
                 }
@@ -753,7 +766,7 @@ async function createBot() {
                     console.log(`🤖 机器人状态: 已连接=${isConnected}, 实体存在=${!!bot.entity}`);
 
                     // 检查是否是需要权限的命令
-                    if (cleanCommand.startsWith('/list') || cleanCommand.startsWith('/seed') || 
+                    if (cleanCommand.startsWith('/list') || cleanCommand.startsWith('/seed') ||
                         cleanCommand.startsWith('/gamemode') || cleanCommand.startsWith('/tp') ||
                         cleanCommand.startsWith('/time') || cleanCommand.startsWith('/weather')) {
                         console.log(`⚠️ 注意: "${cleanCommand}" 通常需要管理员权限`);
@@ -773,7 +786,7 @@ async function createBot() {
                     // 临时消息监听器，监听这个命令的响应
                     const commandResponseListener = (jsonMsg, position) => {
                         const message = jsonMsg.toString();
-                        if (message.toLowerCase().includes('seed') || 
+                        if (message.toLowerCase().includes('seed') ||
                             message.toLowerCase().includes('online') ||
                             message.toLowerCase().includes('permission') ||
                             message.toLowerCase().includes('权限') ||

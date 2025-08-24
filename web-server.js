@@ -531,7 +531,6 @@ function startBot(mode = null) {
                         console.log('⚠️ 系统消息为空，跳过广播');
                     }
                     return; // 处理完成后立即返回
-
                 } else if (output.startsWith('SERVER_MESSAGE:')) {
                     const serverMessage = output.substring(15).trim();
                     console.log('🎯 检测到SERVER_MESSAGE前缀，消息内容:', serverMessage);
@@ -763,54 +762,66 @@ const server = http.createServer((req, res) => {
         });
         req.on('end', () => {
             try {
-                const newConfig = JSON.parse(body);
-                // 验证并合并配置，确保关键信息不被丢失
-                const existingConfig = loadConfig();
-                if (!existingConfig) {
-                    // 如果无法加载现有配置，直接使用新配置
-                    if (saveConfig(newConfig)) {
-                        res.writeHead(200, {'Content-Type': 'application/json'});
-                        res.end(JSON.stringify({success: true, message: '配置已保存'}));
-                    } else {
-                        res.writeHead(500, {'Content-Type': 'application/json'});
-                        res.end(JSON.stringify({success: false, message: '保存配置失败'}));
-                    }
-                } else {
-                    // 合并新配置到现有配置，优先使用新配置的值
-                    const mergedConfig = {
-                        ...existingConfig,
-                        client: {
-                            ...existingConfig.client,
-                            ...newConfig.client,
-                            mods: newConfig.client?.mods !== undefined ? newConfig.client.mods : existingConfig.client.mods,
-                            adaptiveMods: newConfig.client?.adaptiveMods !== undefined ? newConfig.client.adaptiveMods : existingConfig.client.adaptiveMods,
-                            yggdrasil: {
-                                ...(existingConfig.client?.yggdrasil || {}),
-                                ...(newConfig.client?.yggdrasil || {})
-                            },
-                            skin: {
-                                ...(existingConfig.client?.skin || {}),
-                                ...(newConfig.client?.skin || {})
-                            }
-                        },
-                        server: {
-                            ...(existingConfig.server || {}),
-                            ...(newConfig.server || {})
-                        }
+                const newConfigData = JSON.parse(body);
+                // 确保Yggdrasil配置在正确的位置
+                const mergedConfig = {
+                    ...currentConfig, // 使用当前加载的配置作为基础
+                    ...newConfigData
+                };
+
+                // 确保client对象及其子对象存在
+                if (!mergedConfig.client) mergedConfig.client = {};
+                if (!mergedConfig.client.yggdrasil) mergedConfig.client.yggdrasil = {};
+                if (!mergedConfig.client.skin) mergedConfig.client.skin = {};
+
+                // 检查并合并Yggdrasil相关的字段，确保它们是扁平的，并且Yggdrasil认证信息被正确提取
+                // 假设newConfigData中可能包含 `enableYggdrasilAuth`, `yggdrasilServer`, `yggdrasilUsername`, `yggdrasilPassword`
+                // 这些字段需要被合并到 `mergedConfig.client.yggdrasil` 对象中
+                if (newConfigData.enableYggdrasilAuth !== undefined) {
+                    mergedConfig.client.yggdrasil.enable = newConfigData.enableYggdrasilAuth;
+                }
+                if (newConfigData.yggdrasilServer !== undefined) {
+                    mergedConfig.client.yggdrasil.url = newConfigData.yggdrasilServer;
+                }
+                if (newConfigData.yggdrasilUsername !== undefined) {
+                    mergedConfig.client.yggdrasil.username = newConfigData.yggdrasilUsername;
+                }
+                if (newConfigData.yggdrasilPassword !== undefined) {
+                    mergedConfig.client.yggdrasil.password = newConfigData.yggdrasilPassword;
+                }
+
+                // 同样处理skin配置
+                if (newConfigData.skinUsername !== undefined) {
+                    mergedConfig.client.skin.username = newConfigData.skinUsername;
+                }
+
+                // 确保mode, mods, adaptiveMods也被正确合并
+                if (newConfigData.mode !== undefined) {
+                    mergedConfig.client.mode = newConfigData.mode;
+                }
+                if (newConfigData.mods !== undefined) {
+                    mergedConfig.client.mods = newConfigData.mods;
+                }
+                if (newConfigData.adaptiveMods !== undefined) {
+                    mergedConfig.client.adaptiveMods = newConfigData.adaptiveMods;
+                }
+
+
+                // 确保server配置也正确合并
+                if (newConfigData.server) {
+                    mergedConfig.server = {
+                        ...(mergedConfig.server || {}),
+                        ...newConfigData.server
                     };
+                }
 
-                    // 确保模式正确
-                    if (newConfig.client?.mode) {
-                        mergedConfig.client.mode = newConfig.client.mode;
-                    }
 
-                    if (saveConfig(mergedConfig)) {
-                        res.writeHead(200, {'Content-Type': 'application/json'});
-                        res.end(JSON.stringify({success: true, message: '配置已保存'}));
-                    } else {
-                        res.writeHead(500, {'Content-Type': 'application/json'});
-                        res.end(JSON.stringify({success: false, message: '保存配置失败'}));
-                    }
+                if (saveConfig(mergedConfig)) {
+                    res.writeHead(200, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success: true, message: '配置已保存'}));
+                } else {
+                    res.writeHead(500, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success: false, message: '保存配置失败'}));
                 }
             } catch (error) {
                 console.error('配置更新失败:', error);

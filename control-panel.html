@@ -500,7 +500,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                         document.getElementById('auth').value = config.auth || 'offline';
                         document.getElementById('microsoft-email').value = config.microsoftEmail || '';
 
-                        // Yggdrasil认证配置
+                        // Yggdrasil认证配置 - 支持多种配置结构
                         if (config.yggdrasilServer) {
                             const serverSelect = document.getElementById('auth-yggdrasil-server');
                             if ([...serverSelect.options].some(option => option.value === config.yggdrasilServer)) {
@@ -516,6 +516,12 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                         }
                         if (config.yggdrasilPassword) {
                             document.getElementById('auth-yggdrasil-password').value = config.yggdrasilPassword;
+                        }
+
+                        // 确保自适应mod模式状态正确
+                        const adaptiveCheckbox = document.getElementById('adaptive-mods');
+                        if (adaptiveCheckbox.checked !== config.adaptiveMods) {
+                            console.log('修正自适应mod状态:', config.adaptiveMods);
                         }
 
                         // 更新认证模式显示
