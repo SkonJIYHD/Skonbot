@@ -278,12 +278,10 @@
                     </div>
                 </div>
                 <div id="yggdrasil-auth-section" class="form-group" style="display: none;">
+                    <label>认证邮箱:</label>
+                    <input type="email" id="yggdrasilEmail" placeholder="皮肤站注册邮箱">
                     <label>皮肤站密码:</label>
-                    <input type="password" id="yggdrasilPassword" placeholder="皮肤站账户密码">
-                    <div style="margin-top: 8px; font-size: 12px; color: #666;">
-                        密码仅用于获取认证令牌，将安全存储在本地
-                    </div>
-                </div>
+                    <input type="password" id="yggdrasilPassword" placeholder="皮肤站账户密码"></div>
             </div>
 
             <div id="littleskin-section" style="display: none;">
@@ -555,6 +553,9 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                         if (config.client?.yggdrasilUsername) {
                             document.getElementById('yggdrasilUsername').value = config.client.yggdrasilUsername;
                         }
+                        if (config.client?.yggdrasilEmail) {
+                            document.getElementById('yggdrasilEmail').value = config.client.yggdrasilEmail;
+                        }
                         if (config.client?.littleskinUsername) {
                             document.getElementById('littleskinUsername').value = config.client.littleskinUsername;
                         }
@@ -730,11 +731,13 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                 const skinServer = document.getElementById('skinServer').value;
                 const customUrl = document.getElementById('customYggdrasilUrl').value;
                 const yggdrasilUsername = document.getElementById('yggdrasilUsername').value;
+                const yggdrasilEmail = document.getElementById('yggdrasilEmail').value;
                 const enableYggdrasilAuth = document.getElementById('enableYggdrasilAuth').checked;
                 const yggdrasilPassword = document.getElementById('yggdrasilPassword').value;
 
                 newConfig.yggdrasilServer = skinServer === 'custom' ? customUrl : skinServer;
                 newConfig.yggdrasilUsername = yggdrasilUsername;
+                newConfig.yggdrasilEmail = yggdrasilEmail;
                 newConfig.enableYggdrasilAuth = enableYggdrasilAuth;
                 if (enableYggdrasilAuth && yggdrasilPassword) {
                     newConfig.yggdrasilPassword = yggdrasilPassword;
@@ -752,7 +755,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                     newConfig.littleskinPassword = littleskinPassword;
                 }
             }
-            
+
             fetch('/api/config', {
                 method: 'POST',
                 headers: {

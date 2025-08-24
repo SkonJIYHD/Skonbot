@@ -224,12 +224,18 @@ async function createBot() {
         const YggdrasilAPI = require('./yggdrasil-api.js');
         const yggdrasilAPI = new YggdrasilAPI(config.yggdrasilServer);
 
-        if (config.enableYggdrasilAuth && config.yggdrasilPassword && config.yggdrasilUsername) {
+        if (config.enableYggdrasilAuth && config.yggdrasilPassword && (config.yggdrasilEmail || config.yggdrasilUsername)) {
             console.log('🔐 启用Yggdrasil认证');
 
             try {
+                // 优先使用邮箱，如果没有邮箱则使用用户名
+                const authUsername = config.yggdrasilEmail || config.yggdrasilUsername;
+                const cacheKey = config.yggdrasilEmail ? config.yggdrasilEmail : config.yggdrasilUsername;
+                
+                console.log('📧 认证账户:', authUsername);
+
                 // 尝试加载已保存的认证信息
-                let authData = yggdrasilAPI.loadAuthData(config.yggdrasilUsername);
+                let authData = yggdrasilAPI.loadAuthData(cacheKey);
 
                 // 如果没有认证信息或认证信息无效，重新认证
                 let validationResult = { success: false };
@@ -239,10 +245,10 @@ async function createBot() {
 
                 if (!validationResult.success) {
                     console.log('🔄 正在进行Yggdrasil认证...');
-                    authData = await yggdrasilAPI.authenticate(config.yggdrasilUsername, config.yggdrasilPassword);
+                    authData = await yggdrasilAPI.authenticate(authUsername, config.yggdrasilPassword);
 
                     if (authData.success) {
-                        yggdrasilAPI.saveAuthData(authData, config.yggdrasilUsername);
+                        yggdrasilAPI.saveAuthData(authData, cacheKey);
                         console.log('✅ Yggdrasil认证成功！');
                     } else {
                         console.error('❌ Yggdrasil认证失败:', authData.message);
