@@ -238,14 +238,24 @@ async function createBot() {
         if (yggdrasilPassword && yggdrasilUsername) {
             console.log('🔐 启用Yggdrasil认证');
             console.log('📧 认证地址:', yggdrasilUrl);
-            console.log('👤 认证用户:', yggdrasilUsername);
+            console.log('👤 用户名:', yggdrasilUsername);
 
             try {
-                // 优先使用邮箱，如果没有邮箱则使用用户名
-                const authUsername = yggdrasilUsername;
-                const cacheKey = yggdrasilUsername;
+                // 根据Yggdrasil规范，username字段应该是邮箱
+                // 但某些皮肤站可能允许用户名登录，需要尝试两种方式
+                let authUsername = yggdrasilUsername;
+                
+                // 如果看起来不像邮箱，可能需要添加域名后缀
+                if (!yggdrasilUsername.includes('@')) {
+                    console.log('⚠️ 用户名不是邮箱格式，尝试添加默认域名');
+                    // 尝试常见的域名后缀
+                    const domain = new URL(yggdrasilUrl).hostname;
+                    authUsername = `${yggdrasilUsername}@${domain}`;
+                }
+                
+                const cacheKey = yggdrasilUsername; // 缓存键还是用原始用户名
 
-                console.log('📧 认证账户:', authUsername);
+                console.log('📧 认证账户（邮箱格式）:', authUsername);
 
                 // 尝试加载已保存的认证信息
                 let authData = yggdrasilAPI.loadAuthData(cacheKey);
@@ -260,11 +270,26 @@ async function createBot() {
                     console.log('🔄 正在进行Yggdrasil认证...');
                     authData = await yggdrasilAPI.authenticate(authUsername, yggdrasilPassword);
 
+                    // 如果邮箱格式认证失败，尝试原始用户名
+                    if (!authData.success && authUsername !== yggdrasilUsername) {
+                        console.log('⚠️ 邮箱格式认证失败，尝试原始用户名认证');
+                        authData = await yggdrasilAPI.authenticate(yggdrasilUsername, yggdrasilPassword);
+                    }
+
                     if (authData.success) {
                         yggdrasilAPI.saveAuthData(authData, cacheKey);
                         console.log('✅ Yggdrasil认证成功！');
+                        console.log('📋 认证详情:', {
+                            使用的用户名: authData.user?.username || '未知',
+                            角色名: authData.selectedProfile?.name || '未知',
+                            UUID: authData.selectedProfile?.id || '未知'
+                        });
                     } else {
                         console.error('❌ Yggdrasil认证失败:', authData.message);
+                        console.error('🔍 认证详情:');
+                        console.error('  尝试的认证地址:', yggdrasilUrl);
+                        console.error('  尝试的用户名:', [authUsername, yggdrasilUsername].filter((v, i, a) => a.indexOf(v) === i));
+                        console.error('  密码长度:', yggdrasilPassword.length);
                     }
                 } else {
                     console.log('✅ 使用已保存的Yggdrasil认证信息');
@@ -276,22 +301,24 @@ async function createBot() {
                         uuid: authData.selectedProfile.id
                     });
 
-                    // 配置mineflayer使用第三方Yggdrasil认证
-                    // 使用offline模式避免Mojang服务器检查，但保留认证信息用于皮肤验证
-                    botConfig.auth = 'offline';
+                    // 尝试使用在线Yggdrasil认证模式
+                    console.log('🌐 尝试配置在线Yggdrasil认证模式');
+                    botConfig.auth = 'mojang'; // 使用mojang认证模式，但指向第三方服务器
                     botConfig.username = authData.selectedProfile.name;
+                    botConfig.accessToken = authData.accessToken;
+                    botConfig.clientToken = authData.clientToken;
                     
-                    // 保存Yggdrasil认证信息供后续使用
-                    botConfig._yggdrasilAuth = {
-                        accessToken: authData.accessToken,
-                        clientToken: authData.clientToken,
-                        selectedProfile: authData.selectedProfile,
-                        sessionServer: yggdrasilUrl + '/sessionserver',
-                        authServer: yggdrasilUrl + '/authserver'
-                    };
+                    // 配置第三方Yggdrasil服务器地址
+                    botConfig.authServer = yggdrasilUrl + '/authserver';
+                    botConfig.sessionServer = yggdrasilUrl + '/sessionserver';
                     
-                    // 禁用签名验证
+                    // 禁用Mojang特有的功能
                     botConfig.profileKeysSignatureValidation = false;
+                    botConfig.checkTimeoutInterval = 60000; // 增加超时时间
+                    
+                    // 如果在线认证失败，准备回退到离线模式
+                    botConfig._fallbackToOffline = true;
+                    botConfig._offlineUsername = authData.selectedProfile.name;
                     
                     console.log('✅ 已配置第三方Yggdrasil认证信息（离线模式+认证数据）');
                     console.log('🔑 AccessToken:', authData.accessToken.substring(0, 20) + '...');
@@ -621,6 +648,33 @@ async function createBot() {
     // 错误处理
     bot.on('error', (err) => {
         console.error('🚨 机器人错误:', err.message);
+        
+        // 特殊处理认证服务器错误
+        if (err.message.includes('authservers_down') || err.message.includes('authentication')) {
+            console.log('🔄 检测到认证服务器问题，尝试重新连接...');
+            
+            // 如果配置了回退模式，切换到离线模式重试
+            if (botConfig._fallbackToOffline) {
+                console.log('🔄 回退到离线模式重新连接');
+                setTimeout(() => {
+                    try {
+                        const fallbackConfig = { ...botConfig };
+                        fallbackConfig.auth = 'offline';
+                        fallbackConfig.username = botConfig._offlineUsername;
+                        delete fallbackConfig.accessToken;
+                        delete fallbackConfig.clientToken;
+                        delete fallbackConfig._fallbackToOffline;
+                        
+                        console.log('🔄 使用离线模式重新创建机器人');
+                        bot = mineflayer.createBot(fallbackConfig);
+                        setupBotEvents(bot); // 需要重新设置事件监听器
+                    } catch (retryError) {
+                        console.error('❌ 离线模式重连也失败:', retryError.message);
+                    }
+                }, 5000);
+                return; // 不要立即设置isConnected = false
+            }
+        }
 
         // 特殊处理协议错误
         if (err.message.includes('PartialReadError') || err.message.includes('Read error')) {
