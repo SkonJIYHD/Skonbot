@@ -59,7 +59,7 @@ const adminDetection = {
 
                 // 检测权限移除
                 if (text.includes('你不再是管理员') || 
-                    text.includes('You are no longer an operator') ||
+                    text.includes('You no longer an operator') ||
                     text.includes('Deopped') ||
                     text.includes('已移除管理员权限')) {
 
@@ -176,8 +176,53 @@ async function createBot() {
         version: config.version
     });
 
-    // 准备机器人配置
+    // 获取基础配置
     const botConfig = {
+        host: config.host || 'localhost',
+        port: parseInt(config.port) || 25565,
+        username: config.username || 'BotSkon',
+        version: config.version || '1.21.1',
+        auth: config.auth || 'offline'
+    };
+
+    // 处理Yggdrasil认证
+    if (config.auth === 'yggdrasil' && config.authYggdrasilServer && config.authYggdrasilEmail && config.authYggdrasilPassword) {
+        console.log('🔐 使用Yggdrasil认证模式');
+
+        try {
+            const YggdrasilAPI = require('./yggdrasil-api.js');
+            const yggdrasilAPI = new YggdrasilAPI(config.authYggdrasilServer);
+
+            console.log('🔄 正在进行Yggdrasil认证...');
+            const authResult = await yggdrasilAPI.authenticate(config.authYggdrasilEmail, config.authYggdrasilPassword);
+
+            if (authResult.success) {
+                console.log('✅ Yggdrasil认证成功！');
+                console.log('🎮 用户名:', authResult.selectedProfile.name);
+                console.log('🆔 UUID:', authResult.selectedProfile.id);
+
+                // 使用认证后的用户名和session
+                botConfig.username = authResult.selectedProfile.name;
+                botConfig.session = {
+                    accessToken: authResult.accessToken,
+                    clientToken: authResult.clientToken,
+                    selectedProfile: authResult.selectedProfile
+                };
+                // 暂时保持offline模式，因为mineflayer可能需要特殊配置
+                botConfig.auth = 'offline';
+
+            } else {
+                console.error('❌ Yggdrasil认证失败:', authResult.message);
+                console.log('⚠️ 回退到离线模式');
+            }
+        } catch (error) {
+            console.error('❌ Yggdrasil认证过程中出错:', error);
+            console.log('⚠️ 回退到离线模式');
+        }
+    }
+
+    // 准备机器人配置
+    const botConfigWithDefaults = {
         host: config.host,
         port: parseInt(config.port) || 25565,
         username: config.username || 'aterbot',
@@ -202,8 +247,8 @@ async function createBot() {
     // 正版Microsoft登录支持
     if (config.auth === 'microsoft') {
         console.log('🔐 使用Microsoft正版登录');
-        botConfig.auth = 'microsoft';
-        
+        botConfigWithDefaults.auth = 'microsoft';
+
         // 如果配置了Microsoft认证信息
         if (config.microsoftEmail) {
             console.log('📧 Microsoft账户:', config.microsoftEmail);
@@ -211,10 +256,10 @@ async function createBot() {
         } else {
             console.log('⚠️ 未配置Microsoft账户，将使用交互式登录');
         }
-        
+
         // 设置Microsoft认证的额外选项
-        botConfig.profileKeysSignatureValidation = true;
-        botConfig.checkTimeoutInterval = 60000; // 增加超时时间给认证流程
+        botConfigWithDefaults.profileKeysSignatureValidation = true;
+        botConfigWithDefaults.checkTimeoutInterval = 60000; // 增加超时时间给认证流程
         console.log('✅ Microsoft正版认证已配置');
     }
 
@@ -231,7 +276,7 @@ async function createBot() {
                 // 优先使用邮箱，如果没有邮箱则使用用户名
                 const authUsername = config.yggdrasilEmail || config.yggdrasilUsername;
                 const cacheKey = config.yggdrasilEmail ? config.yggdrasilEmail : config.yggdrasilUsername;
-                
+
                 console.log('📧 认证账户:', authUsername);
 
                 // 尝试加载已保存的认证信息
@@ -262,12 +307,12 @@ async function createBot() {
                         username: authData.selectedProfile.name, 
                         uuid: authData.selectedProfile.id 
                     });
-                    
+
                     // 配置mineflayer使用第三方Yggdrasil认证
-                    botConfig.auth = 'offline'; // 暂时使用离线模式，因为mineflayer对第三方皮肤站支持有限
-                    botConfig.username = authData.selectedProfile.name;
+                    botConfigWithDefaults.auth = 'offline'; // 暂时使用离线模式，因为mineflayer对第三方皮肤站支持有限
+                    botConfigWithDefaults.username = authData.selectedProfile.name;
                     // 保存认证信息供将来扩展使用
-                    botConfig._yggdrasilAuth = {
+                    botConfigWithDefaults._yggdrasilAuth = {
                         accessToken: authData.accessToken,
                         clientToken: authData.clientToken,
                         selectedProfile: authData.selectedProfile,
@@ -337,8 +382,8 @@ async function createBot() {
 
                 if (authData && authData.success !== false) {
                     // 配置Yggdrasil认证
-                    botConfig.auth = 'offline'; // 暂时使用离线模式，因为mineflayer可能不直接支持自定义Yggdrasil
-                    botConfig.username = config.littleskinUsername;
+                    botConfigWithDefaults.auth = 'offline'; // 暂时使用离线模式，因为mineflayer可能不直接支持自定义Yggdrasil
+                    botConfigWithDefaults.username = config.littleskinUsername;
 
                     console.log('🎮 LittleSkin认证已配置:', {
                         username: config.littleskinUsername,
@@ -403,8 +448,8 @@ async function createBot() {
 
         if (config.yggdrasilServer && config.yggdrasilUsername) {
             // 设置Yggdrasil认证服务器
-            botConfig.sessionServer = config.yggdrasilServer;
-            botConfig.profileKeysSignatureValidation = false; // 兼容第三方皮肤站
+            botConfigWithDefaults.sessionServer = config.yggdrasilServer;
+            botConfigWithDefaults.profileKeysSignatureValidation = false; // 兼容第三方皮肤站
 
             // 尝试从皮肤站获取皮肤信息
             console.log('🔍 正在从皮肤站获取皮肤信息...');
@@ -421,7 +466,7 @@ async function createBot() {
         }
     }
 
-    bot = mineflayer.createBot(botConfig);
+    bot = mineflayer.createBot(botConfigWithDefaults);
 
     // 添加原始数据包处理器，忽略Fabric mod相关的问题数据包
     bot._client.on('packet', (data, meta) => {
