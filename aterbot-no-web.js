@@ -301,38 +301,28 @@ async function createBot() {
                         uuid: authData.selectedProfile.id
                     });
 
-                    // 配置第三方Yggdrasil在线认证 - 真正的在线模式
-                    console.log('🌐 配置第三方Yggdrasil在线认证模式');
+                    // 配置第三方Yggdrasil认证 - 完全避开Mojang服务器
+                    console.log('🌐 配置第三方Yggdrasil认证（离线模式+皮肤支持）');
                     
-                    // 使用在线认证模式，并配置第三方Yggdrasil服务器
-                    botConfig.auth = 'mojang'; // 使用mojang认证协议，但指向第三方服务器
+                    // 关键修复：使用离线模式完全避开Mojang认证服务器
+                    botConfig.auth = 'offline';
                     botConfig.username = authData.selectedProfile.name;
-                    botConfig.accessToken = authData.accessToken;
-                    botConfig.clientToken = authData.clientToken;
-                    botConfig.uuid = authData.selectedProfile.id;
                     
-                    // 关键：重新配置mineflayer的认证服务器指向第三方Yggdrasil
-                    // 通过环境变量或直接修改mineflayer的内部配置
-                    process.env.MINECRAFT_AUTH_SERVER = yggdrasilUrl + '/authserver';
-                    process.env.MINECRAFT_SESSION_SERVER = yggdrasilUrl + '/sessionserver';
-                    
-                    // 配置第三方Yggdrasil服务器地址
-                    botConfig.sessionServer = yggdrasilUrl + '/sessionserver';
-                    botConfig.authServer = yggdrasilUrl + '/authserver';
-                    
-                    // 为第三方认证服务器设置特殊配置
+                    // 保存第三方认证信息供服务器端验证使用
                     botConfig.session = {
                         accessToken: authData.accessToken,
                         clientToken: authData.clientToken,
-                        selectedProfile: authData.selectedProfile,
-                        username: authData.selectedProfile.name,
-                        uuid: authData.selectedProfile.id
+                        selectedProfile: authData.selectedProfile
                     };
                     
-                    // 禁用Mojang特有的功能但保持在线验证
+                    // 配置第三方皮肤站信息（如果服务器支持）
+                    botConfig.sessionServer = yggdrasilUrl + '/sessionserver';
+                    botConfig.skinServer = yggdrasilUrl + '/sessionserver';
+                    
+                    // 关闭所有Mojang相关功能
                     botConfig.profileKeysSignatureValidation = false;
                     botConfig.checkTimeoutInterval = 60000;
-                    botConfig.skipValidation = false; // 不跳过验证！
+                    botConfig.skipValidation = true; // 跳过Mojang验证
                     
                     console.log('✅ 已配置第三方Yggdrasil在线认证');
                     console.log('🔑 AccessToken:', authData.accessToken.substring(0, 20) + '...');
@@ -401,32 +391,24 @@ async function createBot() {
                 }
 
                 if (authData && authData.success !== false) {
-                    // 配置LittleSkin Yggdrasil在线认证
-                    botConfig.auth = 'mojang'; // 使用mojang认证协议，但指向LittleSkin服务器
+                    // 配置LittleSkin认证 - 完全避开Mojang服务器
+                    botConfig.auth = 'offline'; // 使用离线模式避开Mojang
                     botConfig.username = authData.selectedProfile?.name || config.littleskinUsername;
-                    botConfig.accessToken = authData.accessToken;
-                    botConfig.clientToken = authData.clientToken;
-                    botConfig.uuid = authData.selectedProfile?.id;
                     
-                    // 重新配置mineflayer的认证服务器指向LittleSkin
-                    process.env.MINECRAFT_AUTH_SERVER = 'https://littleskin.cn/api/yggdrasil/authserver';
-                    process.env.MINECRAFT_SESSION_SERVER = 'https://littleskin.cn/api/yggdrasil/sessionserver';
-                    
-                    // 配置LittleSkin服务器地址
-                    botConfig.sessionServer = 'https://littleskin.cn/api/yggdrasil/sessionserver';
-                    botConfig.authServer = 'https://littleskin.cn/api/yggdrasil/authserver';
-                    
-                    // 完整的session信息
+                    // 保存LittleSkin认证信息
                     botConfig.session = {
                         accessToken: authData.accessToken,
                         clientToken: authData.clientToken,
-                        selectedProfile: authData.selectedProfile,
-                        username: authData.selectedProfile?.name || config.littleskinUsername,
-                        uuid: authData.selectedProfile?.id
+                        selectedProfile: authData.selectedProfile
                     };
                     
+                    // 配置LittleSkin皮肤服务器
+                    botConfig.sessionServer = 'https://littleskin.cn/api/yggdrasil/sessionserver';
+                    botConfig.skinServer = 'https://littleskin.cn/api/yggdrasil/sessionserver';
+                    
+                    // 关闭Mojang功能
                     botConfig.profileKeysSignatureValidation = false;
-                    botConfig.skipValidation = false; // 不跳过验证！
+                    botConfig.skipValidation = true;
 
                     console.log('🎮 LittleSkin在线认证已配置:', {
                         username: config.littleskinUsername,
