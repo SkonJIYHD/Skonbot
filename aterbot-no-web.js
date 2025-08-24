@@ -198,6 +198,70 @@ async function createBot() {
         errorTimeout: 30000
     };
 
+    // 通用Yggdrasil皮肤站支持
+    if (config.skinMode === 'yggdrasil') {
+        console.log('🌟 使用通用Yggdrasil皮肤站');
+        const YggdrasilAPI = require('./yggdrasil-api.js');
+        const yggdrasilAPI = new YggdrasilAPI(config.yggdrasilServer);
+
+        if (config.enableYggdrasilAuth && config.yggdrasilPassword && config.yggdrasilUsername) {
+            console.log('🔐 启用Yggdrasil认证');
+
+            try {
+                // 尝试加载已保存的认证信息
+                let authData = yggdrasilAPI.loadAuthData(config.yggdrasilUsername);
+
+                // 如果没有认证信息或认证信息无效，重新认证
+                let validationResult = { success: false };
+                if (authData) {
+                    validationResult = await yggdrasilAPI.validate(authData.accessToken, authData.clientToken);
+                }
+
+                if (!validationResult.success) {
+                    console.log('🔄 正在进行Yggdrasil认证...');
+                    authData = await yggdrasilAPI.authenticate(config.yggdrasilUsername, config.yggdrasilPassword);
+
+                    if (authData.success) {
+                        yggdrasilAPI.saveAuthData(authData, config.yggdrasilUsername);
+                        console.log('✅ Yggdrasil认证成功！');
+                    } else {
+                        console.error('❌ Yggdrasil认证失败:', authData.message);
+                    }
+                } else {
+                    console.log('✅ 使用已保存的Yggdrasil认证信息');
+                }
+
+                if (authData && authData.success && authData.selectedProfile) {
+                    console.log('🎮 Yggdrasil认证已配置:', { 
+                        username: authData.selectedProfile.name, 
+                        uuid: authData.selectedProfile.id 
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Yggdrasil认证过程中发生错误:', error);
+            }
+        }
+
+        // 获取皮肤信息
+        if (config.yggdrasilUsername) {
+            try {
+                const skinResult = await yggdrasilAPI.getUserSkin(config.yggdrasilUsername);
+                if (skinResult.success && skinResult.skinUrl) {
+                    console.log('✅ 成功获取Yggdrasil皮肤:', skinResult.skinUrl);
+                    skinUrl = skinResult.skinUrl;
+                    if (skinResult.capeUrl) {
+                        console.log('✅ 成功获取Yggdrasil披风:', skinResult.capeUrl);
+                        capeUrl = skinResult.capeUrl;
+                    }
+                } else if (!skinResult.silent) {
+                    console.log('⚠️ 无法获取Yggdrasil皮肤:', skinResult.message);
+                }
+            } catch (error) {
+                console.error('❌ 获取Yggdrasil皮肤失败:', error);
+            }
+        }
+    }
+
     // LittleSkin皮肤站支持
     if (config.skinMode === 'littleskin') {
         console.log('🌟 使用LittleSkin皮肤站');
