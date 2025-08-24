@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -145,7 +144,7 @@
         .message.server { color: #6f42c1; background-color: #f3e8ff; border-left: 3px solid #6f42c1; }
         .message.game { color: #fd7e14; background-color: #fff3e0; }
         .message.unknown { color: #6c757d; background-color: #f8f9fa; }
-        
+
         /* 帮助按钮样式 */
         .help-btn {
             background-color: #17a2b8;
@@ -166,7 +165,7 @@
 <body>
     <div class="container">
         <h1>Aterbot 控制面板</h1>
-        
+
         <div class="config-section">
             <h3>📖 使用帮助</h3>
             <div class="form-group">
@@ -180,7 +179,7 @@
             </div>
         </div>
 
-        
+
 
         <div class="config-section">
             <h3>基础配置</h3>
@@ -218,12 +217,17 @@
             </div>
             <div class="form-group">
                 <label>认证方式:</label>
-                <select id="auth" disabled>
-                    <option value="offline">离线模式 (机器人仅支持此模式)</option>
+                <select id="auth">
+                    <option value="offline">离线模式</option>
+                    <option value="microsoft">Microsoft正版登录</option>
                 </select>
-                <div style="margin-top: 5px; padding: 6px; background-color: #e7f3ff; border: 1px solid #b8daff; border-radius: 4px; font-size: 12px; color: #004085;">
-                    <strong>💡 提示:</strong> 机器人只能使用离线模式连接服务器，不支持正版验证。
-                </div>
+                <small style="color: #666;">正版登录需要有效的Minecraft正版账户</small>
+            </div>
+
+            <div id="microsoft-auth-section" class="form-group" style="display: none;">
+                <label>Microsoft账户邮箱 (可选):</label>
+                <input type="email" id="microsoft-email" placeholder="your@email.com">
+                <small style="color: #666;">留空将使用交互式登录（需要在控制台中完成认证）</small>
             </div>
         </div>
 
@@ -261,7 +265,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>皮肤站用户名:</label>
+                    <label>Yggdrasil用户名:</label>
                     <input type="text" id="yggdrasilUsername" placeholder="在皮肤站的用户名">
                 </div>
                 <div class="form-group">
@@ -388,7 +392,7 @@
             loadConfig();
             updateStatus();
             setInterval(updateStatus, 2000);
-            
+
             // 检查是否首次使用
             checkFirstTimeUser();
         };
@@ -507,65 +511,70 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
             fetch('/api/config')
                 .then(response => response.json())
                 .then(data => {
-                    config = data;
-                    updateUI();
+                    if (data.client) {
+                        config = data.client;
+
+                        // 填充Java版配置
+                        document.getElementById('server-address').value = (config.host || '') + (config.port ? `:${config.port}` : '');
+                        document.getElementById('username').value = config.username || '';
+                        document.getElementById('java-version').value = config.version || '1.21.1';
+                        document.getElementById('auth').value = config.auth || 'offline';
+                        document.getElementById('microsoft-email').value = config.microsoftEmail || '';
+
+                        // 显示/隐藏Microsoft认证选项
+                        const microsoftSection = document.getElementById('microsoft-auth-section');
+                        if (config.auth === 'microsoft') {
+                            microsoftSection.style.display = 'block';
+                        } else {
+                            microsoftSection.style.display = 'none';
+                        }
+
+                        mods = config.client?.mods || [];
+                        updateModList();
+
+                        document.getElementById('adaptive-mods').checked = config.client?.adaptiveMods || false;
+                        updateAdaptiveMode();
+
+                        if (config.client?.skinMode) {
+                            document.getElementById('skinMode').value = config.client.skinMode;
+                            updateSkinMode();
+                        }
+                        if (config.client?.skinUrl) {
+                            document.getElementById('skinUrl').value = config.client.skinUrl;
+                        }
+                        if (config.client?.yggdrasilServer) {
+                            const serverSelect = document.getElementById('skinServer');
+                            if ([...serverSelect.options].some(option => option.value === config.client.yggdrasilServer)) {
+                                serverSelect.value = config.client.yggdrasilServer;
+                            } else {
+                                serverSelect.value = 'custom';
+                                document.getElementById('customYggdrasilUrl').value = config.client.yggdrasilServer;
+                            }
+                            updateYggdrasilUrl();
+                        }
+                        if (config.client?.yggdrasilUsername) {
+                            document.getElementById('yggdrasilUsername').value = config.client.yggdrasilUsername;
+                        }
+                        if (config.client?.littleskinUsername) {
+                            document.getElementById('littleskinUsername').value = config.client.littleskinUsername;
+                        }
+                        if (config.client?.littleskinPassword) {
+                            document.getElementById('littleskinPassword').value = config.client.littleskinPassword;
+                        }
+                        if (config.client?.enableLittleskinAuth !== undefined) {
+                            document.getElementById('enableLittleskinAuth').checked = config.client.enableLittleskinAuth;
+                            updateLittleskinAuth();
+                        }
+                        if (config.client?.enableYggdrasilAuth !== undefined) {
+                            document.getElementById('enableYggdrasilAuth').checked = config.client.enableYggdrasilAuth;
+                            updateYggdrasilAuth();
+                        }
+                        if (config.client?.yggdrasilPassword) {
+                            document.getElementById('yggdrasilPassword').value = config.client.yggdrasilPassword;
+                        }
+                    }
                 })
                 .catch(error => console.error('加载配置失败:', error));
-        }
-
-        function updateUI() {
-            const host = config.client?.host || '';
-            const port = config.client?.port || '';
-            const serverAddress = host && port ? `${host}:${port}` : (host || '');
-
-            document.getElementById('server-address').value = serverAddress;
-            document.getElementById('username').value = config.client?.username || '';
-            document.getElementById('java-version').value = config.client?.version || '1.21.1';
-            document.getElementById('auth').value = config.client?.auth || 'offline';
-
-            mods = config.client?.mods || [];
-            updateModList();
-
-            document.getElementById('adaptive-mods').checked = config.client?.adaptiveMods || false;
-            updateAdaptiveMode();
-
-            if (config.client?.skinMode) {
-                document.getElementById('skinMode').value = config.client.skinMode;
-                updateSkinMode();
-            }
-            if (config.client?.skinUrl) {
-                document.getElementById('skinUrl').value = config.client.skinUrl;
-            }
-            if (config.client?.yggdrasilServer) {
-                const serverSelect = document.getElementById('skinServer');
-                if ([...serverSelect.options].some(option => option.value === config.client.yggdrasilServer)) {
-                    serverSelect.value = config.client.yggdrasilServer;
-                } else {
-                    serverSelect.value = 'custom';
-                    document.getElementById('customYggdrasilUrl').value = config.client.yggdrasilServer;
-                }
-                updateYggdrasilUrl();
-            }
-            if (config.client?.yggdrasilUsername) {
-                document.getElementById('yggdrasilUsername').value = config.client.yggdrasilUsername;
-            }
-            if (config.client?.littleskinUsername) {
-                document.getElementById('littleskinUsername').value = config.client.littleskinUsername;
-            }
-            if (config.client?.littleskinPassword) {
-                document.getElementById('littleskinPassword').value = config.client.littleskinPassword;
-            }
-            if (config.client?.enableLittleskinAuth !== undefined) {
-                document.getElementById('enableLittleskinAuth').checked = config.client.enableLittleskinAuth;
-                updateLittleskinAuth();
-            }
-            if (config.client?.enableYggdrasilAuth !== undefined) {
-                document.getElementById('enableYggdrasilAuth').checked = config.client.enableYggdrasilAuth;
-                updateYggdrasilAuth();
-            }
-            if (config.client?.yggdrasilPassword) {
-                document.getElementById('yggdrasilPassword').value = config.client.yggdrasilPassword;
-            }
         }
 
         function updateSkinMode() {
@@ -703,19 +712,16 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
             }
 
             const newConfig = {
-                ...config,
-                client: {
-                    ...config.client,
-                    host: host,
-                    port: port,
-                    username: username,
-                    version: document.getElementById('java-version').value,
-                    auth: 'offline',
-                    adaptiveMods: document.getElementById('adaptive-mods').checked,
-                    mods: mods.filter(mod => mod.trim() !== ''),
-                    skinMode: document.getElementById('skinMode').value,
-                    skinUrl: document.getElementById('skinUrl').value || null
-                }
+                host: host,
+                port: port,
+                username: username,
+                version: document.getElementById('java-version').value,
+                auth: document.getElementById('auth').value,
+                microsoftEmail: document.getElementById('microsoft-email').value,
+                adaptiveMods: document.getElementById('adaptive-mods').checked,
+                mods: mods.filter(mod => mod.trim() !== ''),
+                skinMode: document.getElementById('skinMode').value,
+                skinUrl: document.getElementById('skinUrl').value || null
             };
 
             const skinMode = document.getElementById('skinMode').value;
@@ -727,11 +733,11 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                 const enableYggdrasilAuth = document.getElementById('enableYggdrasilAuth').checked;
                 const yggdrasilPassword = document.getElementById('yggdrasilPassword').value;
 
-                newConfig.client.yggdrasilServer = skinServer === 'custom' ? customUrl : skinServer;
-                newConfig.client.yggdrasilUsername = yggdrasilUsername;
-                newConfig.client.enableYggdrasilAuth = enableYggdrasilAuth;
+                newConfig.yggdrasilServer = skinServer === 'custom' ? customUrl : skinServer;
+                newConfig.yggdrasilUsername = yggdrasilUsername;
+                newConfig.enableYggdrasilAuth = enableYggdrasilAuth;
                 if (enableYggdrasilAuth && yggdrasilPassword) {
-                    newConfig.client.yggdrasilPassword = yggdrasilPassword;
+                    newConfig.yggdrasilPassword = yggdrasilPassword;
                 }
             }
 
@@ -740,25 +746,27 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                 const enableLittleskinAuth = document.getElementById('enableLittleskinAuth').checked;
                 const littleskinPassword = document.getElementById('littleskinPassword').value;
 
-                newConfig.client.littleskinUsername = littleskinUsername;
-                newConfig.client.enableLittleskinAuth = enableLittleskinAuth;
+                newConfig.littleskinUsername = littleskinUsername;
+                newConfig.enableLittleskinAuth = enableLittleskinAuth;
                 if (enableLittleskinAuth && littleskinPassword) {
-                    newConfig.client.littleskinPassword = littleskinPassword;
+                    newConfig.littleskinPassword = littleskinPassword;
                 }
             }
-
+            
             fetch('/api/config', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(newConfig)
+                body: JSON.stringify({ client: newConfig })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     alert('配置保存成功！');
                     config = newConfig;
+                    // 重新加载配置以确保UI同步
+                    loadConfig();
                 } else {
                     alert('保存失败: ' + data.message);
                 }
@@ -872,12 +880,12 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                 })
                 .catch(error => {
                     statusCheckErrors++;
-                    
+
                     // 只在前几次错误时显示日志
                     if (statusCheckErrors <= maxStatusErrors) {
                         console.error(`获取状态失败 (${statusCheckErrors}/${maxStatusErrors}):`, error);
                     }
-                    
+
                     // 如果错误次数过多，显示离线状态
                     if (statusCheckErrors > maxStatusErrors) {
                         const statusEl = document.getElementById('status');
@@ -990,7 +998,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                         reconnectTimeout = null;
                     }
                     console.log('✅ 消息流连接成功');
-                    
+
                     // 连接稳定后，在消息区域显示连接状态
                     setTimeout(() => {
                         if (connectionStable) {
@@ -1002,29 +1010,29 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                 eventSource.onmessage = function(event) {
                     lastMessageTime = Date.now();
                     connectionStable = true;
-                    
+
                     try {
                         console.log('📥 收到原始SSE数据:', event.data);
                         const data = JSON.parse(event.data);
                         console.log('📋 解析后的数据:', data);
-                        
+
                         // 处理心跳消息
                         if (data && data.type === 'heartbeat') {
                             // 心跳消息不需要显示，但可以确认连接活跃
                             console.log('💓 心跳正常');
                             return;
                         }
-                        
+
                         // 处理连接确认消息
                         if (data && data.type === 'connected') {
                             console.log('✅ SSE连接已建立');
                             return;
                         }
-                        
+
                         // 验证聊天和系统消息
                         if (data && data.type && data.message !== undefined && data.message !== null && data.message !== '') {
                             console.log(`🎯 准备显示消息 [${data.type}]:`, data.message);
-                            
+
                             // 立即显示消息，并添加时间戳验证
                             try {
                                 addServerMessage(data.message, data.timestamp, data.type);
@@ -1046,7 +1054,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                     } catch (error) {
                         // 显示所有解析错误用于调试
                         console.error('❌ 解析消息失败:', error, '原始数据:', event.data);
-                        
+
                         // 尝试将原始数据作为纯文本显示
                         if (event.data && event.data.trim()) {
                             addServerMessage(`原始数据: ${event.data}`, new Date().toISOString(), 'debug');
@@ -1056,15 +1064,15 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
 
                 eventSource.onerror = function(error) {
                     connectionStable = false;
-                    
+
                     // 避免重复的错误日志
                     if (reconnectAttempts < maxReconnectAttempts) {
                         reconnectAttempts++;
-                        
+
                         // 只在前几次尝试时显示错误
                         if (reconnectAttempts <= 3) {
                             console.error(`💥 消息流连接错误 (${reconnectAttempts}/${maxReconnectAttempts}):`, error);
-                            
+
                             // 在界面显示连接问题
                             if (reconnectAttempts === 1) {
                                 addServerMessage('⚠️ 消息流连接中断，正在尝试重连...', new Date().toISOString(), 'system');
@@ -1078,7 +1086,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
 
                         // 更快速的重连策略（减少延迟）
                         const delay = Math.min(500 * reconnectAttempts, 3000);
-                        
+
                         reconnectTimeout = setTimeout(() => {
                             if (document.getElementById('status').className === 'status running') {
                                 console.log(`🔄 尝试重连 (${reconnectAttempts}/${maxReconnectAttempts})...`);
@@ -1122,13 +1130,13 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
 
             const time = new Date(timestamp).toLocaleTimeString();
             const messageDiv = document.createElement('div');
-            
+
             // 根据消息类型设置不同的样式和图标
             let icon = '💬';
             let bgColor = '#f8f9fa';
             let borderColor = '#ddd';
             let textColor = '#333';
-            
+
             switch(messageType) {
                 case 'chat':
                     icon = '💬';
@@ -1158,7 +1166,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                     icon = '💬';
                     break;
             }
-            
+
             messageDiv.style.cssText = `margin-bottom: 3px; padding: 8px; border-radius: 4px; border-left: 3px solid ${borderColor}; background-color: ${bgColor}; color: ${textColor};`;
             messageDiv.innerHTML = `
                 <div style="font-size: 11px; color: #666; margin-bottom: 2px;">[${time}] ${messageType || 'unknown'}</div>
@@ -1354,6 +1362,16 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
 
             document.getElementById('username').addEventListener('input', function() {
                 validateUsername(this);
+            });
+
+            // 添加认证方式切换事件监听器
+            document.getElementById('auth').addEventListener('change', function() {
+                const microsoftSection = document.getElementById('microsoft-auth-section');
+                if (this.value === 'microsoft') {
+                    microsoftSection.style.display = 'block';
+                } else {
+                    microsoftSection.style.display = 'none';
+                }
             });
         });
     </script>

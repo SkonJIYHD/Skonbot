@@ -182,7 +182,7 @@ async function createBot() {
         port: parseInt(config.port) || 25565,
         username: config.username || 'aterbot',
         version: config.version || '1.21.1',
-        auth: 'offline', // 强制使用离线模式避免认证问题
+        auth: config.auth || 'offline', // 使用配置的认证方式，默认离线
         hideErrors: true, // 隐藏Fabric相关的协议错误
         // 增加协议兼容性设置
         checkTimeoutInterval: 30000, // 30秒超时检查
@@ -198,6 +198,25 @@ async function createBot() {
         fatalErrors: ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT'],
         errorTimeout: 30000
     };
+
+    // 正版Microsoft登录支持
+    if (config.auth === 'microsoft') {
+        console.log('🔐 使用Microsoft正版登录');
+        botConfig.auth = 'microsoft';
+        
+        // 如果配置了Microsoft认证信息
+        if (config.microsoftEmail) {
+            console.log('📧 Microsoft账户:', config.microsoftEmail);
+            // mineflayer会自动处理Microsoft认证流程
+        } else {
+            console.log('⚠️ 未配置Microsoft账户，将使用交互式登录');
+        }
+        
+        // 设置Microsoft认证的额外选项
+        botConfig.profileKeysSignatureValidation = true;
+        botConfig.checkTimeoutInterval = 60000; // 增加超时时间给认证流程
+        console.log('✅ Microsoft正版认证已配置');
+    }
 
     // 通用Yggdrasil皮肤站支持
     if (config.skinMode === 'yggdrasil') {
@@ -238,23 +257,18 @@ async function createBot() {
                         uuid: authData.selectedProfile.id 
                     });
                     
-                    // 配置mineflayer使用Yggdrasil认证
-                    botConfig.auth = 'microsoft'; // 使用microsoft认证模式来兼容Yggdrasil
+                    // 配置mineflayer使用第三方Yggdrasil认证
+                    botConfig.auth = 'offline'; // 暂时使用离线模式，因为mineflayer对第三方皮肤站支持有限
                     botConfig.username = authData.selectedProfile.name;
-                    botConfig.accessToken = authData.accessToken;
-                    botConfig.clientToken = authData.clientToken;
-                    botConfig.session = {
+                    // 保存认证信息供将来扩展使用
+                    botConfig._yggdrasilAuth = {
                         accessToken: authData.accessToken,
                         clientToken: authData.clientToken,
-                        selectedProfile: {
-                            id: authData.selectedProfile.id,
-                            name: authData.selectedProfile.name
-                        }
+                        selectedProfile: authData.selectedProfile,
+                        sessionServer: config.yggdrasilServer + '/sessionserver',
+                        authServer: config.yggdrasilServer + '/authserver'
                     };
-                    // 设置自定义认证服务器
-                    botConfig.sessionServer = config.yggdrasilServer + '/sessionserver';
-                    botConfig.authServer = config.yggdrasilServer + '/authserver';
-                    console.log('✅ 已配置Yggdrasil认证到mineflayer');
+                    console.log('✅ 已配置第三方Yggdrasil认证信息（离线模式）');
                 } else {
                     console.log('⚠️ Yggdrasil认证信息无效，回退到离线模式');
                 }
