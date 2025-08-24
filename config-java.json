@@ -1,19 +1,38 @@
 {
     "client": {
-        "host": "2661028830@qq.com",
-        "port": "25565",
+        "host": "mc.lmxhl.top",
+        "port": "30043",
         "username": "SkonJiYHD",
         "version": "1.21.1",
         "auth": "offline",
-        "microsoftEmail": "",
-        "adaptiveMods": true,
+        "mode": "java",
         "mods": [],
+        "adaptiveMods": true,
         "skinMode": "yggdrasil",
         "skinUrl": null,
+        "littleskinUsername": "BotSkon",
+        "enableLittleskinAuth": true,
+        "littleskinPassword": "%1145141919810%",
         "yggdrasilServer": "https://skin.lmxhl.top/api/yggdrasil",
         "yggdrasilUsername": "SkonJiYHD",
-        "yggdrasilEmail": "2661028830@qq.com",
         "enableYggdrasilAuth": true,
         "yggdrasilPassword": "MCDReforged"
+    },
+    "! DO NOT EDIT BELOW !": "ONLY IF YOU KNOW WHAT YOU ARE DOING",
+    "logLevel": [
+        "error",
+        "log",
+        "debug"
+    ],
+    "action": {
+        "commands": [
+            "forward",
+            "back",
+            "left",
+            "right",
+            "jump"
+        ],
+        "holdDuration": 5000,
+        "retryDelay": 30000
     }
 }
