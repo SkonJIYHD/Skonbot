@@ -338,10 +338,12 @@ async function createBot() {
             }
         }
 
-        // 获取皮肤信息
-        if (yggdrasilUsername) {
+        // 获取皮肤信息 - 使用配置中的皮肤用户名，不是认证邮箱
+        const skinUsername = config.skinYggdrasilUsername || config.yggdrasilUsername;
+        if (skinUsername) {
             try {
-                const skinResult = await yggdrasilAPI.getUserSkin(yggdrasilUsername);
+                console.log(`🎨 正在获取用户 "${skinUsername}" 的皮肤信息...`);
+                const skinResult = await yggdrasilAPI.getUserSkin(skinUsername);
                 if (skinResult.success && skinResult.skinUrl) {
                     console.log('✅ 成功获取Yggdrasil皮肤:', skinResult.skinUrl);
                     skinUrl = skinResult.skinUrl;
@@ -470,16 +472,16 @@ async function createBot() {
     if (config.skinMode === 'yggdrasil') {
         console.log('🌟 使用Yggdrasil皮肤站模式');
         console.log('  皮肤站服务器:', config.yggdrasilServer);
-        console.log('  皮肤站用户名:', config.yggdrasilUsername);
+        console.log('  皮肤角色名:', config.skinYggdrasilUsername);
 
-        if (config.yggdrasilServer && config.yggdrasilUsername) {
+        if (config.yggdrasilServer && config.skinYggdrasilUsername) {
             // 设置Yggdrasil认证服务器
-            botConfig.sessionServer = config.yggdrasilServer;
+            botConfig.sessionServer = config.yggdrasilServer + '/sessionserver';
             botConfig.profileKeysSignatureValidation = false; // 兼容第三方皮肤站
 
-            // 尝试从皮肤站获取皮肤信息
+            // 尝试从皮肤站获取皮肤信息 - 使用角色名而不是邮箱
             console.log('🔍 正在从皮肤站获取皮肤信息...');
-            fetchYggdrasilProfile(config.yggdrasilServer, config.yggdrasilUsername)
+            fetchYggdrasilProfile(config.yggdrasilServer, config.skinYggdrasilUsername)
                 .then(profile => {
                     if (profile) {
                         console.log('✅ 成功获取皮肤站配置文件:', profile.name);
@@ -800,20 +802,37 @@ async function createBot() {
     async function fetchYggdrasilProfile(yggdrasilServer, username) {
         try {
             // 标准Yggdrasil API流程
-            // 1. 获取用户UUID
-            const profileUrl = `${yggdrasilServer}/sessionserver/session/minecraft/profile`;
-            const usernameUrl = `${yggdrasilServer}/api/profiles/minecraft`;
+            console.log('🔍 查询角色UUID:', username);
 
-            console.log('🔍 查询用户UUID:', username);
-
-            // 一些皮肤站使用不同的API结构，尝试多种方式
+            // 先尝试通过角色名获取UUID（正确的方式）
             const possibleUrls = [
+                // 标准的Yggdrasil API - 通过角色名查询
+                `${yggdrasilServer}/api/profiles/minecraft`,
                 `${yggdrasilServer}/sessionserver/session/minecraft/profile/${username}`,
                 `${yggdrasilServer}/api/profiles/minecraft/${username}`,
-                `${yggdrasilServer}/sessionserver/session/minecraft/hasJoined?username=${username}`,
             ];
 
-            for (const url of possibleUrls) {
+            // 尝试POST方式查询（标准Yggdrasil方式）
+            try {
+                const fetch = require('node-fetch');
+                const response = await fetch(`${yggdrasilServer}/api/profiles/minecraft`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify([username])
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        console.log('✅ 成功从皮肤站获取角色配置文件');
+                        return data[0];
+                    }
+                }
+            } catch (e) {
+                console.log('⚠️ POST查询失败，尝试GET方式');
+            }
+
+            // 尝试GET方式
+            for (const url of possibleUrls.slice(1)) {
                 try {
                     const fetch = require('node-fetch');
                     const response = await fetch(url);
