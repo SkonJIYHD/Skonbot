@@ -4,11 +4,28 @@
         "port": "30043",
         "username": "SkonJiYHD",
         "version": "1.21.1",
-        "auth": "offline",
+        "auth": "yggdrasil",
         "microsoftEmail": "",
         "adaptiveMods": true,
         "mods": [],
-        "skinMode": "default",
-        "skinUrl": null
+        "skinMode": "yggdrasil",
+        "skinUrl": null,
+        "mode": "java",
+        "yggdrasil": {
+            "url": "",
+            "username": "",
+            "password": ""
+        },
+        "skin": {
+            "username": ""
+        },
+        "skinYggdrasilUsername": "SkonJiYHD",
+        "yggdrasilServer": "https://skin.lmxhl.top/api/yggdrasil",
+        "yggdrasilUsername": "SkonJiYHD",
+        "yggdrasilPassword": "MCDReforged"
+    },
+    "server": {
+        "ip": "",
+        "port": 25565
     }
 }
