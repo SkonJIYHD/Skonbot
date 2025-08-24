@@ -217,17 +217,41 @@
             </div>
             <div class="form-group">
                 <label>认证方式:</label>
-                <select id="auth">
+                <select id="auth" onchange="updateAuthMode()">
                     <option value="offline">离线模式</option>
                     <option value="microsoft">Microsoft正版登录</option>
+                    <option value="yggdrasil">第三方皮肤站认证 (Yggdrasil)</option>
                 </select>
-                <small style="color: #666;">正版登录需要有效的Minecraft正版账户</small>
+                <small style="color: #666;">正版登录需要有效的Minecraft正版账户，第三方认证支持各种皮肤站</small>
             </div>
 
             <div id="microsoft-auth-section" class="form-group" style="display: none;">
                 <label>Microsoft账户邮箱 (可选):</label>
                 <input type="email" id="microsoft-email" placeholder="your@email.com">
                 <small style="color: #666;">留空将使用交互式登录（需要在控制台中完成认证）</small>
+            </div>
+
+            <div id="yggdrasil-auth-section" class="form-group" style="display: none;">
+                <div class="form-group">
+                    <label>Yggdrasil服务器:</label>
+                    <select id="auth-yggdrasil-server" onchange="updateAuthYggdrasilUrl()">
+                        <option value="https://littleskin.cn/api/yggdrasil">LittleSkin</option>
+                        <option value="https://auth.mc-user.com:233">统一通行证</option>
+                        <option value="custom">自定义服务器</option>
+                    </select>
+                </div>
+                <div id="custom-auth-yggdrasil" class="form-group" style="display: none;">
+                    <label>自定义Yggdrasil URL:</label>
+                    <input type="url" id="auth-custom-yggdrasil-url" placeholder="https://your-server.com/api/yggdrasil">
+                </div>
+                <div class="form-group">
+                    <label>皮肤站用户名:</label>
+                    <input type="text" id="auth-yggdrasil-username" placeholder="皮肤站用户名">
+                </div>
+                <div class="form-group">
+                    <label>皮肤站密码:</label>
+                    <input type="password" id="auth-yggdrasil-password" placeholder="皮肤站密码">
+                </div>
             </div>
         </div>
 
@@ -238,9 +262,11 @@
                 <select id="skinMode" onchange="updateSkinMode()">
                     <option value="default">默认皮肤 (Steve)</option>
                     <option value="url">自定义皮肤URL</option>
-                    <option value="yggdrasil">第三方皮肤站 (Yggdrasil)</option>
-                    <option value="littleskin">LittleSkin皮肤站</option>
+                    <option value="yggdrasil">从认证的皮肤站获取</option>
                 </select>
+                <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                    若选择"从认证的皮肤站获取"，将使用基础配置中的皮肤站账户信息
+                </div>
             </div>
 
             <div id="skin-url-section" class="form-group" style="display: none;">
@@ -248,56 +274,11 @@
                 <input type="url" id="skinUrl" placeholder="https://example.com/skin.png">
             </div>
 
-            <div id="yggdrasil-section" style="display: none;">
-                <div class="form-group">
-                    <label>Yggdrasil服务器:</label>
-                    <select id="skinServer" onchange="updateYggdrasilUrl()">
-                        <option value="https://littleskin.cn/api/yggdrasil">LittleSkin</option>
-                        <option value="https://auth.mc-user.com:233">统一通行证</option>
-                        <option value="custom">自定义服务器</option>
-                    </select>
-                </div>
-                <div id="custom-yggdrasil" class="form-group" style="display: none;">
-                    <label>自定义Yggdrasil URL:</label>
-                    <input type="url" id="customYggdrasilUrl" placeholder="https://your-server.com/api/yggdrasil">
-                    <div style="margin-top: 5px; font-size: 12px; color: #666;">
-                        请输入完整的Yggdrasil API地址，例如: https://skin.example.com/api/yggdrasil
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Yggdrasil用户名:</label>
-                    <input type="text" id="yggdrasilUsername" placeholder="在皮肤站的用户名">
-                </div>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="enableYggdrasilAuth" onchange="updateYggdrasilAuth()" style="margin-right: 8px;"> 
-                        启用Yggdrasil认证
-                    </label>
-                    <div style="margin-top: 5px; padding: 6px; background-color: #e7f3ff; border: 1px solid #b8daff; border-radius: 4px; font-size: 12px; color: #004085;">
-                        <strong>💡 提示:</strong> 启用后可以使用皮肤站账号密码进行认证，获取完整的皮肤和披风信息
-                    </div>
-                </div>
-                <div id="yggdrasil-auth-section" class="form-group" style="display: none;">
-                    <label>认证邮箱:</label>
-                    <input type="email" id="yggdrasilEmail" placeholder="皮肤站注册邮箱">
-                    <label>皮肤站密码:</label>
-                    <input type="password" id="yggdrasilPassword" placeholder="皮肤站账户密码"></div>
-            </div>
-
-            <div id="littleskin-section" style="display: none;">
-                <div class="form-group">
-                    <label>LittleSkin用户名:</label>
-                    <input type="text" id="littleskinUsername" placeholder="LittleSkin用户名">
-                </div>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="enableLittleskinAuth" onchange="updateLittleskinAuth()" style="margin-right: 8px;"> 
-                        启用LittleSkin认证
-                    </label>
-                </div>
-                <div id="littleskin-auth-section" class="form-group" style="display: none;">
-                    <label>LittleSkin密码:</label>
-                    <input type="password" id="littleskinPassword" placeholder="LittleSkin账户密码">
+            <div id="skin-yggdrasil-section" class="form-group" style="display: none;">
+                <label>皮肤站用户名:</label>
+                <input type="text" id="skinYggdrasilUsername" placeholder="皮肤站中的用户名（可能与登录用户名不同）">
+                <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                    如果留空，将使用基础配置中的皮肤站用户名
                 </div>
             </div>
         </div>
@@ -519,87 +500,68 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                         document.getElementById('auth').value = config.auth || 'offline';
                         document.getElementById('microsoft-email').value = config.microsoftEmail || '';
 
-                        // 显示/隐藏Microsoft认证选项
-                        const microsoftSection = document.getElementById('microsoft-auth-section');
-                        if (config.auth === 'microsoft') {
-                            microsoftSection.style.display = 'block';
-                        } else {
-                            microsoftSection.style.display = 'none';
-                        }
-
-                        mods = config.client?.mods || [];
-                        updateModList();
-
-                        document.getElementById('adaptive-mods').checked = config.client?.adaptiveMods || false;
-                        updateAdaptiveMode();
-
-                        if (config.client?.skinMode) {
-                            document.getElementById('skinMode').value = config.client.skinMode;
-                            updateSkinMode();
-                        }
-                        if (config.client?.skinUrl) {
-                            document.getElementById('skinUrl').value = config.client.skinUrl;
-                        }
-                        if (config.client?.yggdrasilServer) {
-                            const serverSelect = document.getElementById('skinServer');
-                            if ([...serverSelect.options].some(option => option.value === config.client.yggdrasilServer)) {
-                                serverSelect.value = config.client.yggdrasilServer;
+                        // Yggdrasil认证配置
+                        if (config.yggdrasilServer) {
+                            const serverSelect = document.getElementById('auth-yggdrasil-server');
+                            if ([...serverSelect.options].some(option => option.value === config.yggdrasilServer)) {
+                                serverSelect.value = config.yggdrasilServer;
                             } else {
                                 serverSelect.value = 'custom';
-                                document.getElementById('customYggdrasilUrl').value = config.client.yggdrasilServer;
+                                document.getElementById('auth-custom-yggdrasil-url').value = config.yggdrasilServer;
                             }
-                            updateYggdrasilUrl();
+                            updateAuthYggdrasilUrl();
                         }
-                        if (config.client?.yggdrasilUsername) {
-                            document.getElementById('yggdrasilUsername').value = config.client.yggdrasilUsername;
+                        if (config.yggdrasilUsername) {
+                            document.getElementById('auth-yggdrasil-username').value = config.yggdrasilUsername;
                         }
-                        if (config.client?.yggdrasilEmail) {
-                            document.getElementById('yggdrasilEmail').value = config.client.yggdrasilEmail;
+                        if (config.yggdrasilPassword) {
+                            document.getElementById('auth-yggdrasil-password').value = config.yggdrasilPassword;
                         }
-                        if (config.client?.littleskinUsername) {
-                            document.getElementById('littleskinUsername').value = config.client.littleskinUsername;
+
+                        // 更新认证模式显示
+                        updateAuthMode();
+
+                        // mod配置
+                        mods = config.mods || [];
+                        updateModList();
+
+                        document.getElementById('adaptive-mods').checked = config.adaptiveMods !== undefined ? config.adaptiveMods : false;
+                        updateAdaptiveMode();
+
+                        // 皮肤配置
+                        if (config.skinMode) {
+                            document.getElementById('skinMode').value = config.skinMode;
                         }
-                        if (config.client?.littleskinPassword) {
-                            document.getElementById('littleskinPassword').value = config.client.littleskinPassword;
+                        if (config.skinUrl) {
+                            document.getElementById('skinUrl').value = config.skinUrl;
                         }
-                        if (config.client?.enableLittleskinAuth !== undefined) {
-                            document.getElementById('enableLittleskinAuth').checked = config.client.enableLittleskinAuth;
-                            updateLittleskinAuth();
+                        if (config.skinYggdrasilUsername) {
+                            document.getElementById('skinYggdrasilUsername').value = config.skinYggdrasilUsername;
                         }
-                        if (config.client?.enableYggdrasilAuth !== undefined) {
-                            document.getElementById('enableYggdrasilAuth').checked = config.client.enableYggdrasilAuth;
-                            updateYggdrasilAuth();
-                        }
-                        if (config.client?.yggdrasilPassword) {
-                            document.getElementById('yggdrasilPassword').value = config.client.yggdrasilPassword;
-                        }
+                        updateSkinMode();
                     }
                 })
                 .catch(error => console.error('加载配置失败:', error));
         }
 
-        function updateSkinMode() {
-            const skinMode = document.getElementById('skinMode').value;
-            const skinUrlSection = document.getElementById('skin-url-section');
-            const yggdrasilSection = document.getElementById('yggdrasil-section');
-            const littleskinSection = document.getElementById('littleskin-section');
+        function updateAuthMode() {
+            const authMode = document.getElementById('auth').value;
+            const microsoftSection = document.getElementById('microsoft-auth-section');
+            const yggdrasilSection = document.getElementById('yggdrasil-auth-section');
 
-            skinUrlSection.style.display = 'none';
+            microsoftSection.style.display = 'none';
             yggdrasilSection.style.display = 'none';
-            littleskinSection.style.display = 'none';
 
-            if (skinMode === 'url') {
-                skinUrlSection.style.display = 'block';
-            } else if (skinMode === 'yggdrasil') {
+            if (authMode === 'microsoft') {
+                microsoftSection.style.display = 'block';
+            } else if (authMode === 'yggdrasil') {
                 yggdrasilSection.style.display = 'block';
-            } else if (skinMode === 'littleskin') {
-                littleskinSection.style.display = 'block';
             }
         }
 
-        function updateYggdrasilUrl() {
-            const serverSelect = document.getElementById('skinServer');
-            const customSection = document.getElementById('custom-yggdrasil');
+        function updateAuthYggdrasilUrl() {
+            const serverSelect = document.getElementById('auth-yggdrasil-server');
+            const customSection = document.getElementById('custom-auth-yggdrasil');
 
             if (serverSelect.value === 'custom') {
                 customSection.style.display = 'block';
@@ -608,27 +570,22 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
             }
         }
 
-        function updateLittleskinAuth() {
-            const enableAuth = document.getElementById('enableLittleskinAuth').checked;
-            const authSection = document.getElementById('littleskin-auth-section');
+        function updateSkinMode() {
+            const skinMode = document.getElementById('skinMode').value;
+            const skinUrlSection = document.getElementById('skin-url-section');
+            const skinYggdrasilSection = document.getElementById('skin-yggdrasil-section');
 
-            if (enableAuth) {
-                authSection.style.display = 'block';
-            } else {
-                authSection.style.display = 'none';
+            skinUrlSection.style.display = 'none';
+            skinYggdrasilSection.style.display = 'none';
+
+            if (skinMode === 'url') {
+                skinUrlSection.style.display = 'block';
+            } else if (skinMode === 'yggdrasil') {
+                skinYggdrasilSection.style.display = 'block';
             }
         }
 
-        function updateYggdrasilAuth() {
-            const enableAuth = document.getElementById('enableYggdrasilAuth').checked;
-            const authSection = document.getElementById('yggdrasil-auth-section');
-
-            if (enableAuth) {
-                authSection.style.display = 'block';
-            } else {
-                authSection.style.display = 'none';
-            }
-        }
+        
 
         function updateAdaptiveMode() {
             const isAdaptive = document.getElementById('adaptive-mods').checked;
@@ -712,48 +669,30 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                 port = '25565';
             }
 
+            const authMode = document.getElementById('auth').value;
+
             const newConfig = {
                 host: host,
                 port: port,
                 username: username,
                 version: document.getElementById('java-version').value,
-                auth: document.getElementById('auth').value,
+                auth: authMode,
                 microsoftEmail: document.getElementById('microsoft-email').value,
                 adaptiveMods: document.getElementById('adaptive-mods').checked,
                 mods: mods.filter(mod => mod.trim() !== ''),
                 skinMode: document.getElementById('skinMode').value,
-                skinUrl: document.getElementById('skinUrl').value || null
+                skinUrl: document.getElementById('skinUrl').value || null,
+                skinYggdrasilUsername: document.getElementById('skinYggdrasilUsername').value || null
             };
 
-            const skinMode = document.getElementById('skinMode').value;
-
-            if (skinMode === 'yggdrasil') {
-                const skinServer = document.getElementById('skinServer').value;
-                const customUrl = document.getElementById('customYggdrasilUrl').value;
-                const yggdrasilUsername = document.getElementById('yggdrasilUsername').value;
-                const yggdrasilEmail = document.getElementById('yggdrasilEmail').value;
-                const enableYggdrasilAuth = document.getElementById('enableYggdrasilAuth').checked;
-                const yggdrasilPassword = document.getElementById('yggdrasilPassword').value;
-
-                newConfig.yggdrasilServer = skinServer === 'custom' ? customUrl : skinServer;
-                newConfig.yggdrasilUsername = yggdrasilUsername;
-                newConfig.yggdrasilEmail = yggdrasilEmail;
-                newConfig.enableYggdrasilAuth = enableYggdrasilAuth;
-                if (enableYggdrasilAuth && yggdrasilPassword) {
-                    newConfig.yggdrasilPassword = yggdrasilPassword;
-                }
-            }
-
-            if (skinMode === 'littleskin') {
-                const littleskinUsername = document.getElementById('littleskinUsername').value;
-                const enableLittleskinAuth = document.getElementById('enableLittleskinAuth').checked;
-                const littleskinPassword = document.getElementById('littleskinPassword').value;
-
-                newConfig.littleskinUsername = littleskinUsername;
-                newConfig.enableLittleskinAuth = enableLittleskinAuth;
-                if (enableLittleskinAuth && littleskinPassword) {
-                    newConfig.littleskinPassword = littleskinPassword;
-                }
+            // Yggdrasil认证配置
+            if (authMode === 'yggdrasil') {
+                const yggdrasilServer = document.getElementById('auth-yggdrasil-server').value;
+                const customUrl = document.getElementById('auth-custom-yggdrasil-url').value;
+                
+                newConfig.yggdrasilServer = yggdrasilServer === 'custom' ? customUrl : yggdrasilServer;
+                newConfig.yggdrasilUsername = document.getElementById('auth-yggdrasil-username').value;
+                newConfig.yggdrasilPassword = document.getElementById('auth-yggdrasil-password').value;
             }
 
             fetch('/api/config', {
@@ -1368,14 +1307,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
             });
 
             // 添加认证方式切换事件监听器
-            document.getElementById('auth').addEventListener('change', function() {
-                const microsoftSection = document.getElementById('microsoft-auth-section');
-                if (this.value === 'microsoft') {
-                    microsoftSection.style.display = 'block';
-                } else {
-                    microsoftSection.style.display = 'none';
-                }
-            });
+            document.getElementById('auth').addEventListener('change', updateAuthMode);
         });
     </script>
 </body>

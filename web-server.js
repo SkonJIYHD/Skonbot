@@ -68,7 +68,7 @@ let botLifecycle = {
     connectionCount: 0,
     hasShownInitialConnection: false,
     lastDeathTime: null,
-    
+
     // 检查是否为死亡后的重生连接
     isRespawnConnection() {
         const now = Date.now();
@@ -82,16 +82,16 @@ let botLifecycle = {
         }
         return false;
     },
-    
+
     // 标记机器人连接
     markConnected() {
         const isRespawn = this.isRespawnConnection();
         const isFirstConnection = !this.hasShownInitialConnection;
-        
+
         this.isConnected = true;
         this.lastConnectTime = Date.now();
         this.connectionCount++;
-        
+
         // 只在第一次连接时发送通知
         if (isFirstConnection) {
             this.hasShownInitialConnection = true;
@@ -105,14 +105,14 @@ let botLifecycle = {
             return true; // 真正的重连发送通知
         }
     },
-    
+
     // 标记机器人死亡（区别于断开连接）
     markDeath() {
         this.lastDeathTime = Date.now();
         console.log('💀 机器人死亡，记录死亡时间（不视为断开连接）');
         // 注意：死亡时不改变 isConnected 状态，因为机器人还在服务器中
     },
-    
+
     // 标记机器人真正断开连接
     markDisconnected(reason = '未知') {
         if (this.isConnected) {
@@ -122,7 +122,7 @@ let botLifecycle = {
         }
         return false;
     },
-    
+
     // 重置状态（仅在启动时使用）
     reset() {
         this.isConnected = false;
@@ -240,26 +240,85 @@ function getConfigFile(mode) {
 // 读取配置文件
 function loadConfig(mode = null) {
     try {
+        let configData;
+        let configPath;
+
         if (mode) {
-            // 如果指定了模式，直接读取对应配置
-            const configFile = getConfigFile(mode);
-            const configData = fs.readFileSync(configFile, 'utf8');
-            currentConfig = JSON.parse(configData);
-            console.log(`加载${mode}模式配置:`, currentConfig.client);
+            configPath = getConfigFile(mode);
+        } else {
+            // 默认读取Java配置，如果不存在则尝试读取Bedrock配置
+            configPath = 'config-java.json';
+            if (!fs.existsSync(configPath)) {
+                configPath = 'config-bedrock.json';
+            }
+        }
+
+        if (!fs.existsSync(configPath)) {
+            console.warn(`配置文件 ${configPath} 不存在，将使用默认配置。`);
+            // 如果配置文件不存在，返回一个空结构或默认值
+            currentConfig = {
+                client: {
+                    mode: mode || 'java',
+                    mods: [],
+                    adaptiveMods: true,
+                    yggdrasil: {
+                        url: '',
+                        username: '',
+                        password: ''
+                    },
+                    skin: {
+                        username: ''
+                    }
+                },
+                server: {
+                    ip: '',
+                    port: 25565
+                }
+            };
+            // 创建一个默认配置文件
+            try {
+                fs.writeFileSync(getConfigFile(currentConfig.client.mode), JSON.stringify(currentConfig, null, 4));
+                console.log(`已创建默认配置文件: ${getConfigFile(currentConfig.client.mode)}`);
+            } catch (writeError) {
+                console.error(`创建默认配置文件失败: ${writeError.message}`);
+            }
             return currentConfig;
         }
 
-        // 如果没有指定模式，返回当前配置或默认Java配置
-        if (currentConfig) {
-            return currentConfig;
+        configData = fs.readFileSync(configPath, 'utf8');
+        currentConfig = JSON.parse(configData);
+        console.log(`加载配置 (${configPath}):`, currentConfig.client);
+
+        // 确保所有配置项都存在，并设置默认值
+        if (!currentConfig.client) currentConfig.client = {};
+        if (!currentConfig.client.mode) currentConfig.client.mode = 'java';
+        if (!currentConfig.client.mods) currentConfig.client.mods = [];
+        if (currentConfig.client.adaptiveMods === undefined) currentConfig.client.adaptiveMods = true;
+        if (!currentConfig.client.yggdrasil) currentConfig.client.yggdrasil = { url: '', username: '', password: '' };
+        if (!currentConfig.client.skin) currentConfig.client.skin = { username: '' };
+        if (!currentConfig.server) currentConfig.server = { ip: '', port: 25565 };
+
+        // 如果读取的是java配置但模式是bedrock，则尝试加载bedrock配置
+        if (mode === 'bedrock' && configPath.includes('config-java.json')) {
+            try {
+                const bedrockConfigPath = getConfigFile('bedrock');
+                if (fs.existsSync(bedrockConfigPath)) {
+                    const bedrockConfigData = fs.readFileSync(bedrockConfigPath, 'utf8');
+                    currentConfig = JSON.parse(bedrockConfigData);
+                    console.log(`已切换到Bedrock模式加载配置:`, currentConfig.client);
+                } else {
+                    console.warn(`Bedrock配置文件 ${bedrockConfigPath} 不存在，继续使用Java配置。`);
+                }
+            } catch (bedrockError) {
+                console.error(`加载Bedrock配置时出错: ${bedrockError.message}`);
+            }
         }
 
-        // 默认加载Java配置
-        const javaConfigData = fs.readFileSync('config-java.json', 'utf8');
-        currentConfig = JSON.parse(javaConfigData);
         return currentConfig;
+
     } catch (error) {
         console.error('读取配置文件失败:', error);
+        logger.setError(`读取配置文件失败: ${error.message}`);
         return null;
     }
 }
@@ -271,9 +330,11 @@ function saveConfig(config) {
         const configFile = getConfigFile(mode);
         fs.writeFileSync(configFile, JSON.stringify(config, null, 4));
         currentConfig = config;
+        console.log(`配置已保存到 ${configFile}`);
         return true;
     } catch (error) {
         console.error('保存配置文件失败:', error);
+        logger.setError(`保存配置文件失败: ${error.message}`);
         return false;
     }
 }
@@ -285,38 +346,65 @@ function startBot(mode = null) {
     }
 
     const config = loadConfig(mode);
+    if (!config) {
+        console.error('无法加载配置，启动机器人失败。');
+        logger.setError('启动失败：无法加载配置。');
+        return { success: false, message: '启动失败：无法加载配置。' };
+    }
 
     try {
-        console.log('启动Java模式机器人...');
+        console.log(`启动 ${config.client.mode} 模式机器人...`);
 
         // 重置机器人生命周期状态
         botLifecycle.reset();
 
-        // 准备环境变量，避免端口冲突
-        const env = { 
-            ...process.env, 
-            PORT: '3001',  // 使用3001端口避免与控制面板的5000端口冲突
-            WEB_PORT: '3001',  // 确保aterbot的web服务使用3001端口
-            ATERBOT_WEB_PORT: '3001',  // aterbot专用的web端口环境变量
-            NODE_ENV: 'production'  // 设置为生产环境，避免默认端口冲突
+        // 准备环境变量
+        const env = {
+            ...process.env,
+            PORT: '3001', // 使用3001端口避免与控制面板的5000端口冲突
+            WEB_PORT: '3001', // 确保aterbot的web服务使用3001端口
+            ATERBOT_WEB_PORT: '3001', // aterbot专用的web端口环境变量
+            NODE_ENV: 'production' // 设置为生产环境，避免默认端口冲突
         };
 
         // 传递mod配置
-        if (config && config.client && config.client.mods && config.client.mods.length > 0) {
+        if (config.client.mods && config.client.mods.length > 0) {
             env.FAKE_MODS = JSON.stringify(config.client.mods);
             console.log('配置假mod列表:', config.client.mods);
         }
 
         // 传递自适应mod配置
-        if (config && config.client && config.client.adaptiveMods !== undefined) {
+        if (config.client.adaptiveMods !== undefined) {
             env.ADAPTIVE_MODS = config.client.adaptiveMods ? 'true' : 'false';
             console.log('自适应mod模式:', config.client.adaptiveMods);
         }
 
+        // 传递Yggdrasil认证信息
+        if (config.client.yggdrasil && config.client.yggdrasil.url) {
+            env.YGGDRASIL_URL = config.client.yggdrasil.url;
+            console.log('配置Yggdrasil URL:', env.YGGDRASIL_URL);
+            if (config.client.yggdrasil.username) {
+                env.YGGDRASIL_USERNAME = config.client.yggdrasil.username;
+                console.log('配置Yggdrasil Username:', env.YGGDRASIL_USERNAME);
+            }
+            if (config.client.yggdrasil.password) {
+                env.YGGDRASIL_PASSWORD = config.client.yggdrasil.password;
+                console.log('配置Yggdrasil Password: ********');
+            }
+        }
+
+        // 传递皮肤配置中的用户名
+        if (config.client.skin && config.client.skin.username) {
+            env.MINECRAFT_USERNAME = config.client.skin.username;
+            console.log('配置皮肤站用户名:', env.MINECRAFT_USERNAME);
+        }
+
+
         console.log('使用修补版aterbot避免端口冲突');
 
         // 启动修补版的Java机器人 - 禁用web服务
-        botProcess = spawn('node', ['aterbot-no-web.js'], {
+        const botExecutable = config.client.mode === 'bedrock' ? 'aterbot-bedrock.js' : 'aterbot-no-web.js';
+        botProcess = spawn('node', [botExecutable], {
             stdio: 'pipe',
             env: env
         });
@@ -536,7 +624,7 @@ function startBot(mode = null) {
                 // 检查连接成功消息
                 if (output.includes('机器人已成功进入服务器')) {
                     const shouldNotify = botLifecycle.markConnected();
-                    
+
                     if (shouldNotify) {
                         console.log('✅ 发送连接通知');
                         broadcastMessage({
@@ -550,21 +638,21 @@ function startBot(mode = null) {
                 }
 
                 // 检查死亡消息（死亡不等于断开连接）
-                if (output.includes('died') || output.includes('was killed') || 
+                if (output.includes('died') || output.includes('was killed') ||
                     output.includes('死亡') || output.includes('被杀死')) {
                     botLifecycle.markDeath();
                     // 死亡不发送断开通知
                 }
 
                 // 检查真正的断开连接
-                if (output.includes('机器人被踢出') || 
-                    output.includes('kicked') || 
+                if (output.includes('机器人被踢出') ||
+                    output.includes('kicked') ||
                     output.includes('disconnected') ||
                     output.includes('Connection lost') ||
                     output.includes('连接丢失')) {
-                    
+
                     const shouldNotify = botLifecycle.markDisconnected('被踢出或连接丢失');
-                    
+
                     if (shouldNotify) {
                         broadcastMessage({
                             type: 'system',
@@ -582,31 +670,31 @@ function startBot(mode = null) {
             });
 
             botProcess.on('close', (code) => {
-        console.log(`Bot进程退出，退出码: ${code}`);
+                console.log(`Bot进程退出，退出码: ${code}`);
 
-        // 无论退出码是什么，都应该清理进程状态
-        const wasRunning = botProcess !== null;
-        botProcess = null;
-        
-        // 标记机器人断开连接（只有在真正的进程退出时才算断开）
-        let shouldNotifyDisconnect = false;
-        if (wasRunning) {
-            shouldNotifyDisconnect = botLifecycle.markDisconnected('进程退出');
-        }
+                // 无论退出码是什么，都应该清理进程状态
+                const wasRunning = botProcess !== null;
+                botProcess = null;
 
-        // 如果不是手动停止，且应该通知断开，则发送断开消息
-        if (wasRunning && shouldNotifyDisconnect) {
-            if (code !== 0 && code !== null) {
-                logger.setError(`机器人异常退出，退出码: ${code}`);
-            } else {
-                // 即使退出码是0，如果是意外断开也需要记录
-                const currentTime = Date.now();
-                if (!global.lastManualStop || currentTime - global.lastManualStop > 5000) {
-                    logger.setError(`机器人意外断开连接（可能被踢出或网络问题）`);
+                // 标记机器人断开连接（只有在真正的进程退出时才算断开）
+                let shouldNotifyDisconnect = false;
+                if (wasRunning) {
+                    shouldNotifyDisconnect = botLifecycle.markDisconnected('进程退出');
                 }
-            }
-        }
-    });
+
+                // 如果不是手动停止，且应该通知断开，则发送断开消息
+                if (wasRunning && shouldNotifyDisconnect) {
+                    if (code !== 0 && code !== null) {
+                        logger.setError(`机器人异常退出，退出码: ${code}`);
+                    } else {
+                        // 即使退出码是0，如果是意外断开也需要记录
+                        const currentTime = Date.now();
+                        if (!global.lastManualStop || currentTime - global.lastManualStop > 5000) {
+                            logger.setError(`机器人意外断开连接（可能被踢出或网络问题）`);
+                        }
+                    }
+                }
+            });
 
             botProcess.on('error', (error) => {
                 console.error('Bot进程启动失败:', error);
@@ -628,10 +716,10 @@ function stopBot() {
     if (botProcess) {
         // 记录手动停止的时间
         global.lastManualStop = Date.now();
-        
+
         // 手动停止时标记断开，但不发送通知（因为是主动停止）
         botLifecycle.markDisconnected('手动停止');
-        
+
         botProcess.kill();
         botProcess = null;
     }
@@ -676,24 +764,67 @@ const server = http.createServer((req, res) => {
         req.on('end', () => {
             try {
                 const newConfig = JSON.parse(body);
-                if (saveConfig(newConfig)) {
-                    res.writeHead(200, {'Content-Type': 'application/json'});
-                    res.end(JSON.stringify({success: true, message: '配置已保存'}));
+                // 验证并合并配置，确保关键信息不被丢失
+                const existingConfig = loadConfig();
+                if (!existingConfig) {
+                    // 如果无法加载现有配置，直接使用新配置
+                    if (saveConfig(newConfig)) {
+                        res.writeHead(200, {'Content-Type': 'application/json'});
+                        res.end(JSON.stringify({success: true, message: '配置已保存'}));
+                    } else {
+                        res.writeHead(500, {'Content-Type': 'application/json'});
+                        res.end(JSON.stringify({success: false, message: '保存配置失败'}));
+                    }
                 } else {
-                    res.writeHead(500, {'Content-Type': 'application/json'});
-                    res.end(JSON.stringify({success: false, message: '保存配置失败'}));
+                    // 合并新配置到现有配置，优先使用新配置的值
+                    const mergedConfig = {
+                        ...existingConfig,
+                        client: {
+                            ...existingConfig.client,
+                            ...newConfig.client,
+                            mods: newConfig.client?.mods !== undefined ? newConfig.client.mods : existingConfig.client.mods,
+                            adaptiveMods: newConfig.client?.adaptiveMods !== undefined ? newConfig.client.adaptiveMods : existingConfig.client.adaptiveMods,
+                            yggdrasil: {
+                                ...(existingConfig.client?.yggdrasil || {}),
+                                ...(newConfig.client?.yggdrasil || {})
+                            },
+                            skin: {
+                                ...(existingConfig.client?.skin || {}),
+                                ...(newConfig.client?.skin || {})
+                            }
+                        },
+                        server: {
+                            ...(existingConfig.server || {}),
+                            ...(newConfig.server || {})
+                        }
+                    };
+
+                    // 确保模式正确
+                    if (newConfig.client?.mode) {
+                        mergedConfig.client.mode = newConfig.client.mode;
+                    }
+
+                    if (saveConfig(mergedConfig)) {
+                        res.writeHead(200, {'Content-Type': 'application/json'});
+                        res.end(JSON.stringify({success: true, message: '配置已保存'}));
+                    } else {
+                        res.writeHead(500, {'Content-Type': 'application/json'});
+                        res.end(JSON.stringify({success: false, message: '保存配置失败'}));
+                    }
                 }
             } catch (error) {
+                console.error('配置更新失败:', error);
                 res.writeHead(400, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({success: false, message: '无效的JSON格式'}));
+                res.end(JSON.stringify({success: false, message: `无效的JSON格式或解析错误: ${error.message}`}));
             }
         });
     } else if (req.method === 'POST' && req.url === '/api/bot/start') {
         // 启动机器人
         logger.clearError(); // 清除之前的错误
-        startBot();
+        const mode = req.headers['x-bot-mode']; // 从请求头获取模式，如 'bedrock'
+        const result = startBot(mode);
         res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify({success: true, message: '机器人已启动'}));
+        res.end(JSON.stringify({success: result.success, message: result.message}));
     } else if (req.method === 'POST' && req.url === '/api/bot/stop') {
         // 停止机器人
         stopBot();
@@ -704,6 +835,7 @@ const server = http.createServer((req, res) => {
         try {
             const status = {
                 running: botProcess !== null && botProcess.exitCode === null,
+                pid: botProcess ? botProcess.pid : null,
                 error: logger.getLastError()
             };
             res.writeHead(200, {'Content-Type': 'application/json'});
