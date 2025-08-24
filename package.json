@@ -11,7 +11,7 @@
   "description": "",
   "dependencies": {
     "aterbot": "github:JadeMin/aterbot",
-    "mineflayer": "^4.25.0",
+    "mineflayer": "github:PrismarineJS/mineflayer",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }

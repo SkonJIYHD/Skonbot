@@ -1,17 +1,18 @@
-modules = ["nodejs-20", "nix"]
+modules = ["nodejs-20", "web"]
 hidden = [".config", "package-lock.json"]
+run = "node index.js"
 
 [gitHubImport]
 requiredFiles = [".replit", "replit.nix", "package.json"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-25_05"
 
 [unitTest]
 language = "nodejs"
 
 [deployment]
-run = ["sh", "-c", "node index.mjs"]
+run = ["sh", "-c", "node index.js"]
 deploymentTarget = "cloudrun"
 ignorePorts = false
 
