@@ -277,17 +277,23 @@ async function createBot() {
                     });
 
                     // 配置mineflayer使用第三方Yggdrasil认证
-                    botConfig.auth = 'offline'; // 暂时使用离线模式，因为mineflayer对第三方皮肤站支持有限
+                    botConfig.auth = 'mojang'; // 使用mojang认证模式
                     botConfig.username = authData.selectedProfile.name;
-                    // 保存认证信息供将来扩展使用
-                    botConfig._yggdrasilAuth = {
-                        accessToken: authData.accessToken,
-                        clientToken: authData.clientToken,
-                        selectedProfile: authData.selectedProfile,
-                        sessionServer: yggdrasilUrl + '/sessionserver',
-                        authServer: yggdrasilUrl + '/authserver'
-                    };
-                    console.log('✅ 已配置第三方Yggdrasil认证信息（离线模式）');
+                    botConfig.accessToken = authData.accessToken;
+                    botConfig.clientToken = authData.clientToken;
+                    
+                    // 配置第三方Yggdrasil服务器
+                    botConfig.authServer = yggdrasilUrl + '/authserver';
+                    botConfig.sessionServer = yggdrasilUrl + '/sessionserver';
+                    botConfig.servicesHost = yggdrasilUrl;
+                    
+                    // 禁用签名验证，因为第三方皮肤站可能不支持
+                    botConfig.profileKeysSignatureValidation = false;
+                    
+                    console.log('✅ 已配置第三方Yggdrasil认证信息（正版模式）');
+                    console.log('🔑 AccessToken:', authData.accessToken.substring(0, 20) + '...');
+                    console.log('🎮 用户名:', authData.selectedProfile.name);
+                    console.log('🆔 UUID:', authData.selectedProfile.id);
                 } else {
                     console.log('⚠️ Yggdrasil认证信息无效，回退到离线模式');
                 }
@@ -350,12 +356,21 @@ async function createBot() {
 
                 if (authData && authData.success !== false) {
                     // 配置Yggdrasil认证
-                    botConfig.auth = 'offline'; // 暂时使用离线模式，因为mineflayer可能不直接支持自定义Yggdrasil
+                    botConfig.auth = 'mojang'; // 使用mojang认证模式
                     botConfig.username = config.littleskinUsername;
+                    botConfig.accessToken = authData.accessToken;
+                    botConfig.clientToken = authData.clientToken;
+                    
+                    // LittleSkin Yggdrasil服务器配置
+                    botConfig.authServer = 'https://littleskin.cn/api/yggdrasil/authserver';
+                    botConfig.sessionServer = 'https://littleskin.cn/api/yggdrasil/sessionserver';
+                    botConfig.servicesHost = 'https://littleskin.cn/api/yggdrasil';
+                    botConfig.profileKeysSignatureValidation = false;
 
                     console.log('🎮 LittleSkin认证已配置:', {
                         username: config.littleskinUsername,
-                        uuid: authData.selectedProfile?.id
+                        uuid: authData.selectedProfile?.id,
+                        accessToken: authData.accessToken?.substring(0, 20) + '...'
                     });
 
                     // 获取皮肤信息用于日志
