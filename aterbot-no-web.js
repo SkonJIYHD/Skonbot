@@ -182,7 +182,7 @@ async function createBot() {
         port: parseInt(config.port) || 25565,
         username: config.username || 'aterbot',
         version: config.version || '1.21.1',
-        auth: config.auth || 'offline',
+        auth: 'offline', // 强制使用离线模式避免认证问题
         hideErrors: true, // 隐藏Fabric相关的协议错误
         // 增加协议兼容性设置
         checkTimeoutInterval: 30000, // 30秒超时检查
@@ -190,6 +190,7 @@ async function createBot() {
         // 添加更宽松的协议处理，特别适合Fabric服务器
         protocolVersion: null, // 让mineflayer自动检测
         skipValidation: true, // 跳过一些严格的验证
+        profileKeysSignatureValidation: false, // 禁用配置文件密钥签名验证
         // Fabric mod服务器兼容性设置
         disableModInfo: true, // 禁用mod信息处理
         ignoreParseErrors: true, // 忽略解析错误
@@ -236,6 +237,26 @@ async function createBot() {
                         username: authData.selectedProfile.name, 
                         uuid: authData.selectedProfile.id 
                     });
+                    
+                    // 配置mineflayer使用Yggdrasil认证
+                    botConfig.auth = 'microsoft'; // 使用microsoft认证模式来兼容Yggdrasil
+                    botConfig.username = authData.selectedProfile.name;
+                    botConfig.accessToken = authData.accessToken;
+                    botConfig.clientToken = authData.clientToken;
+                    botConfig.session = {
+                        accessToken: authData.accessToken,
+                        clientToken: authData.clientToken,
+                        selectedProfile: {
+                            id: authData.selectedProfile.id,
+                            name: authData.selectedProfile.name
+                        }
+                    };
+                    // 设置自定义认证服务器
+                    botConfig.sessionServer = config.yggdrasilServer + '/sessionserver';
+                    botConfig.authServer = config.yggdrasilServer + '/authserver';
+                    console.log('✅ 已配置Yggdrasil认证到mineflayer');
+                } else {
+                    console.log('⚠️ Yggdrasil认证信息无效，回退到离线模式');
                 }
             } catch (error) {
                 console.error('❌ Yggdrasil认证过程中发生错误:', error);
