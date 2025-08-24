@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "accessToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZDFkMzU3ZGQ0YmI1ZWQ1YmUxMTc1MGEyZjNiZThiMSIsInlnZ3QiOiJiNDgyYzU3ZTFjZmU0ZTZkOTAzZjQyYTRhNzRhYTViOSIsInNwciI6ImZhY2FjNWNhZjVjZDM3NmI4NDc1NmY1MjEzNTNjOGI2IiwiaXNzIjoiWWdnZHJhc2lsLUF1dGgiLCJleHAiOjE3NTYzMDg1NzQuODQ0MDY2LCJpYXQiOjE3NTYwNDkzNzQuODQ0MDY2fQ.DNkjpOoMlsR31nP46Xvl-Uq0RIetLFALLC2ok6j7bDQ",
+  "clientToken": "aterbot-jfn3xfbs4dh",
+  "selectedProfile": {
+    "id": "facac5caf5cd376b84756f521353c8b6",
+    "name": "SkonJiYHD"
+  },
+  "availableProfiles": [
+    {
+      "id": "facac5caf5cd376b84756f521353c8b6",
+      "name": "SkonJiYHD"
+    }
+  ]
+}

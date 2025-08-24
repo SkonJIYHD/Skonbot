@@ -10,19 +10,12 @@
         "mods": [],
         "skinMode": "yggdrasil",
         "skinUrl": null,
-        "mode": "java",
-        "yggdrasil": {
-            "url": "",
-            "username": "",
-            "password": ""
-        },
-        "skin": {
-            "username": ""
-        },
         "skinYggdrasilUsername": "SkonJiYHD",
         "yggdrasilServer": "https://skin.lmxhl.top/api/yggdrasil",
-        "yggdrasilUsername": "SkonJiYHD",
-        "yggdrasilPassword": "MCDReforged"
+        "yggdrasilUsername": "2661028830@qq.com",
+        "yggdrasilPassword": "MCDReforged",
+        "yggdrasil": {},
+        "skin": {}
     },
     "server": {
         "ip": "",
