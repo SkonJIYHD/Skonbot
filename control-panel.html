@@ -289,9 +289,9 @@
                     <input type="url" id="skin-yggdrasil-server-url" placeholder="https://example.com/api/yggdrasil">
                 </div>
                 <div class="form-group">
-                    <label>游戏内用户名:</label>
-                    <input type="text" id="skin-yggdrasil-username" placeholder="游戏内显示的用户名">
-                    <small style="color: #666;">游戏内显示的用户名（用于获取皮肤，与登录邮箱不同）</small>
+                    <label for="skinYggdrasilUsername">皮肤用户名:</label>
+                    <input type="text" id="skinYggdrasilUsername" placeholder="游戏内显示的用户名" oninput="updateSkinYggdrasilUsername()">
+                    <small>用于获取皮肤的游戏内用户名（不是登录邮箱）</small>
                 </div>
             </div>
         </div>
@@ -555,7 +555,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                             document.getElementById('skinUrl').value = config.skinUrl;
                         }
                         if (config.skinYggdrasilUsername) {
-                            document.getElementById('skin-yggdrasil-username').value = config.skinYggdrasilUsername;
+                            document.getElementById('skinYggdrasilUsername').value = config.skinYggdrasilUsername;
                         }
                         updateSkinMode();
                     }
@@ -604,7 +604,21 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
             }
         }
 
+        // Placeholder for updateConfig and updateSkinYggdrasilUrl to avoid errors if they are called elsewhere
+        function updateConfig() {
+            // This function is intended to update the config object with current UI values,
+            // but its exact implementation depends on how the config object is managed.
+            // For now, it's a placeholder to prevent "updateConfig is not defined" errors.
+            console.log("updateConfig called");
+        }
 
+        function updateSkinYggdrasilUrl() {
+            updateConfig();
+        }
+
+        function updateSkinYggdrasilUsername() {
+            updateConfig();
+        }
 
         function updateAdaptiveMode() {
             const isAdaptive = document.getElementById('adaptive-mods').checked;
@@ -701,7 +715,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                 mods: mods.filter(mod => mod.trim() !== ''),
                 skinMode: document.getElementById('skinMode').value,
                 skinUrl: document.getElementById('skinUrl').value || null,
-                skinYggdrasilUsername: document.getElementById('skin-yggdrasil-username').value || null
+                skinYggdrasilUsername: document.getElementById('skinYggdrasilUsername').value || null
             };
 
             // Yggdrasil认证配置

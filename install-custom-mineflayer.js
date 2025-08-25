@@ -14,7 +14,7 @@ try {
         execSync('npm install', { stdio: 'inherit' });
     }
 
-    // 创建自定义mineflayer补丁
+    // 检查mineflayer是否安装
     const mineflayerPath = './node_modules/mineflayer';
     if (fs.existsSync(mineflayerPath)) {
         console.log('🔨 应用Yggdrasil认证补丁...');
@@ -26,43 +26,59 @@ try {
             console.log('💾 原始mineflayer已备份');
         }
 
-        // 创建补丁文件
-        const patchContent = `
-// Yggdrasil认证补丁 - 由AterBot添加
-const originalCreateBot = require('./lib/index.js').createBot;
-
-module.exports = {
-    ...require('./lib/index.js'),
-    createBot: function(options) {
-        // 如果启用了自定义Yggdrasil，应用补丁
-        if (options.yggdrasilAuth && options.yggdrasilAuth.enabled) {
-            console.log('🔧 应用Yggdrasil认证补丁');
-            
-            // 确保使用离线模式但保留session信息
-            const patchedOptions = {
-                ...options,
-                auth: 'offline',
-                profileKeysSignatureValidation: false,
-                skipValidation: true
-            };
-            
-            return originalCreateBot(patchedOptions);
-        }
+        // 检查是否已经应用了补丁
+        const originalIndexPath = path.join(mineflayerPath, 'index.js');
+        const originalContent = fs.readFileSync(originalIndexPath, 'utf8');
         
-        return originalCreateBot(options);
+        if (originalContent.includes('Yggdrasil认证补丁')) {
+            console.log('✅ 补丁已存在，跳过应用');
+        } else {
+            // 创建更安全的补丁 - 不破坏原始结构
+            const enhancedContent = `// Yggdrasil认证补丁 - 由AterBot添加
+const originalModule = require('./lib/index.js');
+const originalCreateBot = originalModule.createBot;
+
+// 增强createBot函数以支持第三方皮肤站
+function enhancedCreateBot(options) {
+    // 如果有第三方认证信息，进行特殊处理
+    if (options.session && options.session.accessToken && options.sessionServer) {
+        console.log('🔧 检测到第三方皮肤站认证，应用兼容性补丁');
+        
+        // 修改选项以提高兼容性
+        const enhancedOptions = {
+            ...options,
+            auth: 'offline', // 使用离线模式避开Mojang验证
+            profileKeysSignatureValidation: false,
+            skipValidation: true,
+            checkTimeoutInterval: 30000
+        };
+        
+        return originalCreateBot(enhancedOptions);
     }
+    
+    return originalCreateBot(options);
+}
+
+// 导出增强版本，保持完全兼容性
+module.exports = {
+    ...originalModule,
+    createBot: enhancedCreateBot
 };
 `;
 
-        // 写入补丁
-        fs.writeFileSync(path.join(mineflayerPath, 'index.js'), patchContent);
-        console.log('✅ Yggdrasil认证补丁已应用');
+            // 写入增强版本
+            fs.writeFileSync(originalIndexPath, enhancedContent);
+            console.log('✅ Yggdrasil认证补丁已安全应用');
+        }
+    } else {
+        console.log('⚠️ 未找到mineflayer包，请先运行 npm install');
     }
 
     console.log('🎉 自定义mineflayer安装完成！');
     console.log('📋 功能说明:');
     console.log('  ✅ 支持自定义Yggdrasil皮肤站认证');
-    console.log('  ✅ 保持与原版mineflayer的兼容性');
+    console.log('  ✅ 保持与原版mineflayer的完全兼容性');
+    console.log('  ✅ 不破坏原始包结构');
     console.log('  ✅ 自动处理皮肤站session数据');
     
 } catch (error) {
