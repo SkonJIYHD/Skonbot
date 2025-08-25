@@ -32,6 +32,7 @@ const AdaptiveModHandler = require('./adaptive-mod-handler');
 const LittleSkinAPI = require('./littleskin-api.js');
 const YggdrasilAPI = require('./yggdrasil-api.js');
 const CustomMineflayerAdapter = require('./custom-mineflayer-adapter.js'); // 引入自定义适配器
+const YggdrasilMineflayerAdapter = require('./mineflayer-yggdrasil-adapter.js'); // 引入Yggdrasil适配器
 
 // 全局机器人实例
 let bot = null;
