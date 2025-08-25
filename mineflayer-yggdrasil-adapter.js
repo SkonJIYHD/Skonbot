@@ -8,40 +8,59 @@ class YggdrasilMineflayerAdapter {
         // 如果使用了自定义Yggdrasil认证，需要特殊处理
         if (options.yggdrasilAuth && options.yggdrasilAuth.enabled) {
             console.log('🔧 使用自定义Yggdrasil适配器创建机器人');
+            console.log('🔐 Yggdrasil认证详情:', {
+                服务器: options.yggdrasilAuth.serverUrl,
+                用户名: options.session?.selectedProfile?.name,
+                UUID: options.session?.selectedProfile?.id
+            });
             
-            // 创建自定义客户端配置
+            // 尝试使用microsoft认证模式但指向自定义服务器
             const clientOptions = {
                 host: options.host,
                 port: options.port,
-                username: options.username,
+                username: options.session?.selectedProfile?.name || options.username,
                 version: options.version,
-                auth: 'offline', // 强制使用离线模式避开Mojang验证
-                sessionServer: options.sessionServer,
+                auth: 'microsoft', // 尝试使用microsoft认证框架
                 profileKeysSignatureValidation: false,
-                skipValidation: true
+                skipValidation: false, // 不跳过验证，让它尝试验证
+                
+                // 重要：指定自定义认证服务器
+                sessionServer: options.sessionServer || (options.yggdrasilAuth.serverUrl + '/sessionserver'),
+                
+                // 传递认证信息
+                accessToken: options.session?.accessToken,
+                clientToken: options.session?.clientToken,
+                selectedProfile: options.session?.selectedProfile,
+                
+                checkTimeoutInterval: 30000
             };
 
-            // 如果有自定义session数据，添加到配置中
-            if (options.session) {
-                clientOptions.session = options.session;
-            }
+            console.log('🎮 使用认证配置创建机器人:', {
+                认证模式: clientOptions.auth,
+                用户名: clientOptions.username,
+                认证服务器: clientOptions.sessionServer,
+                有Token: !!clientOptions.accessToken
+            });
 
             // 创建机器人实例
             const bot = mineflayer.createBot(clientOptions);
 
-            // 重写皮肤处理逻辑
-            if (options.skinSupport && options.skinData) {
-                bot.once('login', () => {
-                    console.log('🎨 应用自定义皮肤数据');
-                    // 这里可以添加自定义皮肤处理逻辑
-                    if (options.skinData.skinUrl) {
-                        console.log('✅ 皮肤URL:', options.skinData.skinUrl);
-                    }
-                    if (options.skinData.capeUrl) {
-                        console.log('✅ 披风URL:', options.skinData.capeUrl);
-                    }
+            // 监听认证相关事件
+            bot.once('login', () => {
+                console.log('🎉 Yggdrasil认证成功，机器人已登录！');
+                console.log('👤 登录信息:', {
+                    用户名: bot.username,
+                    UUID: bot.uuid
                 });
-            }
+            });
+
+            bot.on('error', (error) => {
+                if (error.message.includes('unverified_username') || 
+                    error.message.includes('authentication')) {
+                    console.log('❌ Yggdrasil认证失败:', error.message);
+                    console.log('🔄 这可能是因为服务器不接受第三方认证');
+                }
+            });
 
             return bot;
         }

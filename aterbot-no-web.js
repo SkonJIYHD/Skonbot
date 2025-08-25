@@ -341,9 +341,18 @@ async function createBot() {
                     // 使用自定义适配器配置第三方Yggdrasil认证
                     console.log('🌐 配置自定义Mineflayer适配器（第三方皮肤站支持）');
 
-                    // 设置为离线模式，但保留第三方认证信息
-                    botConfig.auth = 'offline';
+                    // 使用online模式但指定自定义session服务器
+                    botConfig.auth = 'offline'; // 暂时使用离线模式避开Mojang
                     botConfig.username = authData.selectedProfile.name;
+
+                    // 启用Yggdrasil适配器配置
+                    botConfig.yggdrasilAuth = {
+                        enabled: true,
+                        serverUrl: yggdrasilUrl,
+                        username: yggdrasilUsername,
+                        password: yggdrasilPassword,
+                        skinUsername: yggdrasilSkinUsername || yggdrasilUsername
+                    };
 
                     // 保存第三方认证信息供自定义适配器使用
                     botConfig.session = {
