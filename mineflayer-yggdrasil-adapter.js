@@ -14,32 +14,36 @@ class YggdrasilMineflayerAdapter {
                 UUID: options.session?.selectedProfile?.id
             });
             
-            // 尝试使用microsoft认证模式但指向自定义服务器
+            // 完全使用离线模式，避开所有Microsoft认证
             const clientOptions = {
                 host: options.host,
                 port: options.port,
                 username: options.session?.selectedProfile?.name || options.username,
                 version: options.version,
-                auth: 'microsoft', // 尝试使用microsoft认证框架
+                auth: 'offline', // 强制离线模式，完全避开Microsoft
                 profileKeysSignatureValidation: false,
-                skipValidation: false, // 不跳过验证，让它尝试验证
+                skipValidation: true, // 跳过所有验证
                 
-                // 重要：指定自定义认证服务器
-                sessionServer: options.sessionServer || (options.yggdrasilAuth.serverUrl + '/sessionserver'),
+                // 移除所有Microsoft相关配置
+                // sessionServer: options.sessionServer || (options.yggdrasilAuth.serverUrl + '/sessionserver'),
                 
-                // 传递认证信息
-                accessToken: options.session?.accessToken,
-                clientToken: options.session?.clientToken,
-                selectedProfile: options.session?.selectedProfile,
+                // 不传递任何认证token，避免触发在线验证
+                // accessToken: options.session?.accessToken,
+                // clientToken: options.session?.clientToken,
+                // selectedProfile: options.session?.selectedProfile,
                 
-                checkTimeoutInterval: 30000
+                checkTimeoutInterval: 30000,
+                
+                // 额外的离线模式设置
+                keepAlive: true,
+                hideErrors: true
             };
 
             console.log('🎮 使用认证配置创建机器人:', {
                 认证模式: clientOptions.auth,
                 用户名: clientOptions.username,
-                认证服务器: clientOptions.sessionServer,
-                有Token: !!clientOptions.accessToken
+                皮肤站: options.yggdrasilAuth.serverUrl,
+                离线模式: true
             });
 
             // 创建机器人实例
