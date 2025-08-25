@@ -1,12 +1,106 @@
 
 const mineflayer = require('mineflayer');
 const { Client } = require('minecraft-protocol');
+const MicrosoftAuthHijacker = require('./microsoft-auth-hijacker.js');
 
 // 自定义Yggdrasil适配器，修复皮肤站认证问题
 class YggdrasilMineflayerAdapter {
     static createBot(options) {
         // 如果使用了自定义Yggdrasil认证，需要特殊处理
         if (options.yggdrasilAuth && options.yggdrasilAuth.enabled) {
+            
+            // 🎯 新功能：Microsoft认证劫持模式
+            if (options.hijackMicrosoft || options.auth === 'microsoft') {
+                console.log('🎯 启用Microsoft认证劫持模式');
+                
+                const hijacker = new MicrosoftAuthHijacker(options.yggdrasilAuth.serverUrl);
+                hijacker.setGameUsername(options.session?.selectedProfile?.name || options.username);
+                
+                // 激活劫持
+                hijacker.hijackMicrosoftAuth();
+                
+                // 模拟Microsoft认证但实际使用Yggdrasil
+                const fakeAuth = hijacker.simulateMicrosoftAuthSuccess(
+                    options.session?.selectedProfile?.name || options.username,
+                    options.yggdrasilAuth.username
+                );
+                
+                console.log('🎭 Microsoft认证已被劫持，实际使用Yggdrasil认证');
+                console.log('🔐 劫持认证详情:', {
+                    显示为: 'Microsoft认证',
+                    实际使用: 'Yggdrasil皮肤站',
+                    皮肤站: options.yggdrasilAuth.serverUrl,
+                    用户名: fakeAuth.selectedProfile.name
+                });
+                
+                // 使用劫持的认证信息创建机器人，但保持Microsoft模式的外观
+                const hijackedOptions = {
+                    host: options.host,
+                    port: options.port,
+                    username: fakeAuth.selectedProfile.name,
+                    version: options.version,
+                    auth: 'microsoft', // 保持Microsoft外观
+                    profileKeysSignatureValidation: false,
+                    skipValidation: true,
+                    
+                    // 但实际使用离线模式避开真正的Microsoft验证
+                    _actualAuth: 'offline',
+                    _hijackedAuth: true,
+                    
+                    // 传递劫持的认证信息
+                    accessToken: fakeAuth.accessToken,
+                    clientToken: fakeAuth.clientToken,
+                    selectedProfile: fakeAuth.selectedProfile,
+                    
+                    checkTimeoutInterval: 30000,
+                    keepAlive: true,
+                    hideErrors: true
+                };
+                
+                console.log('🎮 使用劫持认证配置创建机器人:', {
+                    认证模式: '🎭 Microsoft (劫持)',
+                    用户名: hijackedOptions.username,
+                    实际皮肤站: options.yggdrasilAuth.serverUrl,
+                    劫持状态: '✅ 激活'
+                });
+                
+                // 创建机器人时暂时使用离线模式
+                hijackedOptions.auth = 'offline';
+                const bot = mineflayer.createBot(hijackedOptions);
+                
+                // 标记为劫持模式
+                bot._microsoftHijacked = true;
+                bot._originalYggdrasilServer = options.yggdrasilAuth.serverUrl;
+                
+                // 登录成功后恢复原始认证流程
+                bot.once('login', () => {
+                    console.log('🎉 Microsoft认证劫持成功！机器人已登录');
+                    console.log('👤 劫持登录信息:', {
+                        用户名: bot.username,
+                        UUID: bot.uuid,
+                        显示认证: 'Microsoft',
+                        实际认证: 'Yggdrasil',
+                        皮肤站: bot._originalYggdrasilServer
+                    });
+                    
+                    // 可以选择性地恢复原始认证流程
+                    setTimeout(() => {
+                        hijacker.restoreOriginalAuth();
+                        console.log('🔄 认证劫持已清理');
+                    }, 5000);
+                });
+                
+                bot.on('error', (error) => {
+                    if (error.message.includes('authentication') || 
+                        error.message.includes('microsoft')) {
+                        console.log('❌ Microsoft劫持认证失败:', error.message);
+                        console.log('🔧 尝试恢复并重试...');
+                        hijacker.restoreOriginalAuth();
+                    }
+                });
+                
+                return bot;
+            }
             console.log('🔧 使用自定义Yggdrasil适配器创建机器人');
             console.log('🔐 Yggdrasil认证详情:', {
                 服务器: options.yggdrasilAuth.serverUrl,

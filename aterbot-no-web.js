@@ -341,8 +341,16 @@ async function createBot() {
                     // 使用自定义适配器配置第三方Yggdrasil认证
                     console.log('🌐 配置自定义Mineflayer适配器（第三方皮肤站支持）');
 
-                    // 使用online模式但指定自定义session服务器
-                    botConfig.auth = 'offline'; // 暂时使用离线模式避开Mojang
+                    // 🎯 新选项：启用Microsoft认证劫持模式
+                    if (config.enableMicrosoftHijack || config.hijackMicrosoft) {
+                        console.log('🎯 启用Microsoft认证劫持模式');
+                        botConfig.auth = 'microsoft'; // 伪装成Microsoft认证
+                        botConfig.hijackMicrosoft = true; // 劫持标记
+                    } else {
+                        // 使用online模式但指定自定义session服务器
+                        botConfig.auth = 'offline'; // 暂时使用离线模式避开Mojang
+                    }
+                    
                     botConfig.username = authData.selectedProfile.name;
 
                     // 启用Yggdrasil适配器配置
