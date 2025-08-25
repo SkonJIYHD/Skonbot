@@ -10,8 +10,24 @@ try {
     mineflayer = require('mineflayer');
     console.log('⚠️ 使用原始mineflayer（包装器不可用）');
 }
-const { pathfinder, Movements, goals: { GoalNear, GoalFollow } } = require('mineflayer-pathfinder');
-const armorManager = require('mineflayer-armor-manager');
+// 可选依赖 - 如果不存在则跳过
+let pathfinder, Movements, GoalNear, GoalFollow, armorManager;
+try {
+    const pathfinderModule = require('mineflayer-pathfinder');
+    pathfinder = pathfinderModule.pathfinder;
+    Movements = pathfinderModule.Movements;
+    GoalNear = pathfinderModule.goals.GoalNear;
+    GoalFollow = pathfinderModule.goals.GoalFollow;
+} catch (error) {
+    console.log('⚠️ mineflayer-pathfinder 未安装，路径查找功能将被禁用');
+}
+
+try {
+    armorManager = require('mineflayer-armor-manager');
+} catch (error) {
+    console.log('⚠️ mineflayer-armor-manager 未安装，装备管理功能将被禁用');
+}
+
 const AdaptiveModHandler = require('./adaptive-mod-handler');
 const LittleSkinAPI = require('./littleskin-api.js');
 const YggdrasilAPI = require('./yggdrasil-api.js');

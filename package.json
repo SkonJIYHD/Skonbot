@@ -13,6 +13,8 @@
     "aterbot": "github:JadeMin/aterbot",
     "minecraft-protocol": "^1.54.0",
     "mineflayer": "^4.25.0",
+    "mineflayer-armor-manager": "^2.0.1",
+    "mineflayer-pathfinder": "^2.4.5",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
