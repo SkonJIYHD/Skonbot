@@ -1,7 +1,15 @@
 // 修改版的aterbot启动器，创建支持命令执行的机器人
 const fs = require('fs');
 const path = require('path');
-const mineflayer = require('mineflayer');
+// 尝试使用包装器，如果不存在则使用原始mineflayer
+let mineflayer;
+try {
+    mineflayer = require('./mineflayer-wrapper.js');
+    console.log('✅ 使用Yggdrasil包装器');
+} catch (error) {
+    mineflayer = require('mineflayer');
+    console.log('⚠️ 使用原始mineflayer（包装器不可用）');
+}
 const { pathfinder, Movements, goals: { GoalNear, GoalFollow } } = require('mineflayer-pathfinder');
 const armorManager = require('mineflayer-armor-manager');
 const AdaptiveModHandler = require('./adaptive-mod-handler');
