@@ -589,35 +589,43 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
             }
         }
 
+        // 皮肤模式切换处理
         function updateSkinMode() {
             const skinMode = document.getElementById('skinMode').value;
-            const skinUrlSection = document.getElementById('skin-url-section');
-            const skinYggdrasilSection = document.getElementById('yggdrasil-skin-section');
+            const urlSection = document.getElementById('skin-url-section');
+            const littleskinSection = document.getElementById('littleskinSection');
+            const yggdrasilSection = document.getElementById('yggdrasil-skin-section');
 
-            skinUrlSection.style.display = 'none';
-            skinYggdrasilSection.style.display = 'none';
+            // 隐藏所有皮肤配置区域
+            urlSection.style.display = 'none';
+            littleskinSection.style.display = 'none';
+            yggdrasilSection.style.display = 'none';
 
+            // 根据选择显示对应区域
             if (skinMode === 'url') {
-                skinUrlSection.style.display = 'block';
+                urlSection.style.display = 'block';
+            } else if (skinMode === 'littleskin') {
+                littleskinSection.style.display = 'block';
             } else if (skinMode === 'yggdrasil') {
-                skinYggdrasilSection.style.display = 'block';
+                yggdrasilSection.style.display = 'block';
             }
         }
 
-        // Placeholder for updateConfig and updateSkinYggdrasilUrl to avoid errors if they are called elsewhere
-        function updateConfig() {
-            // This function is intended to update the config object with current UI values,
-            // but its exact implementation depends on how the config object is managed.
-            // For now, it's a placeholder to prevent "updateConfig is not defined" errors.
-            console.log("updateConfig called");
-        }
-
+        // 添加缺失的函数
         function updateSkinYggdrasilUrl() {
-            updateConfig();
+            const serverSelect = document.getElementById('skin-yggdrasil-server');
+            const customSection = document.getElementById('custom-skin-yggdrasil-url');
+
+            if (serverSelect.value === 'custom') {
+                customSection.style.display = 'block';
+            } else {
+                customSection.style.display = 'none';
+            }
         }
 
-        function updateSkinYggdrasilUsername() {
-            updateConfig();
+        function updateYggdrasilUrl() {
+            // 这个函数目前为空，可以用于将来扩展
+            console.log('Yggdrasil URL updated');
         }
 
         function updateAdaptiveMode() {

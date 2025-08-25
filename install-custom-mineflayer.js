@@ -101,4 +101,3 @@ module.exports = {
     console.error('❌ 修复失败:', error.message);
     console.log('💡 尝试手动运行: npm install mineflayer --force');
 }
-`;
