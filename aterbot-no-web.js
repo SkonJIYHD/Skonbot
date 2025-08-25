@@ -2,8 +2,12 @@
 const fs = require('fs');
 const path = require('path');
 const mineflayer = require('mineflayer');
+const { pathfinder, Movements, goals: { GoalNear, GoalFollow } } = require('mineflayer-pathfinder');
+const armorManager = require('mineflayer-armor-manager');
+const AdaptiveModHandler = require('./adaptive-mod-handler');
 const LittleSkinAPI = require('./littleskin-api.js');
-const YggdrasilMineflayerAdapter = require('./yggdrasil-mineflayer-adapter'); // 引入自定义适配器
+const YggdrasilAPI = require('./yggdrasil-api.js');
+const CustomMineflayerAdapter = require('./custom-mineflayer-adapter.js'); // 引入自定义适配器
 
 // 全局机器人实例
 let bot = null;
@@ -249,25 +253,19 @@ async function createBot() {
         if (yggdrasilPassword && yggdrasilUsername) {
             console.log('🔐 启用Yggdrasil认证');
             console.log('📧 认证地址:', yggdrasilUrl);
-            console.log('👤 认证用户名:', yggdrasilUsername);
-            console.log('🎨 皮肤用户名:', yggdrasilSkinUsername || yggdrasilUsername);
+            console.log('📧 皮肤站账户（邮箱）:', yggdrasilUsername);
+            console.log('🎮 游戏内用户名:', config.skinYggdrasilUsername || config.username);
 
             try {
-                // 根据Yggdrasil规范，username字段应该是邮箱
-                // 但某些皮肤站可能允许用户名登录，需要尝试两种方式
-                let authUsername = yggdrasilUsername;
+                // yggdrasilUsername是皮肤站登录邮箱
+                // skinYggdrasilUsername是游戏内显示的用户名
+                const authEmail = yggdrasilUsername; // 这个就是邮箱，用于认证
+                const gameUsername = config.skinYggdrasilUsername || config.username; // 这个是游戏内用户名
 
-                // 如果看起来不像邮箱，可能需要添加域名后缀
-                if (!yggdrasilUsername.includes('@')) {
-                    console.log('⚠️ 用户名不是邮箱格式，尝试添加默认域名');
-                    // 尝试常见的域名后缀
-                    const domain = new URL(yggdrasilUrl).hostname;
-                    authUsername = `${yggdrasilUsername}@${domain}`;
-                }
+                const cacheKey = authEmail; // 缓存键使用邮箱
 
-                const cacheKey = yggdrasilUsername; // 缓存键还是用原始用户名
-
-                console.log('📧 认证账户（尝试格式）:', authUsername);
+                console.log('🔐 使用邮箱进行认证:', authEmail);
+                console.log('🎮 期望的游戏内用户名:', gameUsername);
 
                 // 尝试加载已保存的认证信息
                 let authData = yggdrasilAPI.loadAuthData(cacheKey);
@@ -279,64 +277,65 @@ async function createBot() {
                 }
 
                 if (!validationResult.success) {
-                    console.log('🔄 正在进行Yggdrasil认证...');
-                    authData = await yggdrasilAPI.authenticate(authUsername, yggdrasilPassword);
-
-                    // 如果邮箱格式认证失败，尝试原始用户名
-                    if (!authData.success && authUsername !== yggdrasilUsername) {
-                        console.log('⚠️ 邮箱格式认证失败，尝试原始用户名认证');
-                        authData = await yggdrasilAPI.authenticate(yggdrasilUsername, yggdrasilPassword);
-                    }
+                    console.log('🔄 重新进行Yggdrasil认证...');
+                    authData = await yggdrasilAPI.authenticate(authEmail, yggdrasilPassword);
 
                     if (authData.success) {
                         yggdrasilAPI.saveAuthData(authData, cacheKey);
                         console.log('✅ Yggdrasil认证成功！');
                         console.log('📋 认证详情:', {
-                            使用的用户名: authData.user?.username || '未知',
-                            角色名: authData.selectedProfile?.name || '未知',
+                            皮肤站邮箱: authEmail,
+                            认证用户: authData.user?.username || '未知',
+                            游戏角色名: authData.selectedProfile?.name || '未知',
                             UUID: authData.selectedProfile?.id || '未知'
                         });
+
+                        // 验证游戏角色名是否与期望的一致
+                        if (authData.selectedProfile?.name !== gameUsername) {
+                            console.log(`⚠️ 注意：认证获得的角色名 "${authData.selectedProfile?.name}" 与配置的用户名 "${gameUsername}" 不一致`);
+                            console.log('📝 将使用认证服务器返回的角色名');
+                        }
                     } else {
                         console.error('❌ Yggdrasil认证失败:', authData.message);
                         console.error('🔍 认证详情:');
-                        console.error('  尝试的认证地址:', yggdrasilUrl);
-                        console.error('  尝试的用户名:', [authUsername, yggdrasilUsername].filter((v, i, a) => a.indexOf(v) === i));
-                        console.error('  密码长度:', yggdrasilPassword.length);
+                        console.error('  认证地址:', yggdrasilUrl);
+                        console.error('  皮肤站邮箱:', authEmail);
+                        console.error('  密码长度:', yggdrasilPassword?.length || 0);
                     }
                 } else {
                     console.log('✅ 使用已保存的Yggdrasil认证信息');
                 }
 
                 if (authData && authData.success && authData.selectedProfile) {
-                    // 配置第三方Yggdrasil认证 - 完全避开Mojang服务器
-                    // 注意：这里会覆盖botConfig.auth和botConfig.username
-                    botConfig.auth = 'offline'; // 使用离线模式避开Mojang
-                    // 使用皮肤站提供的角色名
+                    console.log('🎮 Yggdrasil认证完成，配置机器人连接参数');
+                    console.log('👤 将使用角色:', {
+                        username: authData.selectedProfile.name,
+                        uuid: authData.selectedProfile.id
+                    });
+
+                    // 使用自定义适配器配置第三方Yggdrasil认证
+                    console.log('🌐 配置自定义Mineflayer适配器（第三方皮肤站支持）');
+
+                    // 设置为离线模式，但保留第三方认证信息
+                    botConfig.auth = 'offline';
                     botConfig.username = authData.selectedProfile.name;
 
-                    // 保存第三方认证信息供服务器端验证使用
+                    // 保存第三方认证信息供自定义适配器使用
                     botConfig.session = {
                         accessToken: authData.accessToken,
                         clientToken: authData.clientToken,
                         selectedProfile: authData.selectedProfile
                     };
 
-                    // 配置第三方皮肤站信息（如果服务器支持）
-                    botConfig.sessionServer = yggdrasilUrl + '/sessionserver';
-                    botConfig.skinServer = yggdrasilUrl + '/sessionserver';
+                    // 配置第三方皮肤站信息
+                    const baseUrl = yggdrasilUrl.replace('/authserver', '').replace('/sessionserver', '');
+                    botConfig.sessionServer = baseUrl + '/sessionserver';
+                    botConfig.skinServer = baseUrl + '/sessionserver';
 
-                    // 关闭所有Mojang相关功能
+                    // 关闭Mojang相关功能
                     botConfig.profileKeysSignatureValidation = false;
                     botConfig.checkTimeoutInterval = 60000;
-                    botConfig.skipValidation = true; // 跳过Mojang验证
-
-                    console.log('🎮 Yggdrasil认证已配置:', {
-                        username: authData.selectedProfile.name,
-                        uuid: authData.selectedProfile.id
-                    });
-                    console.log('🔑 AccessToken:', authData.accessToken.substring(0, 20) + '...');
-                    console.log('🌐 认证服务器:', yggdrasilUrl + '/authserver');
-                    console.log('🌐 会话服务器:', yggdrasilUrl + '/sessionserver');
+                    botConfig.skipValidation = true;
                 } else {
                     console.log('⚠️ Yggdrasil认证信息无效，回退到离线模式');
                     botConfig.auth = 'offline'; // 确保回退到离线模式

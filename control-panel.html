@@ -237,20 +237,21 @@
                     <select id="auth-yggdrasil-server" onchange="updateAuthYggdrasilUrl()">
                         <option value="https://littleskin.cn/api/yggdrasil">LittleSkin</option>
                         <option value="https://auth.mc-user.com:233">统一通行证</option>
-                        <option value="custom">自定义服务器</option>
+                        <option value="custom">自定义</option>
                     </select>
                 </div>
-                <div id="custom-auth-yggdrasil" class="form-group" style="display: none;">
-                    <label>自定义Yggdrasil URL:</label>
-                    <input type="url" id="auth-custom-yggdrasil-url" placeholder="https://your-server.com/api/yggdrasil">
+                <div class="form-group" id="custom-yggdrasil-url" style="display: none;">
+                    <label>自定义Yggdrasil服务器地址:</label>
+                    <input type="url" id="yggdrasil-server" placeholder="https://example.com/api/yggdrasil">
                 </div>
                 <div class="form-group">
-                    <label>皮肤站用户名:</label>
-                    <input type="text" id="auth-yggdrasil-username" placeholder="皮肤站用户名">
+                    <label>皮肤站登录邮箱:</label>
+                    <input type="email" id="yggdrasil-username" placeholder="your@email.com">
+                    <small style="color: #666;">用于登录皮肤站的邮箱地址（不是游戏内用户名）</small>
                 </div>
                 <div class="form-group">
                     <label>皮肤站密码:</label>
-                    <input type="password" id="auth-yggdrasil-password" placeholder="皮肤站密码">
+                    <input type="password" id="yggdrasil-password" placeholder="皮肤站登录密码">
                 </div>
             </div>
         </div>
@@ -274,11 +275,23 @@
                 <input type="url" id="skinUrl" placeholder="https://example.com/skin.png">
             </div>
 
-            <div id="skin-yggdrasil-section" class="form-group" style="display: none;">
-                <label>皮肤显示用户名:</label>
-                <input type="text" id="skinYggdrasilUsername" placeholder="要显示皮肤的游戏内用户名">
-                <div style="margin-top: 5px; font-size: 12px; color: #666;">
-                    将从认证的皮肤站获取此用户的皮肤（与认证邮箱不同）
+            <div id="yggdrasil-skin-section" class="form-group" style="display: none;">
+                <div class="form-group">
+                    <label>Yggdrasil服务器:</label>
+                    <select id="skin-yggdrasil-server" onchange="updateSkinYggdrasilUrl()">
+                        <option value="https://littleskin.cn/api/yggdrasil">LittleSkin</option>
+                        <option value="https://auth.mc-user.com:233">统一通行证</option>
+                        <option value="custom">自定义</option>
+                    </select>
+                </div>
+                <div class="form-group" id="custom-skin-yggdrasil-url" style="display: none;">
+                    <label>自定义Yggdrasil服务器地址:</label>
+                    <input type="url" id="skin-yggdrasil-server-url" placeholder="https://example.com/api/yggdrasil">
+                </div>
+                <div class="form-group">
+                    <label>游戏内用户名:</label>
+                    <input type="text" id="skin-yggdrasil-username" placeholder="游戏内显示的用户名">
+                    <small style="color: #666;">游戏内显示的用户名（用于获取皮肤，与登录邮箱不同）</small>
                 </div>
             </div>
         </div>
@@ -507,15 +520,15 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                                 serverSelect.value = config.yggdrasilServer;
                             } else {
                                 serverSelect.value = 'custom';
-                                document.getElementById('auth-custom-yggdrasil-url').value = config.yggdrasilServer;
+                                document.getElementById('yggdrasil-server').value = config.yggdrasilServer;
                             }
                             updateAuthYggdrasilUrl();
                         }
                         if (config.yggdrasilUsername) {
-                            document.getElementById('auth-yggdrasil-username').value = config.yggdrasilUsername;
+                            document.getElementById('yggdrasil-username').value = config.yggdrasilUsername;
                         }
                         if (config.yggdrasilPassword) {
-                            document.getElementById('auth-yggdrasil-password').value = config.yggdrasilPassword;
+                            document.getElementById('yggdrasil-password').value = config.yggdrasilPassword;
                         }
 
                         // 确保自适应mod模式状态正确
@@ -542,7 +555,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                             document.getElementById('skinUrl').value = config.skinUrl;
                         }
                         if (config.skinYggdrasilUsername) {
-                            document.getElementById('skinYggdrasilUsername').value = config.skinYggdrasilUsername;
+                            document.getElementById('skin-yggdrasil-username').value = config.skinYggdrasilUsername;
                         }
                         updateSkinMode();
                     }
@@ -567,7 +580,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
 
         function updateAuthYggdrasilUrl() {
             const serverSelect = document.getElementById('auth-yggdrasil-server');
-            const customSection = document.getElementById('custom-auth-yggdrasil');
+            const customSection = document.getElementById('custom-yggdrasil-url');
 
             if (serverSelect.value === 'custom') {
                 customSection.style.display = 'block';
@@ -579,7 +592,7 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
         function updateSkinMode() {
             const skinMode = document.getElementById('skinMode').value;
             const skinUrlSection = document.getElementById('skin-url-section');
-            const skinYggdrasilSection = document.getElementById('skin-yggdrasil-section');
+            const skinYggdrasilSection = document.getElementById('yggdrasil-skin-section');
 
             skinUrlSection.style.display = 'none';
             skinYggdrasilSection.style.display = 'none';
@@ -688,17 +701,17 @@ A: 可能是用户名冲突或服务器限制，尝试更换用户名或联系�
                 mods: mods.filter(mod => mod.trim() !== ''),
                 skinMode: document.getElementById('skinMode').value,
                 skinUrl: document.getElementById('skinUrl').value || null,
-                skinYggdrasilUsername: document.getElementById('skinYggdrasilUsername').value || null
+                skinYggdrasilUsername: document.getElementById('skin-yggdrasil-username').value || null
             };
 
             // Yggdrasil认证配置
             if (authMode === 'yggdrasil') {
                 const yggdrasilServer = document.getElementById('auth-yggdrasil-server').value;
-                const customUrl = document.getElementById('auth-custom-yggdrasil-url').value;
+                const customUrl = document.getElementById('yggdrasil-server').value;
 
                 newConfig.yggdrasilServer = yggdrasilServer === 'custom' ? customUrl : yggdrasilServer;
-                newConfig.yggdrasilUsername = document.getElementById('auth-yggdrasil-username').value;
-                newConfig.yggdrasilPassword = document.getElementById('auth-yggdrasil-password').value;
+                newConfig.yggdrasilUsername = document.getElementById('yggdrasil-username').value;
+                newConfig.yggdrasilPassword = document.getElementById('yggdrasil-password').value;
             }
 
             fetch('/api/config', {
