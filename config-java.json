@@ -14,8 +14,16 @@
         "yggdrasilServer": "https://skin.lmxhl.top/api/yggdrasil",
         "yggdrasilUsername": "2661028830@qq.com",
         "yggdrasilPassword": "MCDReforged",
-        "yggdrasil": {},
-        "skin": {}
+        "yggdrasil": {
+            "enable": false,
+            "url": "",
+            "username": "",
+            "password": ""
+        },
+        "skin": {
+            "username": ""
+        },
+        "mode": "java"
     },
     "server": {
         "ip": "",
